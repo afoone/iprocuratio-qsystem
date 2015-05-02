@@ -154,7 +154,9 @@
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/E:/WORK/apertum-qsystem/src/ru/apertum/qsystem/common/SoundPlayer.java</file>
             <file>file:/E:/WORK/apertum-qsystem/src/ru/apertum/qsystem/common/NetCommander.java</file>
+            <file>file:/E:/WORK/apertum-qsystem/src/ru/apertum/qsystem/utils/Utf8AndAscii.java</file>
             <file>file:/E:/WORK/apertum-qsystem/src/ru/apertum/qsystem/server/QServer.java</file>
         </group>
     </open-files>
