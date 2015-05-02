@@ -1,0 +1,317 @@
+/*
+ *  Copyright (C) 2010 {Apertum}Projects. web: www.apertum.ru email: info@apertum.ru
+ * 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ * 
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package ru.apertum.qsystem.common;
+
+import java.util.Enumeration;
+import org.apache.commons.lang.SystemUtils;
+import org.apache.log4j.Appender;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Logger;
+
+/**
+ * Собственно, логер лог4Ж Это синглтон. Тут в место getInstance() для короткого написания используется l()
+ *
+ * @author Evgeniy Egorov
+ */
+public class QLog {
+
+    // Ключи выполнения программы
+    private static final String KEY_DEBUG = "DEBUG";
+    private static final String KEY_LOG_INFO = "LOGINFO";
+    private static final String KEY_DEMO = "DEMO";
+    private static final String KEY_IDE = "ide";
+    private static final String KEY_START = "-start";
+    private static final String KEY_NOPLUGINS = "-noplugins";
+    private static final String KEY_PAUSE = "-pause";
+    private static final String KEY_TERMINAL = "-terminal";
+    private static final String KEY_WELCOME_BTN = "-buttons";
+    private static final String KEY_RETAIN = "-RETAIN";
+    private static final String KEY_CLANGS = "-clangs";
+    private static final String KEY_DELAY_INVITE_FIRST = "-dfi";
+    private Logger logger = Logger.getLogger("server.file");//**.file.info.trace
+
+    public Logger logger() {
+        return logger;
+    }
+    /**
+     * Пользуемся этой константой для работы с логом для отчетов
+     */
+    private Logger logRep = Logger.getLogger("reports.file");
+    private Logger logQUser = isServer1 ? Logger.getLogger("quser.file") : Logger.getLogger("reports.file.info.trace");
+
+    public Logger logRep() {
+        return logRep;
+    }
+
+    public Logger logQUser() {
+        return logQUser;
+    }
+    /**
+     * Режим отладки
+     */
+    private final boolean isDebug;
+
+    public boolean isDebug() {
+        return isDebug;
+    }
+    /**
+     * Режим демонстрации. При нем не надо прятать мышку и убирать шапку формы.
+     */
+    private final boolean isDemo;
+
+    public boolean isDemo() {
+        return isDemo;
+    }
+    private final boolean plaginable;
+
+    public boolean isPlaginable() {
+        return plaginable;
+    }
+    private final boolean terminal;
+
+    public boolean isTerminal() {
+        return terminal;
+    }
+
+    private final boolean buttons;
+
+    public boolean isButtons() {
+        return buttons;
+    }
+
+    private int pauseFirst = 15;
+
+    public int getPauseFirst() {
+        return pauseFirst;
+    }
+
+    private QLog() {
+
+        boolean isDebugin = false;
+        boolean isDem = false;
+        boolean isPlug = true;
+        boolean isTerminal = false;
+        boolean isButtons = false;
+        switch (loggerType) {
+            case 0://сервер
+                logger = Logger.getLogger("server.file");
+                break;
+            case 1://клиент
+                logger = Logger.getLogger("client.file");
+                break;
+            case 2://приемная
+                logger = Logger.getLogger("reception.file");
+                break;
+            case 3://админка
+                logger = Logger.getLogger("admin.file");
+                break;
+            case 4://админка
+                logger = Logger.getLogger("welcome.file");
+                break;
+            case 5://хардварные кнопки
+                logger = Logger.getLogger("user_buttons.file");
+                break;
+            default:
+                throw new AssertionError();
+        }
+
+        //бежим по параметрам, смотрим, выполняем что надо
+        for (int i = 0; i < args1.length; i++) {
+            // ключ, отвечающий за логирование
+            if (KEY_DEBUG.equalsIgnoreCase(args1[i])) {
+                switch (loggerType) {
+                    case 0://сервер
+                        logger = Logger.getLogger("server.file.info.trace");
+                        break;
+                    case 1://клиент
+                        logger = Logger.getLogger("client.file.info.trace");
+                        break;
+                    case 2://приемная
+                        logger = Logger.getLogger("reception.file.info.trace");
+                        break;
+                    case 3://админка
+                        logger = Logger.getLogger("admin.file.info.trace");
+                        break;
+                    case 4://админка
+                        logger = Logger.getLogger("welcome.file.info.trace");
+                        break;
+                    case 5://хардварные кнопки
+                        logger = Logger.getLogger("user_buttons.file.info.trace");
+                        break;
+                    default:
+                        throw new AssertionError();
+                }
+                isDebugin = true;
+            }
+            // ключ, отвечающий за логирование
+            if (KEY_LOG_INFO.equalsIgnoreCase(args1[i])) {
+                isDebugin = true;
+                switch (loggerType) {
+                    case 0://сервер
+                        logger = Logger.getLogger("server.file.info");
+                        break;
+                    case 1://клиент
+                        logger = Logger.getLogger("client.file.info");
+                        break;
+                    case 2://приемная
+                        logger = Logger.getLogger("reception.file.info");
+                        break;
+                    case 3://админка
+                        logger = Logger.getLogger("admin.file.info");
+                        break;
+                    case 4://админка
+                        logger = Logger.getLogger("welcome.file.info");
+                        break;
+                    case 5://хардварные кнопки
+                        logger = Logger.getLogger("user_buttons.file.info");
+                        break;
+                    default:
+                        throw new AssertionError();
+                }
+            }
+            if (!isIDE && SystemUtils.IS_OS_WINDOWS) { // Операционка и бинс
+                final Enumeration<Logger> lgs = logger.getLoggerRepository().getCurrentLoggers();
+                while (lgs.hasMoreElements()) {
+                    final Logger lg = lgs.nextElement();
+                    final Enumeration<Appender> aps = lg.getAllAppenders();
+                    while (aps.hasMoreElements()) {
+                        final Appender ap = aps.nextElement();
+                        if (ap instanceof ConsoleAppender) {
+                            ((ConsoleAppender) ap).setEncoding("cp866");
+                            ((ConsoleAppender) ap).activateOptions();
+                        }
+                    }
+                }
+            }
+
+            // ключ, отвечающий за режим демонстрации. При нем не надо прятать мышку и убирать шапку формы
+            if (KEY_DEMO.equalsIgnoreCase(args1[i])) {
+                isDem = true;
+            }
+            // ключ, отвечающий за возможность загрузки плагинов. 
+            if (KEY_NOPLUGINS.equalsIgnoreCase(args1[i])) {
+                isPlug = false;
+            }
+            // ключ, отвечающий за возможность работы клиента на терминальном сервере. 
+            if (KEY_TERMINAL.equalsIgnoreCase(args1[i])) {
+                isTerminal = true;
+            }
+            // ключ, отвечающий за возможность работы регистрации в кнопочном исполнении. 
+            if (KEY_WELCOME_BTN.equalsIgnoreCase(args1[i])) {
+                isButtons = true;
+            }
+            // ключ, отвечающий за паузу на старте. 
+            if (KEY_PAUSE.equalsIgnoreCase(args1[i])) {
+                if (i < args1.length - 1 && args1[i + 1].matches("^-?\\d+$")) {
+                    try {
+                        Thread.sleep(Integer.parseInt(args1[i + 1]) * 1000);
+                    } catch (InterruptedException ex) {
+                    }
+                }
+            }
+
+            // ключ, отвечающий за паузу при вызове только что вставшего с очередь. Чтоб в зал успел вбежать. 
+            if (KEY_DELAY_INVITE_FIRST.equalsIgnoreCase(args1[i])) {
+                if (i < args1.length - 1 && args1[i + 1].matches("^-?\\d+$")) {
+                    pauseFirst = Integer.parseInt(args1[i + 1]);
+                }
+            }
+        }
+        /*if (!isDebugin) {
+         final Properties settings = new Properties();
+         final InputStream inStream = settings.getClass().getResourceAsStream("/ru/apertum/qsystem/common/version.properties");
+         try {
+         settings.load(inStream);
+         } catch (IOException ex) {
+         throw new ClientException("Проблемы с чтением версии. " + ex);
+         }
+         }*/
+        isDebug = isDebugin;
+        isDemo = isDem;
+        plaginable = isPlug;
+        terminal = isTerminal;
+        buttons = isButtons;
+
+        if ("server.file.info.trace".equalsIgnoreCase(logger.getName())) {
+            logRep = Logger.getLogger("reports.file.info.trace");
+            logQUser = Logger.getLogger("quser.file.info.trace");
+        } else {
+            // ключ, отвечающий за логирование
+            if ("server.file.info".equalsIgnoreCase(logger.getName())) {
+                logRep = Logger.getLogger("reports.file.info");
+                logQUser = Logger.getLogger("quser.file.info");
+            }
+        }
+    }
+
+    public static QLog l() {
+        return LogerHolder.INSTANCE;
+    }
+    private static String[] args1 = new String[0];
+    public static boolean isServer1 = false;
+    public static boolean isIDE = false;
+    public static boolean isSTART = false;
+    public static boolean chooseLANGS = false;
+    /**
+     * Всегда грузим temp.json и никогда не чистим состояние.
+     */
+    public static boolean isRETAIN = false;
+    public static int loggerType = 0; // 0-сервер,1-клиент,2-приемная,3-админка,4-киоск
+
+    /**
+     *
+     * @param args
+     * @param type 0-сервер,1-клиент,2-приемная,3-админка,4-киоск,5-сервер хардварных кнопок
+     * @return
+     */
+    public static QLog initial(String[] args, int type) {
+        args1 = args;
+        for (String string : args) {
+            if (KEY_IDE.equalsIgnoreCase(string)) {
+                isIDE = true;
+            }
+            if (KEY_START.equalsIgnoreCase(string)) {
+                isSTART = true;
+            }
+            if (KEY_RETAIN.equalsIgnoreCase(string)) {
+                isRETAIN = true;
+            }
+            if (KEY_CLANGS.equalsIgnoreCase(string)) {
+                chooseLANGS = true;
+            }
+        }
+        loggerType = type;
+        isServer1 = type == 0;
+        final QLog log = LogerHolder.INSTANCE;
+        QLog.l().logger.info("START LOGER. Logger: " + QLog.l().logger().getName());
+        if (isServer1) {
+            QLog.l().logRep.info("START LOGGER for reports. Logger: " + QLog.l().logRep().getName());
+        }
+        QLog.l().logger.info("Mode: " + (QLog.l().isDebug() ? KEY_DEBUG : (QLog.l().isDemo() ? KEY_DEMO : "FULL")));
+        QLog.l().logger.info("Plugins: " + (QLog.l().isPlaginable() ? "YES" : "NO"));
+        if (isSTART) {
+            QLog.l().logger.info("Auto start: YES");
+        }
+
+        return log;
+    }
+
+    private static class LogerHolder {
+
+        private static final QLog INSTANCE = new QLog();
+    }
+}
