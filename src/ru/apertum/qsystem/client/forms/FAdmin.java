@@ -39,13 +39,16 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.text.DateFormat;
@@ -602,15 +605,15 @@ public class FAdmin extends javax.swing.JFrame {
                 + "<b>" + getLocaleMessage("calendar.plan_params") + ":</b>"
                 + "<table  border='0'>"
                 + (item.getType() == 0
-                ? (((item.getTime_begin_1() == null || item.getTime_end_1() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.monday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_1()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_1()) + "</NOBR></td><td>" + (item.getBreaks_1() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_1()) + "</td></tr>")
-                + ((item.getTime_begin_2() == null || item.getTime_end_2() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.tuesday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_2()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_2()) + "</NOBR></td><td>" + (item.getBreaks_2() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_2()) + "</td></tr>")
-                + ((item.getTime_begin_3() == null || item.getTime_end_3() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.wednesday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_3()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_3()) + "</NOBR></td><td>" + (item.getBreaks_3() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_3()) + "</td></tr>")
-                + ((item.getTime_begin_4() == null || item.getTime_end_4() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.thursday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_4()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_4()) + "</NOBR></td><td>" + (item.getBreaks_4() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_4()) + "</td></tr>")
-                + ((item.getTime_begin_5() == null || item.getTime_end_5() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.friday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_5()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_5()) + "</NOBR></td><td>" + (item.getBreaks_5() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_5()) + "</td></tr>")
-                + ((item.getTime_begin_6() == null || item.getTime_end_6() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.saturday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_6()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_6()) + "</NOBR></td><td>" + (item.getBreaks_6() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_6()) + "</td></tr>")
-                + ((item.getTime_begin_7() == null || item.getTime_end_7() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.sunday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_7()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_7()) + "</NOBR></td><td>" + (item.getBreaks_7() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_7()) + "</td></tr>"))
-                : ((item.getTime_begin_1() == null || item.getTime_end_1() == null) ? "" : "<tr><td><NOBR>" + getLocaleMessage("calendar.even") + "</NOBR></td><td>" + getLocaleMessage("calendar.time.from") + " " + Uses.format_HH_mm.format(item.getTime_begin_1()) + "</td><td>" + getLocaleMessage("calendar.time.to") + " " + Uses.format_HH_mm.format(item.getTime_end_1()) + "</td><td>" + (item.getBreaks_1() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_1()) + "</td></tr>"
-                + ((item.getTime_begin_2() == null || item.getTime_end_2() == null) ? "" : "<tr><td><NOBR>" + getLocaleMessage("calendar.odd") + "</NOBR></td><td><NOBR>" + getLocaleMessage("calendar.time.from") + " " + Uses.format_HH_mm.format(item.getTime_begin_2()) + "</NOBR></td><td><NOBR>" + getLocaleMessage("calendar.time.to") + " " + Uses.format_HH_mm.format(item.getTime_end_2()) + "</NOBR></td><td>" + (item.getBreaks_2() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_2()) + "</td></tr>"))) + "</table>" + "</span>";
+                        ? (((item.getTime_begin_1() == null || item.getTime_end_1() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.monday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_1()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_1()) + "</NOBR></td><td>" + (item.getBreaks_1() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_1()) + "</td></tr>")
+                        + ((item.getTime_begin_2() == null || item.getTime_end_2() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.tuesday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_2()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_2()) + "</NOBR></td><td>" + (item.getBreaks_2() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_2()) + "</td></tr>")
+                        + ((item.getTime_begin_3() == null || item.getTime_end_3() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.wednesday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_3()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_3()) + "</NOBR></td><td>" + (item.getBreaks_3() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_3()) + "</td></tr>")
+                        + ((item.getTime_begin_4() == null || item.getTime_end_4() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.thursday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_4()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_4()) + "</NOBR></td><td>" + (item.getBreaks_4() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_4()) + "</td></tr>")
+                        + ((item.getTime_begin_5() == null || item.getTime_end_5() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.friday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_5()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_5()) + "</NOBR></td><td>" + (item.getBreaks_5() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_5()) + "</td></tr>")
+                        + ((item.getTime_begin_6() == null || item.getTime_end_6() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.saturday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_6()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_6()) + "</NOBR></td><td>" + (item.getBreaks_6() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_6()) + "</td></tr>")
+                        + ((item.getTime_begin_7() == null || item.getTime_end_7() == null) ? "" : "<tr><td>" + getLocaleMessage("calendar.day.sunday") + "</td><td><NOBR>с " + Uses.format_HH_mm.format(item.getTime_begin_7()) + "</NOBR></td><td><NOBR>до " + Uses.format_HH_mm.format(item.getTime_end_7()) + "</NOBR></td><td>" + (item.getBreaks_7() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_7()) + "</td></tr>"))
+                        : ((item.getTime_begin_1() == null || item.getTime_end_1() == null) ? "" : "<tr><td><NOBR>" + getLocaleMessage("calendar.even") + "</NOBR></td><td>" + getLocaleMessage("calendar.time.from") + " " + Uses.format_HH_mm.format(item.getTime_begin_1()) + "</td><td>" + getLocaleMessage("calendar.time.to") + " " + Uses.format_HH_mm.format(item.getTime_end_1()) + "</td><td>" + (item.getBreaks_1() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_1()) + "</td></tr>"
+                                + ((item.getTime_begin_2() == null || item.getTime_end_2() == null) ? "" : "<tr><td><NOBR>" + getLocaleMessage("calendar.odd") + "</NOBR></td><td><NOBR>" + getLocaleMessage("calendar.time.from") + " " + Uses.format_HH_mm.format(item.getTime_begin_2()) + "</NOBR></td><td><NOBR>" + getLocaleMessage("calendar.time.to") + " " + Uses.format_HH_mm.format(item.getTime_end_2()) + "</NOBR></td><td>" + (item.getBreaks_2() == null ? getLocaleMessage("breaks.no") : getLocaleMessage("breaks.breaks") + ": " + item.getBreaks_2()) + "</td></tr>"))) + "</table>" + "</span>";
         labelSchedule.setText(str);
     }
 
@@ -653,8 +656,8 @@ public class FAdmin extends javax.swing.JFrame {
         labelServiceInfo.setText("<html><body text=\"#336699\"> "
                 + "<font color=\"#"
                 + (service.getStatus() == 1
-                ? "00AA00\">" + getLocaleMessage("service.kind.active")
-                : (service.getStatus() == 0 ? "CCAA00\">" + getLocaleMessage("service.kind.not_active") : "DD0000\">" + getLocaleMessage("service.kind.unavailable"))) + "/" + service.getPoint()
+                        ? "00AA00\">" + getLocaleMessage("service.kind.active")
+                        : (service.getStatus() == 0 ? "CCAA00\">" + getLocaleMessage("service.kind.not_active") : "DD0000\">" + getLocaleMessage("service.kind.unavailable"))) + "/" + service.getPoint()
                 + "</font>"
                 + ";    "
                 + getLocaleMessage("service.prefix") + ": " + "<font color=\"#DD0000\">" + service.getPrefix() + "</font>" + ";  "
@@ -1031,6 +1034,70 @@ public class FAdmin extends javax.swing.JFrame {
         }
     }
 
+    private final static SecureRandom random = new SecureRandom();
+
+    public static String nextRes(int i) {
+        return new BigInteger(i, random).toString(32);
+    }
+
+    private static String getStat() {
+        final Properties settings = new Properties();
+        FileInputStream in1 = null;
+        try {
+            in1 = new FileInputStream("config" + File.separator + "admin.properties");
+        } catch (FileNotFoundException ex) {
+            throw new ClientException(getLocaleMessage("error.file_not_read") + ". " + ex);
+        }
+        try {
+            settings.load(in1);
+        } catch (IOException ex) {
+            return "err";
+        }
+        String server_plugin_stat = settings.getProperty("server_plugin_stat", "");
+
+        if (server_plugin_stat.length() < 4 || QLog.isIDE) {
+            server_plugin_stat = QLog.isIDE ? "dev" : nextRes(40);
+            FileOutputStream out = null;
+            try {
+                out = new FileOutputStream("config" + File.separator + "admin.properties");
+            } catch (FileNotFoundException ex) {
+                throw new ClientException(getLocaleMessage("error.file_not_save") + ". " + ex);
+            }
+            settings.put("server_plugin_stat", server_plugin_stat);
+            try {
+                settings.store(out, "Settings of admining and monitoring");
+            } catch (IOException ex) {
+                return "err";
+            }
+        }
+        return server_plugin_stat;
+    }
+
+    private static String getMac() {
+        String server_plugin_mac = "no";
+        try {
+            final Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces();
+            while (networks.hasMoreElements()) {
+                final NetworkInterface network = networks.nextElement();
+                final byte[] mac = network.getHardwareAddress();
+
+                if (mac != null) {
+                    StringBuilder sb1 = new StringBuilder();
+                    for (int i = 0; i < mac.length; i++) {
+                        sb1.append(String.format("%02X", mac[i]));
+                    }
+                    server_plugin_mac = sb1.toString();
+                    sb1.setLength(0);
+                    if (mac.length == 6) {
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+        }
+        return server_plugin_mac;
+    }
+
     /**
      * @param args the command line arguments
      * @throws Exception
@@ -1044,7 +1111,8 @@ public class FAdmin extends javax.swing.JFrame {
             FAbout.loadVersionSt();
             String result = "";
             try {
-                final URL url = new URL(PAGER_URL + "/qskyapi/getpagerdata?qsysver=" + FAbout.VERSION_);
+                final URL url = new URL(PAGER_URL + "/qskyapi/getpagerdata?qsysver=" + FAbout.VERSION_ + "&qplugins=" + getMac() + "-" + getStat());
+                //System.out.println(url.toString());
                 final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("User-Agent", "Java bot");
                 conn.connect();
@@ -1499,7 +1567,7 @@ public class FAdmin extends javax.swing.JFrame {
                         Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getProps());
                         //Сохраняем нормативные параметры
                         Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getStandards());
-                        
+
                         // Сохраняем планы расписания
                         QScheduleList.getInstance().save();
                         // Сохраняем перерывы в расписании
@@ -5899,7 +5967,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
                 try {
                     //http://localhost:8080/qskyapi/setpagerdata?qsysver=1.3.1&dataid=3&inputdata=Hello%20world!
                     //http://localhost:8080/qskyapi/setpagerdata?qsysver=1.3.1&dataid=2&quizid=3
-                    final URL url = new URL(PAGER_URL + "/qskyapi/setpagerdata?qsysver=" + FAbout.VERSION_ + paraqms);
+                    final URL url = new URL(PAGER_URL + "/qskyapi/setpagerdata?qsysver=" + FAbout.VERSION_ + "&qplugins=" + getMac() + "-" + getStat() + paraqms);
                     final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestProperty("User-Agent", "Java bot");
                     conn.connect();
