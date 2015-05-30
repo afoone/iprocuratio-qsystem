@@ -215,7 +215,7 @@ public class QServer extends Thread {
             QLog.l().logger().info("Сервер системы захватывает порт \"" + ServerProps.getInstance().getProps().getServerPort() + "\".");
             server = new ServerSocket(ServerProps.getInstance().getProps().getServerPort());
         } catch (IOException e) {
-            throw new ServerException("ОшиNetwork error. Creating net socket is not possible: " + e);
+            throw new ServerException("Network error. Creating net socket is not possible: " + e);
         } catch (Exception e) {
             throw new ServerException("Network error: " + e);
         }

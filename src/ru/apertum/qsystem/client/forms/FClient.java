@@ -554,8 +554,8 @@ public final class FClient extends javax.swing.JFrame {
             final String tts = prob + action + "  " + tt / 1000 / 60 + ":" + (tt / 1000) % 60;
             labelMotiv.setText(tts.substring(tts.length() - 26));
             // тут типа костылик для автообновления. удп у них видите ли не доходят! Лохи криворукие! Раз в три минуты если давно не обновлялось...
-            // ок-ок. раз в 55 скеунд. Это обновление будет еще сессию обновлять, такая так сказать долбилка для сессии.
-            if (new Date().getTime() - refreshTime > 1 * 55 * 1000) {
+            // ок-ок. раз в 55 скеунд, ок, хрен с вами, в 25 секунд. Это обновление будет еще сессию обновлять, такая так сказать долбилка для сессии.
+            if (new Date().getTime() - refreshTime > 1 * 25 * 1000) {
                 refreshTime = new Date().getTime();
                 refreshClient();
             }

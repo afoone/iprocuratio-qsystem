@@ -404,8 +404,10 @@ public class SoundPlayer implements Runnable {
                 case 2:
                     res.add(path + "tostoika.wav");
                     break;
-                default:
+                case 3:
                     res.add(path + "totable.wav");
+                default:
+                    res.add(path + "towindow.wav");
             }
 
             res.addAll(toSoundSimple(path, pointNumber));

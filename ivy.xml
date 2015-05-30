@@ -33,7 +33,7 @@
 
         <dependency org="org.slf4j" name="slf4j-api" rev="1.6.1" conf="compile->*" transitive="false"/>
         <dependency org="javax.transaction" name="jta" rev="1.1" conf="runtime->*" transitive="false"/>
-        <dependency org="javassist" name="javassist" rev="3.9.0.GA" conf="runtime->*" transitive="false"/>
+        <dependency org="org.javassist" name="javassist" rev="3.16.1-GA" conf="runtime->*" transitive="false"/>
         <dependency org="dom4j" name="dom4j" rev="1.6.1" conf="compile->*" transitive="false"/>
         <dependency org="antlr" name="antlr" rev="2.7.7" conf="runtime->*" transitive="false"/>
         <dependency org="org.slf4j" name="jcl-over-slf4j" rev="1.6.1" conf="runtime->*" transitive="false"/>

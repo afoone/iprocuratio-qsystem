@@ -114,6 +114,7 @@
 			<file src="i18n/license-gpl3-ukr.txt" targetdir="$INSTALL_PATH/license/"/-->
 			<file type="properties" src="../config/langs.properties" targetdir="$INSTALL_PATH/config/"/>
 			<fileset dir="../config/board" includes="*.jpg,*.gif,*.png,*.mpg,*.txt" targetdir="$INSTALL_PATH/config/board/"/>
+			<fileset dir="../languages" includes="*.jar" targetdir="$INSTALL_PATH/languages/"/>
             <fileset os="windows" dir="resource/img" includes="*.ico" targetdir="$INSTALL_PATH/icons/"/>
             <fileset os="unix" dir="resource/img" includes="*.png" targetdir="$INSTALL_PATH/icons/"/>
 			<singlefile src="../plugins/" target="$INSTALL_PATH/plugins"/>
@@ -179,9 +180,10 @@
             <description>Пункт регистрации</description>
             <file src="../config/welcome.properties" targetdir="$INSTALL_PATH/config/"/>
 			<file src="../config/welcome_bg.properties" targetdir="$INSTALL_PATH/config/"/>
+			<file src="../config/welcome_buttons.properties" targetdir="$INSTALL_PATH/config/"/>
             <file os="windows" src="resource/txt/Welcome.bat" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/welcome.sh" targetdir="$INSTALL_PATH"/>
-			<fileset dir="../config/flags" includes="*.jpg,*.gif,*.png,*.mpg" targetdir="$INSTALL_PATH/config/flags/"/>
+			<fileset dir="../languages/flags" includes="*.jpg,*.gif,*.png,*.mpg" targetdir="$INSTALL_PATH/languages/flags/"/>
             <parsable os="windows" targetfile="$INSTALL_PATH/Welcome.bat"/>
             <parsable os="unix" targetfile="$INSTALL_PATH/welcome.sh"/>
 			<parsable targetfile="$INSTALL_PATH/config/langs.properties"/>

@@ -398,7 +398,7 @@ public class WelcomeParams {
         topURL = settings.getProperty(TOP_URL, "");
         topImgSecondary = settings.getProperty(TOP_IMG_SECONDARY, "");
         patternGetTicket = settings.getProperty(PATTERN_GET_TICKET, "<HTML><b><p align=center><span style='font-size:60.0pt;color:green'>dialogue_text.take_ticket<br></span><span style='font-size:60.0pt;color:blue'>dialogue_text.your_nom<br></span><span style='font-size:130.0pt;color:blue'>dialogue_text.number</span></p>");
-        patternConfirmationStart = settings.getProperty(PATTERN_CONFIRMATION_START, "pattern_confirmation_start=<HTML><b><p align=center><span style='font-size:60.0pt;color:green'>dialog.text_before</span><br><span style='font-size:100.0pt;color:red'>dialog.count</span><br><span style='font-size:60.0pt;color:red'>dialog.text_before_people[[endRus]]</span></p></b>");
+        patternConfirmationStart = settings.getProperty(PATTERN_CONFIRMATION_START, "<HTML><b><p align=center><span style='font-size:60.0pt;color:green'>dialog.text_before</span><br><span style='font-size:100.0pt;color:red'>dialog.count</span><br><span style='font-size:60.0pt;color:red'>dialog.text_before_people[[endRus]]</span></p></b>");
         getTicketImg = settings.getProperty(GET_TICKET_IMG, "/ru/apertum/qsystem/client/forms/resources/getTicket.png");
         if ("".equals(getTicketImg) || !new File(getTicketImg).exists()) {
             getTicketImg = "/ru/apertum/qsystem/client/forms/resources/getTicket.png";

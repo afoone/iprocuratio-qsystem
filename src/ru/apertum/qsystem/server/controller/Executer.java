@@ -65,6 +65,7 @@ import ru.apertum.qsystem.common.cmd.RpcBanList;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfDay;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
 import ru.apertum.qsystem.common.cmd.RpcGetServiceState;
+import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
 import ru.apertum.qsystem.extra.ISelectNextService;
 import ru.apertum.qsystem.server.MainBoard;
 import ru.apertum.qsystem.server.QServer;
@@ -1666,7 +1667,7 @@ public final class Executer {
     final Task checkCustomerNumber = new Task(Uses.TASK_CHECK_CUSTOMER_NUMBER) {
 
         @Override
-        public RpcGetSrt process(final CmdParams cmdParams, String ipAdress, byte[] IP) {
+        public RpcGetTicketHistory process(final CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             final String num = cmdParams.clientAuthId.trim().replaceAll("-", "").replaceAll(" ", "").toUpperCase();
             String s = "";
@@ -1699,7 +1700,15 @@ public final class Executer {
             if ("".equals(s) && killedCustomers.get(num) != null) {
                 s = Locales.locMes("client_with_number") + " \"" + num + "\" удален по неявке в " + Uses.format_for_label.format(killedCustomers.get(num));
             }
-            return new RpcGetSrt("".equals(s) ? "Клиент по введенному номеру \"" + num + "\" не найден в списке удаленных по неявке или стоящих в очереди." : s);
+
+            final String n = num.replaceAll("\\D+", "");
+            final String p = num.replaceAll(n, "");
+            final List<QCustomer> custs = Spring.getInstance().getHt().find("FROM QCustomer a WHERE service_prefix ='" + p + "' and number = " + n);
+            final LinkedList lc = new LinkedList();
+            custs.forEach((cust) -> {
+                lc.add(Uses.format_dd_MM_yyyy_time.format(cust.getStandTime()) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (cust.getService().getName().length() > 96 ? cust.getService().getName().substring(0, 95) + "..." : cust.getService().getName()) + "&nbsp;&nbsp;&nbsp;&nbsp;" + cust.getUser().getName() + "&nbsp;&nbsp;&nbsp;&nbsp;" + CustomerState.values()[cust.getStateIn()]);
+            });
+            return new RpcGetTicketHistory(new RpcGetTicketHistory.TicketHistory("".equals(s) ? "Клиент по введенному номеру \"" + num + "\" не найден в списке удаленных по неявке или стоящих в очереди." : s, lc));
         }
     };
     /**

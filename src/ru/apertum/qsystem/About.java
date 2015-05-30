@@ -858,9 +858,9 @@ public class About {
 
     static public void printver() {
         System.out.println();
-        System.out.println("       $  $          #       ##      #         $  $");
-        System.out.println("         $  $      ###      ###    ###       $  $");
-        System.out.println("       $$$$$$$      ##     # ##     ##      $$$$$$$");
+        System.out.println("       $  $          #       ##    ####        $  $");
+        System.out.println("         $  $      ###      ###    # ##      $  $");
+        System.out.println("       $$$$$$$      ##     # ##      ##     $$$$$$$");
         System.out.println("         $  $       ##    ######    ##       $  $");
         System.out.println("       $  $        #### #    ##  # ####        $  $");
     }
