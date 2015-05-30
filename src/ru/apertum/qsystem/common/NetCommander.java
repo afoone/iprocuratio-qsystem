@@ -56,6 +56,8 @@ import ru.apertum.qsystem.common.cmd.RpcGetServiceState.ServiceState;
 import ru.apertum.qsystem.common.cmd.RpcGetSrt;
 import ru.apertum.qsystem.common.cmd.RpcGetUsersList;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
+import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
+import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory.TicketHistory;
 import ru.apertum.qsystem.common.cmd.RpcInviteCustomer;
 import ru.apertum.qsystem.common.cmd.RpcStandInService;
 import ru.apertum.qsystem.common.exceptions.ClientException;
@@ -223,10 +225,10 @@ public class NetCommander {
      * Постановка в очередь.
      *
      * @param netProperty netProperty параметры соединения с сервером.
-     * @param servicesId услуги, в которые пытаемся встать. Требует уточнения что это за трехмерный массив. 
-     * Это пять списков. Первый это вольнопоследовательные услуги. Остальные четыре это зависимопоследовательные услуги, т.е. пока один не закончится на другой не переходить.
-     * Что такое элемент списка. Это тоже список. Первый элемент это та самая комплексная услуга(ID). А остальные это зависимости, т.е. если есть еще не оказанные услуги
-     * но назначенные, которые в зависимостях, то их надо оказать.
+     * @param servicesId услуги, в которые пытаемся встать. Требует уточнения что это за трехмерный массив. Это пять списков. Первый это вольнопоследовательные
+     * услуги. Остальные четыре это зависимопоследовательные услуги, т.е. пока один не закончится на другой не переходить. Что такое элемент списка. Это тоже
+     * список. Первый элемент это та самая комплексная услуга(ID). А остальные это зависимости, т.е. если есть еще не оказанные услуги но назначенные, которые в
+     * зависимостях, то их надо оказать.
      * @param password пароль того кто пытается выполнить задание.
      * @param priority приоритет.
      * @param inputData
@@ -973,7 +975,7 @@ public class NetCommander {
         }
         return rpc;
     }
-    
+
     /**
      * Удаление предварительной записи в очередь.
      *
@@ -1200,7 +1202,7 @@ public class NetCommander {
      * @param customerNumber
      * @return Текстовый ответ о результате
      */
-    public static String checkCustomerNumber(INetProperty netProperty, String customerNumber) {
+    public static TicketHistory checkCustomerNumber(INetProperty netProperty, String customerNumber) {
         QLog.l().logger().info("Команда проверки номера кастомера.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
@@ -1212,9 +1214,9 @@ public class NetCommander {
             throw new ClientException(Locales.locMes("command_error"), ex);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
-        final RpcGetSrt rpc;
+        final RpcGetTicketHistory rpc;
         try {
-            rpc = gson.fromJson(res, RpcGetSrt.class);
+            rpc = gson.fromJson(res, RpcGetTicketHistory.class);
         } catch (JsonSyntaxException ex) {
             throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
         } finally {
@@ -1378,14 +1380,14 @@ public class NetCommander {
         }
         return (QStandards) rpc.getResult();
     }
-    
+
     /**
      * Изменение приоритетов услуг оператором
      *
      * @param netProperty
      * @param userId id юзера который вызывает
      * @param lock
-     * @return 
+     * @return
      */
     public static boolean setBussy(INetProperty netProperty, long userId, boolean lock) {
         QLog.l().logger().info("Изменение приоритетов услуг оператором.");

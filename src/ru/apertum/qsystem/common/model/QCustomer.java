@@ -88,8 +88,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         this.id = id;
     }
     /**
-     * АТРИБУТЫ "ОЧЕРЕДНИКА" персональный номер, именно по нему система ведет учет и управление очередниками
-     *  номер - целое число
+     * АТРИБУТЫ "ОЧЕРЕДНИКА" персональный номер, именно по нему система ведет учет и управление очередниками номер - целое число
      */
     @Expose
     @SerializedName("number")
@@ -104,6 +103,8 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         return number;
     }
 
+    @Expose
+    @SerializedName("stateIn")
     private Integer stateIn;
 
     @Column(name = "state_in")
@@ -114,7 +115,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setStateIn(Integer stateIn) {
         this.stateIn = stateIn;
     }
-    
+
     /**
      * АТРИБУТЫ "ОЧЕРЕДНИКА" состояние кастомера, именно по нему система знает что сейчас происходит с кастомером Это состояние менять только если кастомер уже
      * готов к этому и все другие параметры у него заполнены. Если данные пишутся в БД, то только по состоянию завершенности обработки над ним. Так что если
@@ -122,6 +123,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
      * если надо, его атрибуты и менять состояние, например на РЕДИРЕКТЕННОГО.
      *
      * состояние клиента
+     *
      * @see ru.apertum.qsystem.common.Uses
      */
     @Expose
@@ -136,7 +138,8 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
      * Специально для редиректа и возврата после редиректа
      *
      * @param state
-     * @param newServiceId - при редиректе и возврате после редиректа тут будет ID той услуги куда редиректим или возвращвем, причем услуга у кастомера все еще прежняя, т.е. так в которой завершили с ним работать
+     * @param newServiceId - при редиректе и возврате после редиректа тут будет ID той услуги куда редиректим или возвращвем, причем услуга у кастомера все еще
+     * прежняя, т.е. так в которой завершили с ним работать
      */
     public void setState(CustomerState state, Long newServiceId) {
         this.state = state;
@@ -284,7 +287,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     @SerializedName("to_service")
     private QService service;
 
-        @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id")
     public QService getService() {
         return service;

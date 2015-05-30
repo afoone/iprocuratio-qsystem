@@ -749,7 +749,10 @@ public class FAdmin extends javax.swing.JFrame {
         textFieldClientAdress.setText(settings.getProperty(CLIENT_ADRESS));
         spinnerClientPort.setValue(Integer.parseInt(settings.getProperty(CLIENT_PORT)));
         checkBoxClientAuto.setSelected("1".equals(settings.getProperty(CLIENT_AUTO_REQUEST)));
+        serverPluginStat = settings.getProperty("server_plugin_stat", "");
     }
+
+    String serverPluginStat = "";
 
     /**
      * Сохраним настройки.
@@ -768,6 +771,7 @@ public class FAdmin extends javax.swing.JFrame {
         settings.put(CLIENT_ADRESS, textFieldClientAdress.getText());
         settings.put(CLIENT_PORT, String.valueOf(spinnerClientPort.getValue()));
         settings.put(CLIENT_AUTO_REQUEST, checkBoxClientAuto.isSelected() ? "1" : "0");
+        settings.put("server_plugin_stat", serverPluginStat);
         try {
             settings.store(out, "Settings of admining and monitoring");
         } catch (IOException ex) {

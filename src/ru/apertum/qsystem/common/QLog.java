@@ -39,6 +39,7 @@ public class QLog {
     private static final String KEY_PAUSE = "-pause";
     private static final String KEY_TERMINAL = "-terminal";
     private static final String KEY_WELCOME_BTN = "-buttons";
+    private static final String KEY_WELCOME_KEYBOARD = "-keyboard";
     private static final String KEY_RETAIN = "-RETAIN";
     private static final String KEY_CLANGS = "-clangs";
     private static final String KEY_DELAY_INVITE_FIRST = "-dfi";
@@ -87,9 +88,9 @@ public class QLog {
         return terminal;
     }
 
-    private final boolean buttons;
+    private final int buttons;
 
-    public boolean isButtons() {
+    public int isButtons() {
         return buttons;
     }
 
@@ -105,7 +106,7 @@ public class QLog {
         boolean isDem = false;
         boolean isPlug = true;
         boolean isTerminal = false;
-        boolean isButtons = false;
+        int isButtons = 0;
         switch (loggerType) {
             case 0://сервер
                 logger = Logger.getLogger("server.file");
@@ -212,7 +213,11 @@ public class QLog {
             }
             // ключ, отвечающий за возможность работы регистрации в кнопочном исполнении. 
             if (KEY_WELCOME_BTN.equalsIgnoreCase(args1[i])) {
-                isButtons = true;
+                isButtons = 1;
+            }
+            // ключ, отвечающий за возможность работы регистрации при наличии только некой клавиатуры. Список услуг в виде картинки с указанием что нажать на клаве для той или иной услуги 
+            if (KEY_WELCOME_KEYBOARD.equalsIgnoreCase(args1[i])) {
+                isButtons = 2;
             }
             // ключ, отвечающий за паузу на старте. 
             if (KEY_PAUSE.equalsIgnoreCase(args1[i])) {

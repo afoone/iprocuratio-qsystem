@@ -68,6 +68,7 @@ import ru.apertum.qsystem.client.common.ClientNetProperty;
 import ru.apertum.qsystem.client.model.JTreeComboBox;
 import ru.apertum.qsystem.client.model.QTray;
 import ru.apertum.qsystem.common.CustomerState;
+import static ru.apertum.qsystem.common.CustomerState.STATE_DEAD;
 import ru.apertum.qsystem.common.NetCommander;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
@@ -80,6 +81,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation.SelfService;
 import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation.SelfSituation;
 import ru.apertum.qsystem.common.cmd.RpcGetServerState.ServiceInfo;
 import ru.apertum.qsystem.common.cmd.RpcGetServiceState.ServiceState;
+import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
 import ru.apertum.qsystem.common.cmd.RpcStandInService;
 import ru.apertum.qsystem.common.exceptions.ClientException;
 import ru.apertum.qsystem.common.exceptions.QException;
@@ -2085,7 +2087,19 @@ public class FReception extends javax.swing.JFrame {
     public void checkAnyTicket() {
         final String num = (String) JOptionPane.showInputDialog(this, getLocaleMessage("admin.action.change_priority.num.message"), getLocaleMessage("admin.action.change_priority.num.title"), 3, null, null, "");
         if (num != null) {
-            JOptionPane.showMessageDialog(this, NetCommander.checkCustomerNumber(netProperty, num), getLocaleMessage("admin.action.change_priority.num.title"), JOptionPane.INFORMATION_MESSAGE);
+            final FInfoByTicketNumber f = new FInfoByTicketNumber(this, true);
+            f.setTitle(num.toUpperCase());
+            Uses.setLocation(f);
+            RpcGetTicketHistory.TicketHistory t = NetCommander.checkCustomerNumber(netProperty, num);
+            f.setInfo(t.getInfo());
+            StringBuilder sb = new StringBuilder("<html>");
+            t.getCusts().stream().forEach((c) -> {
+                sb.append(c).append("<br>");
+            });
+            f.setHistory(sb.toString());
+            sb.setLength(0);
+            f.setVisible(true);
+            //JOptionPane.showMessageDialog(this, NetCommander.checkCustomerNumber(netProperty, num), getLocaleMessage("admin.action.change_priority.num.title"), JOptionPane.INFORMATION_MESSAGE);
         }
     }
     private final LinkedHashMap<String, Long> results = new LinkedHashMap<>();

@@ -34,7 +34,13 @@ import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Robot;
 import java.awt.Toolkit;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.MemoryImageSource;
@@ -68,6 +74,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.tree.TreeNode;
 import net.sourceforge.barbecue.Barcode;
 import net.sourceforge.barbecue.BarcodeException;
@@ -338,7 +345,7 @@ public class FWelcome extends javax.swing.JFrame {
         Locale.setDefault(Locales.getInstance().getLangCurrent());
 
         // выберем нужные языки на велкоме если первый раз запускаем или ключ -clangs
-        if (Locales.getInstance().isWelcomeMultylangs() && (Locales.getInstance().isWelcomeFirstLaunch() || QLog.chooseLANGS)) {
+        if ((Locales.getInstance().isWelcomeMultylangs() && Locales.getInstance().isWelcomeFirstLaunch()) || QLog.chooseLANGS) {
 
             JFrame form = new FLangsOnWelcome();
             java.awt.EventQueue.invokeLater(() -> {
@@ -380,135 +387,287 @@ public class FWelcome extends javax.swing.JFrame {
         FWelcome.startTime = servs.getStartTime();
         FWelcome.finishTime = servs.getFinishTime();
         FWelcome.btnFreeDesign = servs.getButtonFreeDesign();
-        if (QLog.l().isButtons()) {
-            // ***************************************************************************************************************************************
-            // ***  Это кнопочный терминал
-            // ***************************************************************************************************************************************
-            QLog.l().logger().info("Кнопочный режим пункта регистрации включен.");
 
-            final GregorianCalendar gc = new GregorianCalendar();
-            gc.setTime(startTime);
-            final long stime = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
-            gc.setTime(finishTime);
-            final long ftime = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
+        switch (QLog.l().isButtons()) {
+            case 2: {
+                // ***************************************************************************************************************************************
+                // ***  Это клавиатурный ввод символа
+                // ***************************************************************************************************************************************
+                QLog.l().logger().info("Keyboard mode is starting...");
 
-            final HashMap<Byte, QService> addrs = new HashMap<>();
-            final File addrFile = new File("config/buttons.adr");
-            try (FileInputStream fis = new FileInputStream(addrFile); Scanner s = new Scanner(fis)) {
-                while (s.hasNextLine()) {
-                    final String line = s.nextLine().trim();
-                    if (!line.startsWith("#")) {
-                        final String[] ss = line.split("=");
-                        QServiceTree.sailToStorm(root, (TreeNode service) -> {
-                            if (((QService) service).getId().equals(Long.valueOf(ss[1]))) {
-                                QLog.l().logger().debug(ss[0] + " = " + ss[1] + " " + ((QService) service).getName());
-                                addrs.put(Byte.valueOf(ss[0]), (QService) service);
-                            }
-                        });
+                final GregorianCalendar gc = new GregorianCalendar();
+                gc.setTime(startTime);
+                final long stime = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
+                gc.setTime(finishTime);
+                final long ftime = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
+
+                final HashMap<String, QService> addrs = new HashMap<>();
+                final File addrFile = new File("config/welcome_buttons.properties");
+                try (FileInputStream fis = new FileInputStream(addrFile); Scanner s = new Scanner(fis)) {
+                    while (s.hasNextLine()) {
+                        final String line = s.nextLine().trim();
+                        if (!line.startsWith("#")) {
+                            final String[] ss = line.split("=");
+                            QServiceTree.sailToStorm(root, (TreeNode service) -> {
+                                if (((QService) service).getId().equals(Long.valueOf(ss[1]))) {
+                                    QLog.l().logger().debug("Key " + ss[0] + " = " + ss[1] + " " + ((QService) service).getName());
+                                    addrs.put(ss[0], (QService) service);
+                                }
+                            });
+                        }
                     }
+                } catch (IOException ex) {
+                    System.err.println(ex);
+                    throw new RuntimeException(ex);
                 }
-            } catch (IOException ex) {
-                System.err.println(ex);
-                throw new RuntimeException(ex);
-            }
 
-            serialPort = new RxtxSerialPort(WelcomeParams.getInstance().buttons_COM);
-            serialPort.setDataBits(WelcomeParams.getInstance().buttons_databits);
-            serialPort.setParity(WelcomeParams.getInstance().buttons_parity);
-            serialPort.setSpeed(WelcomeParams.getInstance().buttons_speed);
-            serialPort.setStopBits(WelcomeParams.getInstance().buttons_stopbits);
-            serialPort.bind(new IReceiveListener() {
+                final JFrame fr = new JFrame("Keyboard input");
+                fr.setUndecorated(true);
+                fr.setOpacity(0.1f);
+                final Robot r = new Robot();
+                fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                fr.setSize(5, 5);
+                fr.addKeyListener(new KeyListener() {
 
-                @Override
-                public void actionPerformed(SerialPortEvent spe, byte[] bytes) {
-                    final GregorianCalendar gc = new GregorianCalendar();
-                    final long now = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
-                    if (now > stime && now < ftime) {
-                        if (bytes.length == 4 && bytes[0] == 0x01 && bytes[3] == 0x07) {
-                            final QService serv = addrs.get(bytes[2]);
-                            if (addrs.get(bytes[2]) == null) {
-                                QLog.l().logger().error("Не найдена услуга по нажатию кнопки " + bytes[2]);
+                    long t = 0;
+
+                    @Override
+                    public void keyTyped(KeyEvent e) {
+                    }
+
+                    @Override
+                    public void keyPressed(KeyEvent e) {
+
+                        if (System.currentTimeMillis() - t < 5000) {
+                            return;
+                        }
+                        t = System.currentTimeMillis();
+                        final GregorianCalendar gc = new GregorianCalendar();
+                        final long now = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
+                        if (now > stime && now < ftime) {
+                            final QService serv = addrs.get("" + e.getKeyChar());
+                            if (serv == null) {
+                                QLog.l().logger().error("Service is not found by " + e.getKeyChar());
                                 return;
                             }
                             final QCustomer customer;
                             try {
                                 customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "");
                             } catch (Exception ex) {
-                                QLog.l().logger().error("Не поставлен в очередь в " + serv.getName() + "  ID=" + serv.getId(), ex);
+                                QLog.l().logger().error("Fail to put in line " + serv.getName() + "  ID=" + serv.getId(), ex);
                                 return;
                             }
                             FWelcome.printTicket(customer, root.getName());
+
                         } else {
-                            String s = "";
-                            for (byte b : bytes) {
-                                s = s + (b & 0xFF) + "_";
-                            }
-                            QLog.l().logger().error("Collision! Package lenght not 4 bytes or broken: \"" + s + "\"");
+                            QLog.l().logger().warn("Client is out of time: " + new Date());
                         }
-                    } else {
-                        QLog.l().logger().warn("Не поставлен в очередь т.к. не приемные часы в " + new Date());
                     }
+
+                    @Override
+                    public void keyReleased(KeyEvent e) {
+                    }
+                });
+                fr.addMouseListener(new MouseListener() {
+
+                    long t = 0;
+
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        //System.out.println("ccc " + e.getButton());
+                        if (System.currentTimeMillis() - t < 5000) {
+                            return;
+                        }
+                        t = System.currentTimeMillis();
+                        final GregorianCalendar gc = new GregorianCalendar();
+                        final long now = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
+                        if (now > stime && now < ftime) {
+                            final QService serv = addrs.get("" + e.getButton());
+                            if (serv == null) {
+                                QLog.l().logger().error("Service is not found by " + e.getButton());
+                                return;
+                            }
+                            final QCustomer customer;
+                            try {
+                                customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "");
+                            } catch (Exception ex) {
+                                QLog.l().logger().error("Fail to put in line " + serv.getName() + "  ID=" + serv.getId(), ex);
+                                return;
+                            }
+                            FWelcome.printTicket(customer, root.getName());
+
+                        } else {
+                            QLog.l().logger().warn("Client is out of time: " + new Date());
+                        }
+                    }
+
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                    }
+                });
+
+                fr.setState(JFrame.NORMAL);
+                fr.setVisible(true);
+                final Timer t = new Timer(30000, (ActionEvent e) -> {
+                    fr.setState(JFrame.NORMAL);
+                    fr.setVisible(true);
+                    fr.setAlwaysOnTop(true);
+                    fr.setAlwaysOnTop(false);
+                    fr.setVisible(true);
+                    fr.toFront();
+                    fr.requestFocus();
+                    r.mouseMove(fr.getLocation().x + 3, fr.getLocation().y + 3);
+                    r.mousePress(InputEvent.BUTTON1_MASK);
+                });
+                t.start();
+                break;
+                // ***************************************************************************************************************************************
+            }
+            case 1: {
+                // ***************************************************************************************************************************************
+                // ***  Это кнопочный терминал
+                // ***************************************************************************************************************************************
+                QLog.l().logger().info("Кнопочный режим пункта регистрации включен.");
+
+                final GregorianCalendar gc = new GregorianCalendar();
+                gc.setTime(startTime);
+                final long stime = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
+                gc.setTime(finishTime);
+                final long ftime = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
+
+                final HashMap<Byte, QService> addrs = new HashMap<>();
+                final File addrFile = new File("config/welcome_buttons.properties");
+                try (FileInputStream fis = new FileInputStream(addrFile); Scanner s = new Scanner(fis)) {
+                    while (s.hasNextLine()) {
+                        final String line = s.nextLine().trim();
+                        if (!line.startsWith("#")) {
+                            final String[] ss = line.split("=");
+                            QServiceTree.sailToStorm(root, (TreeNode service) -> {
+                                if (((QService) service).getId().equals(Long.valueOf(ss[1]))) {
+                                    QLog.l().logger().debug(ss[0] + " = " + ss[1] + " " + ((QService) service).getName());
+                                    addrs.put(Byte.valueOf(ss[0]), (QService) service);
+                                }
+                            });
+                        }
+                    }
+                } catch (IOException ex) {
+                    System.err.println(ex);
+                    throw new RuntimeException(ex);
                 }
 
-                @Override
-                public void actionPerformed(SerialPortEvent spe) {
-                }
-            });
-            int pos = 0;
-            boolean exit = false;
-            // индикатор
-            while (!exit) {
-                Thread.sleep(1500);
-                // ждём нового подключения, после чего запускаем обработку клиента
-                // в новый вычислительный поток и увеличиваем счётчик на единичку
+                serialPort = new RxtxSerialPort(WelcomeParams.getInstance().buttons_COM);
+                serialPort.setDataBits(WelcomeParams.getInstance().buttons_databits);
+                serialPort.setParity(WelcomeParams.getInstance().buttons_parity);
+                serialPort.setSpeed(WelcomeParams.getInstance().buttons_speed);
+                serialPort.setStopBits(WelcomeParams.getInstance().buttons_stopbits);
+                serialPort.bind(new IReceiveListener() {
 
-                if (!QLog.l().isDebug()) {
-                    final char ch = '*';
-                    String progres = "Process: " + ch;
-                    final int len = 5;
-                    for (int i = 0; i < pos; i++) {
-                        progres = progres + ch;
+                    @Override
+                    public void actionPerformed(SerialPortEvent spe, byte[] bytes) {
+                        final GregorianCalendar gc = new GregorianCalendar();
+                        final long now = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
+                        if (now > stime && now < ftime) {
+                            if (bytes.length == 4 && bytes[0] == 0x01 && bytes[3] == 0x07) {
+                                final QService serv = addrs.get(bytes[2]);
+                                if (addrs.get(bytes[2]) == null) {
+                                    QLog.l().logger().error("Не найдена услуга по нажатию кнопки " + bytes[2]);
+                                    return;
+                                }
+                                final QCustomer customer;
+                                try {
+                                    customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "");
+                                } catch (Exception ex) {
+                                    QLog.l().logger().error("Не поставлен в очередь в " + serv.getName() + "  ID=" + serv.getId(), ex);
+                                    return;
+                                }
+                                FWelcome.printTicket(customer, root.getName());
+                            } else {
+                                String s = "";
+                                for (byte b : bytes) {
+                                    s = s + (b & 0xFF) + "_";
+                                }
+                                QLog.l().logger().error("Collision! Package lenght not 4 bytes or broken: \"" + s + "\"");
+                            }
+                        } else {
+                            QLog.l().logger().warn("Не поставлен в очередь т.к. не приемные часы в " + new Date());
+                        }
                     }
-                    for (int i = 0; i < len; i++) {
-                        progres = progres + ' ';
-                    }
-                    if (++pos == len) {
-                        pos = 0;
-                    }
-                    System.out.print(progres);
-                    System.out.write(13);// '\b' - возвращает корретку на одну позицию назад
-                }
 
-                // Попробуем считать нажатую клавишу
-                // если нажади ENTER, то завершаем работу сервера
-                // и затираем файл временного состояния Uses.TEMP_STATE_FILE
-                //BufferedReader r = new BufferedReader(new StreamReader(System.in));
-                int bytesAvailable = System.in.available();
-                if (bytesAvailable > 0) {
-                    byte[] data = new byte[bytesAvailable];
-                    System.in.read(data);
-                    if (bytesAvailable == 5
-                            && data[0] == 101
-                            && data[1] == 120
-                            && data[2] == 105
-                            && data[3] == 116
-                            && ((data[4] == 10) || (data[4] == 13))) {
-                        // набрали команду "exit" и нажали ENTER
-                        QLog.l().logger().info("Завершение работы сервера.");
-                        exit = true;
+                    @Override
+                    public void actionPerformed(SerialPortEvent spe) {
                     }
-                }
-            }// while
-            serialPort.free();
-            // ***************************************************************************************************************************************
-        } else {
-            // ***************************************************************************************************************************************
-            // ***  Это тачевый терминал
-            // ***************************************************************************************************************************************
-            java.awt.EventQueue.invokeLater(() -> {
-                final FWelcome w = new FWelcome(root);
-                w.setVisible(true);
-            });
+                });
+                int pos = 0;
+                boolean exit = false;
+                // индикатор
+                while (!exit) {
+                    Thread.sleep(1500);
+                    // ждём нового подключения, после чего запускаем обработку клиента
+                    // в новый вычислительный поток и увеличиваем счётчик на единичку
+
+                    if (!QLog.l().isDebug()) {
+                        final char ch = '*';
+                        String progres = "Process: " + ch;
+                        final int len = 5;
+                        for (int i = 0; i < pos; i++) {
+                            progres = progres + ch;
+                        }
+                        for (int i = 0; i < len; i++) {
+                            progres = progres + ' ';
+                        }
+                        if (++pos == len) {
+                            pos = 0;
+                        }
+                        System.out.print(progres);
+                        System.out.write(13);// '\b' - возвращает корретку на одну позицию назад
+                    }
+
+                    // Попробуем считать нажатую клавишу
+                    // если нажади ENTER, то завершаем работу сервера
+                    // и затираем файл временного состояния Uses.TEMP_STATE_FILE
+                    //BufferedReader r = new BufferedReader(new StreamReader(System.in));
+                    int bytesAvailable = System.in.available();
+                    if (bytesAvailable > 0) {
+                        byte[] data = new byte[bytesAvailable];
+                        System.in.read(data);
+                        if (bytesAvailable == 5
+                                && data[0] == 101
+                                && data[1] == 120
+                                && data[2] == 105
+                                && data[3] == 116
+                                && ((data[4] == 10) || (data[4] == 13))) {
+                            // набрали команду "exit" и нажали ENTER
+                            QLog.l().logger().info("Завершение работы сервера.");
+                            exit = true;
+                        }
+                    }
+                }// while
+                serialPort.free();
+                break;
+                // ***************************************************************************************************************************************
+            }
+            case 0: {
+                // ***************************************************************************************************************************************
+                // ***  Это тачевый терминал
+                // ***************************************************************************************************************************************
+                java.awt.EventQueue.invokeLater(() -> {
+                    final FWelcome w = new FWelcome(root);
+                    w.setVisible(true);
+                });
+                break;
+            }
         }
     }
 

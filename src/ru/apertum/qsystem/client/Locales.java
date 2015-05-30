@@ -17,12 +17,24 @@
 package ru.apertum.qsystem.client;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.text.DateFormatSymbols;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -42,6 +54,56 @@ public final class Locales {
     }
 
     private Locales() {
+
+        // Загрузка плагинов из папки plugins
+        QLog.l().logger().info("Languages are loading...");
+        final File[] list = new File("languages").listFiles((File dir, String name) -> name.toLowerCase().endsWith(".jar"));
+        if (list != null && list.length != 0) {
+            final URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+            final Class sysclass = URLClassLoader.class;
+            final Class[] parameters = new Class[]{URL.class};
+            for (File file : list) {
+                //QLog.l().logger().debug("Langusge " + file.getName().split("\\.")[0]);
+                try {
+                    final Method method = sysclass.getDeclaredMethod("addURL", parameters);
+                    method.setAccessible(true);
+                    method.invoke(sysloader, new Object[]{file.toURI().toURL()});
+                } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | MalformedURLException ex) {
+                    QLog.l().logger().error("Language " + file.getName() + " did NOT load. " + ex);
+                }
+            }
+        }
+
+        HashSet<String> locs = new HashSet<>();
+        for (File list1 : list) {
+            final String s = list1.getName().split("\\.")[0];
+            locs.add(s);
+            final Properties settings = new Properties();
+            final InputStream in;
+            final InputStreamReader inR;
+            try {
+                in = settings.getClass().getResourceAsStream("/" + s + ".properties");
+                inR = new InputStreamReader(in, "UTF-8");
+            } catch (UnsupportedEncodingException ex) {
+                QLog.l().logger().error("Language " + list1.getName() + " have no description. " + ex);
+                continue;
+            }
+            try {
+                settings.load(inR);
+            } catch (IOException ex) {
+                QLog.l().logger().error("Language description " + list1.getName() + " did NOT load. " + ex);
+                continue;
+            }
+            QLog.l().logger().debug("   Langusge: " + settings.getProperty("name") + " " + settings.getProperty("lng") + "_" + settings.getProperty("country"));
+
+            final Locale locale = new Locale(settings.getProperty("lng"), settings.getProperty("country"));
+            locales.put(s, locale);
+            locales_name.put(locale, s);
+            lngs.put(settings.getProperty("name"), s);
+            lngs_names.put(s, settings.getProperty("name"));
+            lngs_buttontext.put(s, settings.getProperty("buttontext"));
+        }
+
         config = new PropertiesConfiguration();
         config.setEncoding("utf8");
         File f = new File(configFileName);
@@ -68,24 +130,10 @@ public final class Locales {
         }
         config.setAutoSave(true);
 
-        for (Iterator<String> itr = config.getKeys(); itr.hasNext();) {
-            String s = itr.next();
-            if (s.startsWith("locale")) {
-                s = s.substring(s.indexOf(".") + 1);
-                if (s.contains(".")) {
-                    s = s.substring(0, s.indexOf("."));
-                    if (locales.get(s) == null) {
-                        final Locale locale = new Locale(config.getString("locale." + s + ".lng"), config.getString("locale." + s + ".country"));
-                        locales.put(s, locale);
-                        locales_name.put(locale, s);
-                        lngs.put(config.getString("locale." + s + ".name"), s);
-                        lngs_names.put(s, config.getString("locale." + s + ".name"));
-                        lngs_buttontext.put(s, config.getString("locale." + s + ".buttontext"));
-                        lngs_welcome.put(s, config.getString("locale." + s + ".welcome", "1"));
-                    }
-                }
-            }
-        }
+        locs.stream().forEach((loc) -> {
+            lngs_welcome.put(loc, config.getString(loc, "1"));
+        });
+
         //System.out.println("- 0 --" + getLangCurrent());
         //System.out.println("- 01 --" + getLangCurrent().getISO3Language());
         isUkr = getLangCurrent().getISO3Language().toLowerCase().startsWith("ukr");
@@ -222,7 +270,7 @@ public final class Locales {
     }
 
     public void setLangWelcome(String name, boolean on) {
-        config.setProperty("locale." + name + ".welcome", on ? "1" : "0");
+        config.setProperty(name, on ? "1" : "0");
         lngs_welcome.put(name, on ? "1" : "0");
     }
 
