@@ -21,6 +21,8 @@ import org.apache.commons.lang.SystemUtils;
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
+import ru.apertum.qsystem.About;
+import ru.apertum.qsystem.server.ServerProps;
 
 /**
  * Собственно, логер лог4Ж Это синглтон. Тут в место getInstance() для короткого написания используется l()
@@ -302,8 +304,11 @@ public class QLog {
         loggerType = type;
         isServer1 = type == 0;
         final QLog log = LogerHolder.INSTANCE;
+        About.load();
+        QLog.l().logger.info("\"QSystem " + About.ver + "\"!  date: " + About.date);
         QLog.l().logger.info("START LOGER. Logger: " + QLog.l().logger().getName());
         if (isServer1) {
+            QLog.l().logger.info("Version DB=" + ServerProps.getInstance().getProps().getVersion());
             QLog.l().logRep.info("START LOGGER for reports. Logger: " + QLog.l().logRep().getName());
         }
         QLog.l().logger.info("Mode: " + (QLog.l().isDebug() ? KEY_DEBUG : (QLog.l().isDemo() ? KEY_DEMO : "FULL")));

@@ -241,6 +241,7 @@ public class QUser implements IidGetter, Serializable {
     //@OneToMany(fetch = FetchType.EAGER)//setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JoinColumn(name = "user_id", insertable = false, nullable = false, updatable = false)
+    //MOSCOW
     @Fetch(FetchMode.SELECT) // Это отсечение дублирования при джойне таблици, т.к. в QPlanService есть @OneToOne к QService, и в нем есть @OneToMany к QServiceLang - дублится по количеству переводов
     public List<QPlanService> getPlanServices() {
         return planServices;
