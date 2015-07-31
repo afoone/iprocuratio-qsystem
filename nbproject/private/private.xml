@@ -6,7 +6,7 @@
             <url>src/ru/apertum/qsystem/server/model/QService.java</url>
             <bookmark id="21">
                 <name/>
-                <line>601</line>
+                <line>602</line>
                 <key/>
             </bookmark>
         </file>
@@ -51,17 +51,17 @@
             <url>src/ru/apertum/qsystem/client/forms/FAdmin.java</url>
             <bookmark id="20">
                 <name/>
-                <line>4532</line>
+                <line>4509</line>
                 <key/>
             </bookmark>
             <bookmark id="28">
                 <name/>
-                <line>4983</line>
+                <line>4888</line>
                 <key/>
             </bookmark>
             <bookmark id="29">
                 <name/>
-                <line>4997</line>
+                <line>4902</line>
                 <key/>
             </bookmark>
         </file>
@@ -79,18 +79,10 @@
             </bookmark>
         </file>
         <file>
-            <url>src/ru/apertum/qsystem/client/forms/FServiceChangeDialod.java</url>
-            <bookmark id="16">
-                <name/>
-                <line>176</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
             <url>src/ru/apertum/qsystem/common/QLog.java</url>
             <bookmark id="27">
                 <name/>
-                <line>280</line>
+                <line>282</line>
                 <key/>
             </bookmark>
         </file>
@@ -103,22 +95,22 @@
             </bookmark>
             <bookmark id="8">
                 <name/>
-                <line>215</line>
+                <line>218</line>
                 <key/>
             </bookmark>
             <bookmark id="1">
                 <name/>
-                <line>279</line>
+                <line>282</line>
                 <key/>
             </bookmark>
             <bookmark id="33">
                 <name/>
-                <line>1294</line>
+                <line>1301</line>
                 <key/>
             </bookmark>
             <bookmark id="34">
                 <name/>
-                <line>1701</line>
+                <line>1708</line>
                 <key/>
             </bookmark>
         </file>
@@ -126,17 +118,17 @@
             <url>src/ru/apertum/qsystem/common/NetCommander.java</url>
             <bookmark id="6">
                 <name/>
-                <line>196</line>
+                <line>218</line>
                 <key/>
             </bookmark>
             <bookmark id="9">
                 <name/>
-                <line>235</line>
+                <line>261</line>
                 <key/>
             </bookmark>
             <bookmark id="5">
                 <name/>
-                <line>596</line>
+                <line>629</line>
                 <key/>
             </bookmark>
         </file>

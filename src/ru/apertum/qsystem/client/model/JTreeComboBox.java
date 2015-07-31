@@ -70,6 +70,10 @@ public final class JTreeComboBox extends JComboBox implements TreeSelectionListe
 
     @Override
     public void setSelectedItem(Object item) {
+        if (item == null) {
+            removeAllItems();
+            return;
+        }
         if (treeContains((TreeNode) tree.getModel().getRoot(), (TreeNode) item)) {
             setSelection(item);
         }

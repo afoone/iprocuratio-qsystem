@@ -18,9 +18,7 @@ package ru.apertum.qsystem.client.forms;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.HashMap;
 import java.util.LinkedList;
 import javax.swing.JDialog;
@@ -35,7 +33,6 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.model.JTreeComboBox;
 import ru.apertum.qsystem.common.exceptions.ClientException;
 import ru.apertum.qsystem.server.model.ATreeModel;
-import ru.apertum.qsystem.server.model.ISailListener;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
 
@@ -73,21 +70,13 @@ public class FRedirect extends JDialog {
         super(owner, getLocaleMessage("redirect.caption"), true);
         initComponents();
 
-        buttonOk.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ok = true;
-                setVisible(false);
-            }
+        buttonOk.addActionListener((ActionEvent e) -> {
+            ok = true;
+            setVisible(false);
         });
-        buttonCancel.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ok = false;
-                setVisible(false);
-            }
+        buttonCancel.addActionListener((ActionEvent e) -> {
+            ok = false;
+            setVisible(false);
         });
 
         final QService service = NetCommander.getServiсes(netProperty).getRoot();
@@ -95,12 +84,8 @@ public class FRedirect extends JDialog {
             throw new ClientException("Невозможно получить список предлагаемых услуг.");
         }
         final LinkedList<QService> list = new LinkedList<>();
-        QServiceTree.sailToStorm(service, new ISailListener() {
-
-            @Override
-            public void actionPerformed(TreeNode service) {
-                list.add((QService) service);
-            }
+        QServiceTree.sailToStorm(service, (TreeNode service1) -> {
+            list.add((QService) service1);
         });
         ServiceTreeModel.list = list;
         comboBoxServices = new JTreeComboBox(new ServiceTreeModel());
@@ -116,15 +101,11 @@ public class FRedirect extends JDialog {
             }
         }
 
-        comboBoxServices.addItemListener(new ItemListener() {
-
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (((QService) e.getItem()).isLeaf()) {
-                    lastSelected = (QService) e.getItem();
-                } else {
-                    comboBoxServices.setSelectedItem(lastSelected);
-                }
+        comboBoxServices.addItemListener((ItemEvent e) -> {
+            if (((QService) e.getItem()).isLeaf()) {
+                lastSelected = (QService) e.getItem();
+            } else {
+                comboBoxServices.setSelectedItem(lastSelected);
             }
         });
 

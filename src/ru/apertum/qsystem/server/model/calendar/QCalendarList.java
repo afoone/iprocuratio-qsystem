@@ -18,6 +18,8 @@ package ru.apertum.qsystem.server.model.calendar;
 
 import java.util.LinkedList;
 import javax.swing.ComboBoxModel;
+import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.DetachedCriteria;
 import ru.apertum.qsystem.server.Spring;
 import ru.apertum.qsystem.server.model.ATListModel;
 
@@ -42,7 +44,9 @@ public class QCalendarList extends ATListModel<QCalendar> implements ComboBoxMod
 
     @Override
     protected LinkedList<QCalendar> load() {
-        return new LinkedList<>(Spring.getInstance().getHt().loadAll(QCalendar.class));
+        return new LinkedList<>(Spring.getInstance().getHt().
+                findByCriteria(DetachedCriteria.forClass(QCalendar.class).
+                        setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY)));
     }
     private QCalendar selected;
 

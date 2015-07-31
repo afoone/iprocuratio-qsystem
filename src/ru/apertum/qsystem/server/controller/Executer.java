@@ -179,13 +179,16 @@ public final class Executer {
                 customer = new QCustomer(service.getNextNumber());
                 // Определим кастомера в очередь
                 customer.setService(service);
+                if (service.getLink() != null) {
+                    customer.setService(service.getLink());
+                }
                 // время постановки проставляется автоматом при создании кастомера.
                 // Приоритет "как все"
                 customer.setPriority(cmdParams.priority);
                 // Введенные кастомером данные
                 customer.setInput_data(cmdParams.textData);
                 //добавим нового пользователя
-                service.addCustomer(customer);
+                (service.getLink() != null ? service.getLink() : service).addCustomer(customer);
                 // Состояние у него "Стою, жду".
                 customer.setState(CustomerState.STATE_WAIT);
             } catch (Exception ex) {
@@ -529,7 +532,8 @@ public final class Executer {
                 return new RpcGetInt(2);
             }
             // Если лимит количества подобных введенных данных кастомерами в день достигнут
-            final QService srv = QServiceTree.getInstance().getById(cmdParams.serviceId);
+            final QService srvR = QServiceTree.getInstance().getById(cmdParams.serviceId);
+            final QService srv = srvR.getLink() != null ? srvR.getLink() : srvR;
             try {
                 return new RpcGetInt(srv.isLimitPersonPerDayOver(cmdParams.textData) ? 1 : 0);
             } catch (Exception ex) {
@@ -545,7 +549,8 @@ public final class Executer {
         @Override
         public RpcGetServiceState process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
-            final QService srv = QServiceTree.getInstance().getById(cmdParams.serviceId);
+            final QService srvR = QServiceTree.getInstance().getById(cmdParams.serviceId);
+            final QService srv = srvR.getLink() != null ? srvR.getLink() : srvR;
             return new RpcGetServiceState(srv.getClients());
         }
     };
@@ -560,7 +565,8 @@ public final class Executer {
             // Проверим оказывается ли сейчас эта услуга
             int min = Uses.LOCK_INT;
             final Date day = new Date();
-            final QService srv = QServiceTree.getInstance().getById(cmdParams.serviceId);
+            final QService srvR = QServiceTree.getInstance().getById(cmdParams.serviceId);
+            final QService srv = srvR.getLink() != null ? srvR.getLink() : srvR;
             if (srv.getTempReasonUnavailable() != null && !"".equals(srv.getTempReasonUnavailable())) {
                 return new RpcGetServiceState(0, srv.getTempReasonUnavailable());
             }
@@ -1020,7 +1026,8 @@ public final class Executer {
             // Название старой очереди
             final QService oldService = customer.getService();
             // вот она новая очередь.
-            final QService newService = QServiceTree.getInstance().getById(cmdParams.serviceId);
+            final QService newServiceR = QServiceTree.getInstance().getById(cmdParams.serviceId);
+            final QService newService = newServiceR.getLink() != null ? newServiceR.getLink() : newServiceR;
             // действия по завершению работы юзера над кастомером
             customer.setFinishTime(new Date());
             // кастомер переходит в состояние "перенаправленности", тут еще и в базу скинется, если надо.
@@ -1191,7 +1198,10 @@ public final class Executer {
             super.process(cmdParams, ipAdress, IP);
             //Определим услугу
             final QService service = QServiceTree.getInstance().getById(cmdParams.serviceId);
-            final QSchedule sch = service.getSchedule();
+            final QSchedule sch1 = service.getCalendar() == null
+                    ? QCalendarList.getInstance().getById(1).getSpecSchedule(new Date(cmdParams.date))
+                    : (service.getCalendar().getSpecSchedule(new Date(cmdParams.date)));
+            final QSchedule sch = (sch1 == null ? service.getSchedule() : sch1);
 
             final RpcGetGridOfDay.GridDayAndParams advCusts = new RpcGetGridOfDay.GridDayAndParams();
             advCusts.setAdvanceLimit(service.getAdvanceLimit());
@@ -1256,7 +1266,9 @@ public final class Executer {
                                 final int e = gc.get(GregorianCalendar.HOUR_OF_DAY);
                                 final int e_m = gc.get(GregorianCalendar.MINUTE);
                                 // Если совпал день и час и минуты, то увеличим счетчик записавшихся на этот час и минуты
-                                if (s == e && s_m == e_m) {
+                                // тут учитываем что реально время предварительного может быть не по сетке, к примеру загрузили извне.
+                                if (s * 60 + s_m <= e * 60 + e_m
+                                        && s * 60 + s_m + service.getAdvanceTimePeriod() > e * 60 + e_m) {
                                     cnt++;
                                     atime.addACustomer(advCustomer);
                                     // Защита от того чтобы один и тодже клиент не записался предварительно в одну услугу на одну дату.
@@ -1299,7 +1311,7 @@ public final class Executer {
             super.process(cmdParams, ipAdress, IP);
             //Определим услугу
             final QService service = QServiceTree.getInstance().getById(cmdParams.serviceId);
-            final QSchedule sch = service.getSchedule();
+            QSchedule sch = service.getSchedule();
             if (sch == null) {
                 return new RpcGetGridOfWeek(new RpcGetGridOfWeek.GridAndParams("Требуемая услуга не имеет расписания."));
             }
@@ -1331,7 +1343,11 @@ public final class Executer {
                 if (!QCalendarList.getInstance().getById(1).checkFreeDay(day)
                         && !(service.getCalendar() != null
                         && service.getCalendar().checkFreeDay(day))) {
-                    // Определим время начала и нонца работы на этот день
+                    // Определим время начала и нонца работы на этот день/ расписания могут быть перекрыты в календаре
+                    final QSchedule sch1 = service.getCalendar() == null
+                            ? QCalendarList.getInstance().getById(1).getSpecSchedule(gc_day.getTime())
+                            : (service.getCalendar().getSpecSchedule(gc_day.getTime()));
+                    sch = (sch1 == null ? service.getSchedule() : sch1);
                     final QSchedule.Interval interval = sch.getWorkInterval(gc_day.getTime());
 
                     // Если работаем в этот день то определим часы на которые еще можно записаться
@@ -1364,7 +1380,10 @@ public final class Executer {
                                     final int e = gc.get(GregorianCalendar.HOUR_OF_DAY);
                                     final int e_m = gc.get(GregorianCalendar.MINUTE);
                                     // Если совпал день и час и минуты, то увеличим счетчик записавшихся на этот час и минуты
-                                    if (gc.get(GregorianCalendar.DAY_OF_YEAR) == gc_day.get(GregorianCalendar.DAY_OF_YEAR) && s == e && s_m == e_m) {
+                                    // тут учитываем что реально время предварительного может быть не по сетке, к примеру загрузили извне.
+                                    if ((gc.get(GregorianCalendar.DAY_OF_YEAR) == gc_day.get(GregorianCalendar.DAY_OF_YEAR))
+                                            && (s * 60 + s_m <= e * 60 + e_m
+                                            && s * 60 + s_m + service.getAdvanceTimePeriod() > e * 60 + e_m)) {
                                         cnt++;
                                         // Защита от того чтобы один и тодже клиент не записался предварительно в одну услугу на одну дату.
                                         // данный предв.кастомер не должен быть таким же как и авторизовавшийся на этот час

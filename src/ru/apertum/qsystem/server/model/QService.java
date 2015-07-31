@@ -43,6 +43,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.Transient;
@@ -975,6 +976,18 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     public void setParentId(Long parentId) {
         this.parentId = parentId;
     }
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "link_service_id")
+    private QService link;
+
+    public QService getLink() {
+        return link;
+    }
+
+    public void setLink(QService link) {
+        this.link = link;
+    }
+
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "schedule_id")
     private QSchedule schedule;
