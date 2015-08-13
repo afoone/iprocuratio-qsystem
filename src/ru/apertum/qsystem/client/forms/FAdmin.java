@@ -1552,14 +1552,16 @@ public class FAdmin extends javax.swing.JFrame {
                         Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getProps());
                         //Сохраняем нормативные параметры
                         Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getStandards());
-                        // Сохраняем календари услуг, главное раньше расписаний, не то спец расписания будут ругаться.
-                        QCalendarList.getInstance().save();
+                        // Сохраняем перерывы в расписании, тут теперь стоит, а то в календаре появились расписания.
+                        QBreaksList.getInstance().save();
+                        
                         // Сохраняем планы расписания
                         QScheduleList.getInstance().save();
-                        // Сохраняем перерывы в расписании
-                        QBreaksList.getInstance().save();
-                        // Сохраняем календари услуг
+                        
+                        // хз что за коммент: Сохраняем календари услуг, главное раньше расписаний, не то спец расписания будут ругаться.
                         QCalendarList.getInstance().save();
+                        
+                        
                         // Сохраняем услуги
                         QServiceTree.getInstance().save();
                         // Сохраняем пользователей
@@ -1791,25 +1793,6 @@ public class FAdmin extends javax.swing.JFrame {
         jPanel28 = new javax.swing.JPanel();
         jScrollPane22 = new javax.swing.JScrollPane();
         userServsList = new javax.swing.JList();
-        jPanel17 = new javax.swing.JPanel();
-        jScrollPane12 = new javax.swing.JScrollPane();
-        listSchedule = new javax.swing.JList();
-        jLabel21 = new javax.swing.JLabel();
-        textFieldScheduleName = new javax.swing.JTextField();
-        buttonScheduleAdd = new javax.swing.JButton();
-        buttonSchedulleDelete = new javax.swing.JButton();
-        labelSchedule = new javax.swing.JLabel();
-        jScrollPane21 = new javax.swing.JScrollPane();
-        listBreaks = new javax.swing.JList();
-        jButton13 = new javax.swing.JButton();
-        jButton14 = new javax.swing.JButton();
-        jButton19 = new javax.swing.JButton();
-        jButton20 = new javax.swing.JButton();
-        jPanel10 = new javax.swing.JPanel();
-        jLabel10 = new javax.swing.JLabel();
-        jLabel14 = new javax.swing.JLabel();
-        textFieldStartTime = new javax.swing.JTextField();
-        textFieldFinishTime = new javax.swing.JTextField();
         jPanel19 = new javax.swing.JPanel();
         jScrollPane14 = new javax.swing.JScrollPane();
         listCalendar = new javax.swing.JList();
@@ -1831,6 +1814,25 @@ public class FAdmin extends javax.swing.JFrame {
         butAddSpecSced = new javax.swing.JButton();
         butEditSpecSced = new javax.swing.JButton();
         butDeleteSpecSced = new javax.swing.JButton();
+        jPanel17 = new javax.swing.JPanel();
+        jScrollPane12 = new javax.swing.JScrollPane();
+        listSchedule = new javax.swing.JList();
+        jLabel21 = new javax.swing.JLabel();
+        textFieldScheduleName = new javax.swing.JTextField();
+        buttonScheduleAdd = new javax.swing.JButton();
+        buttonSchedulleDelete = new javax.swing.JButton();
+        labelSchedule = new javax.swing.JLabel();
+        jScrollPane21 = new javax.swing.JScrollPane();
+        listBreaks = new javax.swing.JList();
+        jButton13 = new javax.swing.JButton();
+        jButton14 = new javax.swing.JButton();
+        jButton19 = new javax.swing.JButton();
+        jButton20 = new javax.swing.JButton();
+        jPanel10 = new javax.swing.JPanel();
+        jLabel10 = new javax.swing.JLabel();
+        jLabel14 = new javax.swing.JLabel();
+        textFieldStartTime = new javax.swing.JTextField();
+        textFieldFinishTime = new javax.swing.JTextField();
         jPanel2 = new javax.swing.JPanel();
         jSplitPane7 = new javax.swing.JSplitPane();
         jPanel30 = new javax.swing.JPanel();
@@ -2850,190 +2852,6 @@ public class FAdmin extends javax.swing.JFrame {
 
         tabbedPaneMain.addTab(resourceMap.getString("jPanel4.TabConstraints.tabTitle"), jPanel4); // NOI18N
 
-        jPanel17.setAutoscrolls(true);
-        jPanel17.setName("jPanel17"); // NOI18N
-
-        jScrollPane12.setName("jScrollPane12"); // NOI18N
-
-        listSchedule.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("listSchedule.border.title"))); // NOI18N
-        listSchedule.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        listSchedule.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        listSchedule.setComponentPopupMenu(popupPlans);
-        listSchedule.setName("listSchedule"); // NOI18N
-        listSchedule.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                listScheduleMouseClicked(evt);
-            }
-        });
-        jScrollPane12.setViewportView(listSchedule);
-        listSchedule.getAccessibleContext().setAccessibleName(resourceMap.getString("jList1.AccessibleContext.accessibleName")); // NOI18N
-
-        jLabel21.setText(resourceMap.getString("jLabel21.text")); // NOI18N
-        jLabel21.setName("jLabel21"); // NOI18N
-
-        textFieldScheduleName.setEditable(false);
-        textFieldScheduleName.setText(resourceMap.getString("textFieldScheduleName.text")); // NOI18N
-        textFieldScheduleName.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        textFieldScheduleName.setFocusable(false);
-        textFieldScheduleName.setName("textFieldScheduleName"); // NOI18N
-        textFieldScheduleName.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                textFieldScheduleNameKeyReleased(evt);
-            }
-        });
-
-        buttonScheduleAdd.setAction(actionMap.get("addSchedule")); // NOI18N
-        buttonScheduleAdd.setText(resourceMap.getString("buttonScheduleAdd.text")); // NOI18N
-        buttonScheduleAdd.setName("buttonScheduleAdd"); // NOI18N
-
-        buttonSchedulleDelete.setAction(actionMap.get("deleteSchedule")); // NOI18N
-        buttonSchedulleDelete.setText(resourceMap.getString("buttonSchedulleDelete.text")); // NOI18N
-        buttonSchedulleDelete.setName("buttonSchedulleDelete"); // NOI18N
-
-        labelSchedule.setText(resourceMap.getString("labelSchedule.text")); // NOI18N
-        labelSchedule.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-        labelSchedule.setName("labelSchedule"); // NOI18N
-
-        jScrollPane21.setName("jScrollPane21"); // NOI18N
-
-        listBreaks.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("listBreaks.border.title"))); // NOI18N
-        listBreaks.setComponentPopupMenu(popupBreaks);
-        listBreaks.setName("listBreaks"); // NOI18N
-        listBreaks.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                listBreaksMouseClicked(evt);
-            }
-        });
-        jScrollPane21.setViewportView(listBreaks);
-
-        jButton13.setAction(actionMap.get("editSchedule")); // NOI18N
-        jButton13.setName("jButton13"); // NOI18N
-
-        jButton14.setAction(actionMap.get("addBreakToList")); // NOI18N
-        jButton14.setName("jButton14"); // NOI18N
-
-        jButton19.setAction(actionMap.get("deleteBreakFromList")); // NOI18N
-        jButton19.setName("jButton19"); // NOI18N
-
-        jButton20.setAction(actionMap.get("editBreak")); // NOI18N
-        jButton20.setName("jButton20"); // NOI18N
-
-        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel10.border.title"))); // NOI18N
-        jPanel10.setName("jPanel10"); // NOI18N
-
-        jLabel10.setText(resourceMap.getString("jLabel10.text")); // NOI18N
-        jLabel10.setName("jLabel10"); // NOI18N
-
-        jLabel14.setText(resourceMap.getString("jLabel14.text")); // NOI18N
-        jLabel14.setName("jLabel14"); // NOI18N
-
-        textFieldStartTime.setText(resourceMap.getString("textFieldStartTime.text")); // NOI18N
-        textFieldStartTime.setName("textFieldStartTime"); // NOI18N
-
-        textFieldFinishTime.setText(resourceMap.getString("textFieldFinishTime.text")); // NOI18N
-        textFieldFinishTime.setName("textFieldFinishTime"); // NOI18N
-
-        javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
-        jPanel10.setLayout(jPanel10Layout);
-        jPanel10Layout.setHorizontalGroup(
-            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel10Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel10)
-                    .addComponent(jLabel14))
-                .addGap(30, 30, 30)
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(textFieldStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(textFieldFinishTime, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        jPanel10Layout.setVerticalGroup(
-            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(textFieldStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel10))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(textFieldFinishTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel14))
-                .addContainerGap())
-        );
-
-        javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
-        jPanel17.setLayout(jPanel17Layout);
-        jPanel17Layout.setHorizontalGroup(
-            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel17Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton13)
-                    .addComponent(buttonScheduleAdd)
-                    .addComponent(jScrollPane12, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonSchedulleDelete))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel17Layout.createSequentialGroup()
-                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(labelSchedule, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
-                            .addGroup(jPanel17Layout.createSequentialGroup()
-                                .addComponent(jLabel21)
-                                .addGap(0, 0, Short.MAX_VALUE)))
-                        .addGap(18, 18, 18))
-                    .addGroup(jPanel17Layout.createSequentialGroup()
-                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jPanel10, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(textFieldScheduleName))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton20, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jButton14, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane21, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton19, javax.swing.GroupLayout.Alignment.TRAILING))
-                .addContainerGap())
-        );
-        jPanel17Layout.setVerticalGroup(
-            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel17Layout.createSequentialGroup()
-                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
-                                .addComponent(jScrollPane21, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton14)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton20))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
-                                .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(buttonScheduleAdd)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton13)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton19)
-                            .addComponent(buttonSchedulleDelete))
-                        .addContainerGap())
-                    .addGroup(jPanel17Layout.createSequentialGroup()
-                        .addComponent(jLabel21)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textFieldScheduleName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(labelSchedule, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-        );
-
-        tabbedPaneMain.addTab(resourceMap.getString("jPanel17.TabConstraints.tabTitle"), jPanel17); // NOI18N
-
         jPanel19.setAutoscrolls(true);
         jPanel19.setName("jPanel19"); // NOI18N
 
@@ -3275,6 +3093,190 @@ public class FAdmin extends javax.swing.JFrame {
         );
 
         tabbedPaneMain.addTab(resourceMap.getString("jPanel19.TabConstraints.tabTitle"), jPanel19); // NOI18N
+
+        jPanel17.setAutoscrolls(true);
+        jPanel17.setName("jPanel17"); // NOI18N
+
+        jScrollPane12.setName("jScrollPane12"); // NOI18N
+
+        listSchedule.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("listSchedule.border.title"))); // NOI18N
+        listSchedule.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        listSchedule.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        listSchedule.setComponentPopupMenu(popupPlans);
+        listSchedule.setName("listSchedule"); // NOI18N
+        listSchedule.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                listScheduleMouseClicked(evt);
+            }
+        });
+        jScrollPane12.setViewportView(listSchedule);
+        listSchedule.getAccessibleContext().setAccessibleName(resourceMap.getString("jList1.AccessibleContext.accessibleName")); // NOI18N
+
+        jLabel21.setText(resourceMap.getString("jLabel21.text")); // NOI18N
+        jLabel21.setName("jLabel21"); // NOI18N
+
+        textFieldScheduleName.setEditable(false);
+        textFieldScheduleName.setText(resourceMap.getString("textFieldScheduleName.text")); // NOI18N
+        textFieldScheduleName.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        textFieldScheduleName.setFocusable(false);
+        textFieldScheduleName.setName("textFieldScheduleName"); // NOI18N
+        textFieldScheduleName.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                textFieldScheduleNameKeyReleased(evt);
+            }
+        });
+
+        buttonScheduleAdd.setAction(actionMap.get("addSchedule")); // NOI18N
+        buttonScheduleAdd.setText(resourceMap.getString("buttonScheduleAdd.text")); // NOI18N
+        buttonScheduleAdd.setName("buttonScheduleAdd"); // NOI18N
+
+        buttonSchedulleDelete.setAction(actionMap.get("deleteSchedule")); // NOI18N
+        buttonSchedulleDelete.setText(resourceMap.getString("buttonSchedulleDelete.text")); // NOI18N
+        buttonSchedulleDelete.setName("buttonSchedulleDelete"); // NOI18N
+
+        labelSchedule.setText(resourceMap.getString("labelSchedule.text")); // NOI18N
+        labelSchedule.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        labelSchedule.setName("labelSchedule"); // NOI18N
+
+        jScrollPane21.setName("jScrollPane21"); // NOI18N
+
+        listBreaks.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("listBreaks.border.title"))); // NOI18N
+        listBreaks.setComponentPopupMenu(popupBreaks);
+        listBreaks.setName("listBreaks"); // NOI18N
+        listBreaks.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                listBreaksMouseClicked(evt);
+            }
+        });
+        jScrollPane21.setViewportView(listBreaks);
+
+        jButton13.setAction(actionMap.get("editSchedule")); // NOI18N
+        jButton13.setName("jButton13"); // NOI18N
+
+        jButton14.setAction(actionMap.get("addBreakToList")); // NOI18N
+        jButton14.setName("jButton14"); // NOI18N
+
+        jButton19.setAction(actionMap.get("deleteBreakFromList")); // NOI18N
+        jButton19.setName("jButton19"); // NOI18N
+
+        jButton20.setAction(actionMap.get("editBreak")); // NOI18N
+        jButton20.setName("jButton20"); // NOI18N
+
+        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel10.border.title"))); // NOI18N
+        jPanel10.setName("jPanel10"); // NOI18N
+
+        jLabel10.setText(resourceMap.getString("jLabel10.text")); // NOI18N
+        jLabel10.setName("jLabel10"); // NOI18N
+
+        jLabel14.setText(resourceMap.getString("jLabel14.text")); // NOI18N
+        jLabel14.setName("jLabel14"); // NOI18N
+
+        textFieldStartTime.setText(resourceMap.getString("textFieldStartTime.text")); // NOI18N
+        textFieldStartTime.setName("textFieldStartTime"); // NOI18N
+
+        textFieldFinishTime.setText(resourceMap.getString("textFieldFinishTime.text")); // NOI18N
+        textFieldFinishTime.setName("textFieldFinishTime"); // NOI18N
+
+        javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
+        jPanel10.setLayout(jPanel10Layout);
+        jPanel10Layout.setHorizontalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel10Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel10)
+                    .addComponent(jLabel14))
+                .addGap(30, 30, 30)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(textFieldStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textFieldFinishTime, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel10Layout.setVerticalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(textFieldStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel10))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(textFieldFinishTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel14))
+                .addContainerGap())
+        );
+
+        javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
+        jPanel17.setLayout(jPanel17Layout);
+        jPanel17Layout.setHorizontalGroup(
+            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel17Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton13)
+                    .addComponent(buttonScheduleAdd)
+                    .addComponent(jScrollPane12, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonSchedulleDelete))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel17Layout.createSequentialGroup()
+                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(labelSchedule, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
+                            .addGroup(jPanel17Layout.createSequentialGroup()
+                                .addComponent(jLabel21)
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(18, 18, 18))
+                    .addGroup(jPanel17Layout.createSequentialGroup()
+                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jPanel10, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(textFieldScheduleName))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton20, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jButton14, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane21, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton19, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addContainerGap())
+        );
+        jPanel17Layout.setVerticalGroup(
+            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel17Layout.createSequentialGroup()
+                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
+                                .addComponent(jScrollPane21, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton14)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton20))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
+                                .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(buttonScheduleAdd)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton13)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jButton19)
+                            .addComponent(buttonSchedulleDelete))
+                        .addContainerGap())
+                    .addGroup(jPanel17Layout.createSequentialGroup()
+                        .addComponent(jLabel21)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textFieldScheduleName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(labelSchedule, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+        );
+
+        tabbedPaneMain.addTab(resourceMap.getString("jPanel17.TabConstraints.tabTitle"), jPanel17); // NOI18N
 
         jPanel2.setAutoscrolls(true);
         jPanel2.setName("jPanel2"); // NOI18N
@@ -5091,7 +5093,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
 
     private void jMenuItemBagtrackerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemBagtrackerActionPerformed
         try {
-            Desktop.getDesktop().browse(new URI("https://code.google.com/p/apertum-qsystem/issues/list"));
+            Desktop.getDesktop().browse(new URI("https://bitbucket.org/Apertum/qsystem/issues"));
         } catch (URISyntaxException | IOException ex) {
             QLog.l().logger().error(ex);
         }

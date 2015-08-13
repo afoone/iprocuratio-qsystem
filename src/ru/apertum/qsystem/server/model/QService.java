@@ -547,7 +547,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
             dayAdvs = i;
         }
 
-        QLog.l().logger().debug("Посмотрели сколько предварительных записалось в " + getName() + ". Их " + i);
+        QLog.l().logger().trace("Посмотрели сколько предварительных записалось в " + getName() + ". Их " + i);
         return i;
     }
 
@@ -608,21 +608,26 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
             day = today;
             setCountPerDay(0);
         }
-        return getDayLimit() != 0 && getPossibleTickets(now) <= getCountPerDay() + advCusts;
+        final long p = getPossibleTickets();
+        final long c = getCountPerDay();
+        final boolean f = getDayLimit() != 0 && (p <= c + advCusts);
+        if (f) {
+            QLog.l().logger().trace("Customers overflow: DayLimit()=" + getDayLimit() + " && PossibleTickets=" + p + " <= CountPerDay=" + c + " + advCusts=" + advCusts);
+        }
+        return f;// getDayLimit() != 0 && getPossibleTickets(now) <= getCountPerDay() + advCusts;
     }
 
     /**
      * Получить количество талонов, которые все еще можно выдать учитывая ограничение на время работы с одним клиетом
      *
-     * @param date на это время все еще доступны сколько-то талонов
      * @return оставшееся время работы по услуге / ограничение на время работы с одним клиетом
      */
-    public long getPossibleTickets(Date date) {
+    public long getPossibleTickets() {
         if (getDayLimit() != 0) {
             // подсчитаем ограничение на выдачу талонов
             final GregorianCalendar gc = new GregorianCalendar();
             final Date now = new Date();
-            gc.setTime(new Date());
+            gc.setTime(now);
             long dif = getSchedule().getWorkInterval(gc.getTime()).finish.getTime() - now.getTime();
 
             int ii = gc.get(GregorianCalendar.DAY_OF_WEEK) - 1;
@@ -666,6 +671,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
                     }
                 }
             }
+            QLog.l().logger().trace("Осталось рабочего времени " + (dif / 1000 / 60) + " минут. Если на каждого " + getDayLimit() + " минут, то остается принять " + (dif / 1000 / 60 / getDayLimit()) + " посетителей.");
             return dif / 1000 / 60 / getDayLimit();
         } else {
             return Integer.MAX_VALUE;

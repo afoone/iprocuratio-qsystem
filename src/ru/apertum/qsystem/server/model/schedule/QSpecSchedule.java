@@ -61,7 +61,7 @@ public class QSpecSchedule implements IidGetter, Serializable {
 
     @Override
     public String getName() {
-        return getId() == null ? "NEW" : getId().toString();
+        return getId() == null ? "NEW" : schedule.getName();
     }
 
     @Override
