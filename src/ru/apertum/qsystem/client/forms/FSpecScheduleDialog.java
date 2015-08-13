@@ -18,6 +18,7 @@ package ru.apertum.qsystem.client.forms;
 
 import java.awt.Frame;
 import java.util.Date;
+import java.util.ResourceBundle;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import ru.apertum.qsystem.common.QLog;
@@ -63,11 +64,11 @@ public class FSpecScheduleDialog extends javax.swing.JDialog {
         cbSchedule = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Специальное расписание");
+        setTitle(fSpecScheduleDialog.getString("title")); // NOI18N
 
         jPanel1.setBorder(new javax.swing.border.MatteBorder(null));
 
-        butOK.setText("OK");
+        butOK.setText(fSpecScheduleDialog.getString("ok")); // NOI18N
         butOK.setPreferredSize(new java.awt.Dimension(90, 23));
         butOK.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -75,7 +76,7 @@ public class FSpecScheduleDialog extends javax.swing.JDialog {
             }
         });
 
-        butCancel.setText("Отмена");
+        butCancel.setText(fSpecScheduleDialog.getString("cancel")); // NOI18N
         butCancel.setPreferredSize(new java.awt.Dimension(90, 23));
         butCancel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -106,11 +107,11 @@ public class FSpecScheduleDialog extends javax.swing.JDialog {
 
         jPanel2.setBorder(new javax.swing.border.MatteBorder(null));
 
-        jLabel1.setText("Действует с");
+        jLabel1.setText(fSpecScheduleDialog.getString("from")); // NOI18N
 
-        jLabel2.setText("Действует по");
+        jLabel2.setText(fSpecScheduleDialog.getString("to")); // NOI18N
 
-        jLabel3.setText("Использовать расписание");
+        jLabel3.setText(fSpecScheduleDialog.getString("use")); // NOI18N
 
         cbSchedule.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
@@ -175,7 +176,7 @@ public class FSpecScheduleDialog extends javax.swing.JDialog {
     private static FSpecScheduleDialog dialog;
 
     public static QSpecSchedule changeQSpecSchedule(Frame parent, boolean modal, QSpecSchedule sps) {
-        QLog.l().logger().info("Редактирование спец расписания \"" + (sps == null ? "NEW" : sps.getName()) + "\"");
+        QLog.l().logger().info(java.text.MessageFormat.format(java.util.ResourceBundle.getBundle("ru/apertum/qsystem/client/forms/resources/FSpecScheduleDialog").getString("edit_spec"), new Object[]{(sps == null ? "NEW" : sps.getName())}));
         if (dialog == null) {
             dialog = new FSpecScheduleDialog(parent, modal);
             Uses.setLocation(dialog);
@@ -208,14 +209,15 @@ public class FSpecScheduleDialog extends javax.swing.JDialog {
     }
 
     private static boolean res = false;
+    private static final ResourceBundle fSpecScheduleDialog = ResourceBundle.getBundle("ru/apertum/qsystem/client/forms/resources/FSpecScheduleDialog");
 
     private void butOKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butOKActionPerformed
         if (cbSchedule.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Select a schedule", "Invalid data", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, fSpecScheduleDialog.getString("select_spec"), fSpecScheduleDialog.getString("invalid"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (dcFrom.getDate().after(dcTo.getDate())) {
-            JOptionPane.showMessageDialog(this, "End time before start tame.", "Invalid data", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, fSpecScheduleDialog.getString("err_time"), fSpecScheduleDialog.getString("invalid"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         res = true;
