@@ -151,6 +151,7 @@ import ru.apertum.qsystem.server.model.results.QResultList;
 import ru.apertum.qsystem.server.model.schedule.QBreaks;
 import ru.apertum.qsystem.server.model.schedule.QBreaksList;
 import ru.apertum.qsystem.server.model.schedule.QScheduleList;
+import ru.apertum.qsystem.server.model.schedule.QSpecSchedule;
 
 /**
  * Created on 1 Декабрь 2008 г., 18:51
@@ -492,7 +493,6 @@ public class FAdmin extends javax.swing.JFrame {
             jMenuBar1.add(menu, 4);
             jMenuBar1.add(new JLabel("<html><span style='font-size:13.0pt;color:red'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  [" + as.getName() + "]"));
         }
-        comboBoxVoices.setVisible(false);
     }
 
     /**
@@ -635,6 +635,8 @@ public class FAdmin extends javax.swing.JFrame {
         tableCalendar.setDefaultRenderer(FreeDay.class, new TableСell((Integer) (spinCalendarYear.getValue())));
         tableCalendar.setDefaultRenderer(Object.class, new TableСell((Integer) (spinCalendarYear.getValue())));
         tableCalendar.getColumnModel().getColumn(0).setPreferredWidth(500);
+
+        listSpecSced.setModel(new DefaultComboBoxModel(item.getSpecSchedules().toArray()));
     }
 
     /**
@@ -817,34 +819,8 @@ public class FAdmin extends javax.swing.JFrame {
         rbKindPersonal.setSelected(ServerProps.getInstance().getProps().getNumering());
         spinnerRemoveRecall.getModel().setValue(ServerProps.getInstance().getProps().getLimitRecall());
         chBoxBtnFreeDsn.setSelected(ServerProps.getInstance().getProps().getButtonFreeDesign());
-        switch (ServerProps.getInstance().getProps().getPoint()) {
-            case 0:
-                rbPointOffice.setSelected(true);
-                break;
-            case 1:
-                rbPointWindow.setSelected(true);
-                break;
-            case 2:
-                rbPointStoika.setSelected(true);
-                break;
-        }
-        switch (ServerProps.getInstance().getProps().getSound()) {
-            case 0:
-                rbNotificationNo.setSelected(true);
-                break;
-            case 1:
-                rbNotificationGong.setSelected(true);
-                break;
-            case 2:
-                rbNotificationGongOrVoice.setSelected(true);
-                break;
-            case 3:
-                rbNotificationGongVoice.setSelected(true);
-                break;
-        }
-        comboBoxVoices.setSelectedIndex(ServerProps.getInstance().getProps().getVoice());
+
         spinnerBlackListTimeMin.setValue(ServerProps.getInstance().getProps().getBlackTime());
-        rbNotificationGongVoiceActionPerformed(null);
 
         // выставим начальные позиции в списках
         if (listUsers.getLastVisibleIndex() != -1) {
@@ -1017,9 +993,6 @@ public class FAdmin extends javax.swing.JFrame {
         ServerProps.getInstance().getProps().setSkyServerUrl(textFieldURLWebService.getText());
         ServerProps.getInstance().getProps().setLastNumber((Integer) spinnerLastNumber.getValue());
         ServerProps.getInstance().getProps().setNumering(rbKindPersonal.isSelected());
-        ServerProps.getInstance().getProps().setPoint(rbPointOffice.isSelected() ? 0 : rbPointWindow.isSelected() ? 1 : 2);
-        ServerProps.getInstance().getProps().setSound(rbNotificationNo.isSelected() ? 0 : rbNotificationGong.isSelected() ? 1 : rbNotificationGongOrVoice.isSelected() ? 2 : 3);
-        ServerProps.getInstance().getProps().setVoice(comboBoxVoices.getSelectedIndex());
         ServerProps.getInstance().getProps().setBlackTime((int) spinnerBlackListTimeMin.getValue());
         ServerProps.getInstance().getProps().setLimitRecall((int) spinnerRemoveRecall.getValue());
         ServerProps.getInstance().getProps().setButtonFreeDesign(chBoxBtnFreeDsn.isSelected());
@@ -1478,6 +1451,14 @@ public class FAdmin extends javax.swing.JFrame {
             final int del = service.getParent().getIndex(service);
             final int col = service.getParent().getChildCount();
             ((QServiceTree) treeServices.getModel()).removeNodeFromParent(service);
+            // Удалим эту услугу привязанную как ярлык
+            QServiceTree.sailToStorm(((QServiceTree) treeServices.getModel()).getRoot(), (TreeNode srv) -> {
+                final QService serv = (QService) srv;
+                if (serv.getLink() != null && serv.getLink().getId().equals(service.getId())) {
+                    serv.setLink(null);
+                }
+            });
+
             // Выделение в услуги в дереве
             if (col == 1) {
                 treeServices.setSelectionPath(new TreePath(((QServiceTree) treeServices.getModel()).getPathToRoot(service.getParent())));
@@ -1571,13 +1552,16 @@ public class FAdmin extends javax.swing.JFrame {
                         Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getProps());
                         //Сохраняем нормативные параметры
                         Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getStandards());
-
+                        // Сохраняем перерывы в расписании, тут теперь стоит, а то в календаре появились расписания.
+                        QBreaksList.getInstance().save();
+                        
                         // Сохраняем планы расписания
                         QScheduleList.getInstance().save();
-                        // Сохраняем перерывы в расписании
-                        QBreaksList.getInstance().save();
-                        // Сохраняем календари услуг
+                        
+                        // хз что за коммент: Сохраняем календари услуг, главное раньше расписаний, не то спец расписания будут ругаться.
                         QCalendarList.getInstance().save();
+                        
+                        
                         // Сохраняем услуги
                         QServiceTree.getInstance().save();
                         // Сохраняем пользователей
@@ -1809,20 +1793,6 @@ public class FAdmin extends javax.swing.JFrame {
         jPanel28 = new javax.swing.JPanel();
         jScrollPane22 = new javax.swing.JScrollPane();
         userServsList = new javax.swing.JList();
-        jPanel17 = new javax.swing.JPanel();
-        jScrollPane12 = new javax.swing.JScrollPane();
-        listSchedule = new javax.swing.JList();
-        jLabel21 = new javax.swing.JLabel();
-        textFieldScheduleName = new javax.swing.JTextField();
-        buttonScheduleAdd = new javax.swing.JButton();
-        buttonSchedulleDelete = new javax.swing.JButton();
-        labelSchedule = new javax.swing.JLabel();
-        jScrollPane21 = new javax.swing.JScrollPane();
-        listBreaks = new javax.swing.JList();
-        jButton13 = new javax.swing.JButton();
-        jButton14 = new javax.swing.JButton();
-        jButton19 = new javax.swing.JButton();
-        jButton20 = new javax.swing.JButton();
         jPanel19 = new javax.swing.JPanel();
         jScrollPane14 = new javax.swing.JScrollPane();
         listCalendar = new javax.swing.JList();
@@ -1838,6 +1808,31 @@ public class FAdmin extends javax.swing.JFrame {
         jButton15 = new javax.swing.JButton();
         jLabel36 = new javax.swing.JLabel();
         spinCalendarYear = new javax.swing.JSpinner();
+        panelSpecSc = new javax.swing.JPanel();
+        jScrollPane23 = new javax.swing.JScrollPane();
+        listSpecSced = new javax.swing.JList();
+        butAddSpecSced = new javax.swing.JButton();
+        butEditSpecSced = new javax.swing.JButton();
+        butDeleteSpecSced = new javax.swing.JButton();
+        jPanel17 = new javax.swing.JPanel();
+        jScrollPane12 = new javax.swing.JScrollPane();
+        listSchedule = new javax.swing.JList();
+        jLabel21 = new javax.swing.JLabel();
+        textFieldScheduleName = new javax.swing.JTextField();
+        buttonScheduleAdd = new javax.swing.JButton();
+        buttonSchedulleDelete = new javax.swing.JButton();
+        labelSchedule = new javax.swing.JLabel();
+        jScrollPane21 = new javax.swing.JScrollPane();
+        listBreaks = new javax.swing.JList();
+        jButton13 = new javax.swing.JButton();
+        jButton14 = new javax.swing.JButton();
+        jButton19 = new javax.swing.JButton();
+        jButton20 = new javax.swing.JButton();
+        jPanel10 = new javax.swing.JPanel();
+        jLabel10 = new javax.swing.JLabel();
+        jLabel14 = new javax.swing.JLabel();
+        textFieldStartTime = new javax.swing.JTextField();
+        textFieldFinishTime = new javax.swing.JTextField();
         jPanel2 = new javax.swing.JPanel();
         jSplitPane7 = new javax.swing.JSplitPane();
         jPanel30 = new javax.swing.JPanel();
@@ -1891,6 +1886,8 @@ public class FAdmin extends javax.swing.JFrame {
         spinnerLineTotalMax = new javax.swing.JSpinner();
         spinnerRelocation = new javax.swing.JSpinner();
         jLabel35 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        spinnerBlackListTimeMin = new javax.swing.JSpinner();
         spinnerRemoveRecall = new javax.swing.JSpinner();
         jSplitPane4 = new javax.swing.JSplitPane();
         jScrollPane7 = new javax.swing.JScrollPane();
@@ -1914,26 +1911,9 @@ public class FAdmin extends javax.swing.JFrame {
         spinnerPropServerPort = new javax.swing.JSpinner();
         spinnerWebServerPort = new javax.swing.JSpinner();
         spinnerPropClientPort = new javax.swing.JSpinner();
-        jPanel10 = new javax.swing.JPanel();
-        jLabel10 = new javax.swing.JLabel();
-        jLabel14 = new javax.swing.JLabel();
-        textFieldStartTime = new javax.swing.JTextField();
-        textFieldFinishTime = new javax.swing.JTextField();
-        spinnerBlackListTimeMin = new javax.swing.JSpinner();
-        jLabel6 = new javax.swing.JLabel();
         jPanel16 = new javax.swing.JPanel();
         spinnerFirstNumber = new javax.swing.JSpinner();
         spinnerLastNumber = new javax.swing.JSpinner();
-        jPanel20 = new javax.swing.JPanel();
-        rbPointOffice = new javax.swing.JRadioButton();
-        rbPointWindow = new javax.swing.JRadioButton();
-        rbPointStoika = new javax.swing.JRadioButton();
-        jPanel21 = new javax.swing.JPanel();
-        rbNotificationNo = new javax.swing.JRadioButton();
-        rbNotificationGong = new javax.swing.JRadioButton();
-        rbNotificationGongVoice = new javax.swing.JRadioButton();
-        comboBoxVoices = new javax.swing.JComboBox();
-        rbNotificationGongOrVoice = new javax.swing.JRadioButton();
         jLabel11 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
         jPanel22 = new javax.swing.JPanel();
@@ -2305,7 +2285,7 @@ public class FAdmin extends javax.swing.JFrame {
                             .addComponent(buttonRestart, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(buttonShutDown, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(buttonLock, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(labelWelcomeState, javax.swing.GroupLayout.DEFAULT_SIZE, 869, Short.MAX_VALUE))
+                    .addComponent(labelWelcomeState, javax.swing.GroupLayout.DEFAULT_SIZE, 844, Short.MAX_VALUE))
                 .addGap(119, 119, 119))
         );
         jPanel5Layout.setVerticalGroup(
@@ -2378,7 +2358,7 @@ public class FAdmin extends javax.swing.JFrame {
             }
         });
 
-        jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("server_info")));
+        jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder("Информация о состоянии сервера"));
         jScrollPane2.setName("jScrollPane2"); // NOI18N
 
         labelServerState.setText(resourceMap.getString("labelServerState.text")); // NOI18N
@@ -2451,7 +2431,7 @@ public class FAdmin extends javax.swing.JFrame {
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 237, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 550, Short.MAX_VALUE)))
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 525, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(buttonRefreshBan)
@@ -2564,12 +2544,12 @@ public class FAdmin extends javax.swing.JFrame {
             jPanel25Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel25Layout.createSequentialGroup()
                 .addComponent(jButton5)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 79, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 54, Short.MAX_VALUE)
                 .addComponent(jButton4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton3))
-            .addComponent(textFieldSearchService, javax.swing.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
+            .addComponent(textFieldSearchService, javax.swing.GroupLayout.DEFAULT_SIZE, 383, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 383, Short.MAX_VALUE)
         );
         jPanel25Layout.setVerticalGroup(
             jPanel25Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2631,7 +2611,7 @@ public class FAdmin extends javax.swing.JFrame {
         jSplitPane3.setName("jSplitPane3"); // NOI18N
         jSplitPane3.setPreferredSize(new java.awt.Dimension(40, 25));
 
-        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel11.border.title")));
+        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder("Свойства пользователя"));
         jPanel11.setMinimumSize(new java.awt.Dimension(5, 5));
         jPanel11.setName("jPanel11"); // NOI18N
 
@@ -2838,7 +2818,7 @@ public class FAdmin extends javax.swing.JFrame {
         jPanel28.setLayout(jPanel28Layout);
         jPanel28Layout.setHorizontalGroup(
             jPanel28Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane22, javax.swing.GroupLayout.DEFAULT_SIZE, 1005, Short.MAX_VALUE)
+            .addComponent(jScrollPane22, javax.swing.GroupLayout.DEFAULT_SIZE, 980, Short.MAX_VALUE)
         );
         jPanel28Layout.setVerticalGroup(
             jPanel28Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2871,136 +2851,6 @@ public class FAdmin extends javax.swing.JFrame {
         jTabbedPane1.getAccessibleContext().setAccessibleName(resourceMap.getString("jTabbedPane1.AccessibleContext.accessibleName")); // NOI18N
 
         tabbedPaneMain.addTab(resourceMap.getString("jPanel4.TabConstraints.tabTitle"), jPanel4); // NOI18N
-
-        jPanel17.setAutoscrolls(true);
-        jPanel17.setName("jPanel17"); // NOI18N
-
-        jScrollPane12.setName("jScrollPane12"); // NOI18N
-
-        listSchedule.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("listSchedule.border.title"))); // NOI18N
-        listSchedule.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        listSchedule.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        listSchedule.setComponentPopupMenu(popupPlans);
-        listSchedule.setName("listSchedule"); // NOI18N
-        listSchedule.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                listScheduleMouseClicked(evt);
-            }
-        });
-        jScrollPane12.setViewportView(listSchedule);
-        listSchedule.getAccessibleContext().setAccessibleName(resourceMap.getString("jList1.AccessibleContext.accessibleName")); // NOI18N
-
-        jLabel21.setText(resourceMap.getString("jLabel21.text")); // NOI18N
-        jLabel21.setName("jLabel21"); // NOI18N
-
-        textFieldScheduleName.setEditable(false);
-        textFieldScheduleName.setText(resourceMap.getString("textFieldScheduleName.text")); // NOI18N
-        textFieldScheduleName.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        textFieldScheduleName.setFocusable(false);
-        textFieldScheduleName.setName("textFieldScheduleName"); // NOI18N
-        textFieldScheduleName.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                textFieldScheduleNameKeyReleased(evt);
-            }
-        });
-
-        buttonScheduleAdd.setAction(actionMap.get("addSchedule")); // NOI18N
-        buttonScheduleAdd.setText(resourceMap.getString("buttonScheduleAdd.text")); // NOI18N
-        buttonScheduleAdd.setName("buttonScheduleAdd"); // NOI18N
-
-        buttonSchedulleDelete.setAction(actionMap.get("deleteSchedule")); // NOI18N
-        buttonSchedulleDelete.setText(resourceMap.getString("buttonSchedulleDelete.text")); // NOI18N
-        buttonSchedulleDelete.setName("buttonSchedulleDelete"); // NOI18N
-
-        labelSchedule.setText(resourceMap.getString("labelSchedule.text")); // NOI18N
-        labelSchedule.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-        labelSchedule.setName("labelSchedule"); // NOI18N
-
-        jScrollPane21.setName("jScrollPane21"); // NOI18N
-
-        listBreaks.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("listBreaks.border.title"))); // NOI18N
-        listBreaks.setComponentPopupMenu(popupBreaks);
-        listBreaks.setName("listBreaks"); // NOI18N
-        listBreaks.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                listBreaksMouseClicked(evt);
-            }
-        });
-        jScrollPane21.setViewportView(listBreaks);
-
-        jButton13.setAction(actionMap.get("editSchedule")); // NOI18N
-        jButton13.setName("jButton13"); // NOI18N
-
-        jButton14.setAction(actionMap.get("addBreakToList")); // NOI18N
-        jButton14.setName("jButton14"); // NOI18N
-
-        jButton19.setAction(actionMap.get("deleteBreakFromList")); // NOI18N
-        jButton19.setName("jButton19"); // NOI18N
-
-        jButton20.setAction(actionMap.get("editBreak")); // NOI18N
-        jButton20.setName("jButton20"); // NOI18N
-
-        javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
-        jPanel17.setLayout(jPanel17Layout);
-        jPanel17Layout.setHorizontalGroup(
-            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel17Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton13)
-                    .addComponent(buttonScheduleAdd)
-                    .addComponent(jScrollPane12, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonSchedulleDelete))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(labelSchedule, javax.swing.GroupLayout.DEFAULT_SIZE, 464, Short.MAX_VALUE)
-                    .addComponent(jLabel21)
-                    .addComponent(textFieldScheduleName, javax.swing.GroupLayout.DEFAULT_SIZE, 464, Short.MAX_VALUE))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton20, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jButton14, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane21, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton19, javax.swing.GroupLayout.Alignment.TRAILING))
-                .addContainerGap())
-        );
-        jPanel17Layout.setVerticalGroup(
-            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel17Layout.createSequentialGroup()
-                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
-                                .addComponent(jScrollPane21, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton14)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton20))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
-                                .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(buttonScheduleAdd)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton13)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton19)
-                            .addComponent(buttonSchedulleDelete)))
-                    .addGroup(jPanel17Layout.createSequentialGroup()
-                        .addComponent(jLabel21)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textFieldScheduleName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(labelSchedule, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)))
-                .addContainerGap())
-        );
-
-        tabbedPaneMain.addTab(resourceMap.getString("jPanel17.TabConstraints.tabTitle"), jPanel17); // NOI18N
 
         jPanel19.setAutoscrolls(true);
         jPanel19.setName("jPanel19"); // NOI18N
@@ -3109,6 +2959,74 @@ public class FAdmin extends javax.swing.JFrame {
             }
         });
 
+        panelSpecSc.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("panelSpecSc.border.title"))); // NOI18N
+        panelSpecSc.setName("panelSpecSc"); // NOI18N
+
+        jScrollPane23.setName("jScrollPane23"); // NOI18N
+
+        listSpecSced.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        listSpecSced.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        listSpecSced.setName("listSpecSced"); // NOI18N
+        listSpecSced.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                listSpecScedMouseClicked(evt);
+            }
+        });
+        jScrollPane23.setViewportView(listSpecSced);
+
+        butAddSpecSced.setText(resourceMap.getString("butAddSpecSced.text")); // NOI18N
+        butAddSpecSced.setName("butAddSpecSced"); // NOI18N
+        butAddSpecSced.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butAddSpecScedActionPerformed(evt);
+            }
+        });
+
+        butEditSpecSced.setText(resourceMap.getString("butEditSpecSced.text")); // NOI18N
+        butEditSpecSced.setName("butEditSpecSced"); // NOI18N
+        butEditSpecSced.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butEditSpecScedActionPerformed(evt);
+            }
+        });
+
+        butDeleteSpecSced.setText(resourceMap.getString("butDeleteSpecSced.text")); // NOI18N
+        butDeleteSpecSced.setName("butDeleteSpecSced"); // NOI18N
+        butDeleteSpecSced.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butDeleteSpecScedActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout panelSpecScLayout = new javax.swing.GroupLayout(panelSpecSc);
+        panelSpecSc.setLayout(panelSpecScLayout);
+        panelSpecScLayout.setHorizontalGroup(
+            panelSpecScLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSpecScLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(butDeleteSpecSced)
+                .addGap(18, 18, 18)
+                .addComponent(butEditSpecSced)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(butAddSpecSced)
+                .addContainerGap())
+            .addComponent(jScrollPane23)
+        );
+        panelSpecScLayout.setVerticalGroup(
+            panelSpecScLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelSpecScLayout.createSequentialGroup()
+                .addComponent(jScrollPane23)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelSpecScLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(butAddSpecSced)
+                    .addComponent(butEditSpecSced)
+                    .addComponent(butDeleteSpecSced)))
+        );
+
         javax.swing.GroupLayout jPanel19Layout = new javax.swing.GroupLayout(jPanel19);
         jPanel19.setLayout(jPanel19Layout);
         jPanel19Layout.setHorizontalGroup(
@@ -3124,6 +3042,15 @@ public class FAdmin extends javax.swing.JFrame {
                         .addComponent(jScrollPane14, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane15, javax.swing.GroupLayout.DEFAULT_SIZE, 766, Short.MAX_VALUE)
+                            .addGroup(jPanel19Layout.createSequentialGroup()
+                                .addComponent(jLabel23)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(textFieldCalendarName, javax.swing.GroupLayout.DEFAULT_SIZE, 524, Short.MAX_VALUE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jLabel36)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(spinCalendarYear, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel19Layout.createSequentialGroup()
                                 .addComponent(jButton18)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -3131,16 +3058,9 @@ public class FAdmin extends javax.swing.JFrame {
                                 .addGap(18, 18, 18)
                                 .addComponent(jButton17)
                                 .addGap(18, 18, 18)
-                                .addComponent(jButton15))
-                            .addComponent(jScrollPane15, javax.swing.GroupLayout.DEFAULT_SIZE, 791, Short.MAX_VALUE)
-                            .addGroup(jPanel19Layout.createSequentialGroup()
-                                .addComponent(jLabel23)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(textFieldCalendarName, javax.swing.GroupLayout.DEFAULT_SIZE, 549, Short.MAX_VALUE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jLabel36)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(spinCalendarYear, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                .addComponent(jButton15)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addComponent(panelSpecSc, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         jPanel19Layout.setVerticalGroup(
@@ -3155,13 +3075,15 @@ public class FAdmin extends javax.swing.JFrame {
                             .addComponent(spinCalendarYear, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel36))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane15, javax.swing.GroupLayout.DEFAULT_SIZE, 432, Short.MAX_VALUE)
+                        .addComponent(jScrollPane15, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jButton18)
                             .addComponent(jButton16)
                             .addComponent(jButton17)
-                            .addComponent(jButton15)))
+                            .addComponent(jButton15))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(panelSpecSc, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addComponent(jScrollPane14, javax.swing.GroupLayout.DEFAULT_SIZE, 487, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -3171,6 +3093,190 @@ public class FAdmin extends javax.swing.JFrame {
         );
 
         tabbedPaneMain.addTab(resourceMap.getString("jPanel19.TabConstraints.tabTitle"), jPanel19); // NOI18N
+
+        jPanel17.setAutoscrolls(true);
+        jPanel17.setName("jPanel17"); // NOI18N
+
+        jScrollPane12.setName("jScrollPane12"); // NOI18N
+
+        listSchedule.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("listSchedule.border.title"))); // NOI18N
+        listSchedule.setModel(new javax.swing.AbstractListModel() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public Object getElementAt(int i) { return strings[i]; }
+        });
+        listSchedule.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        listSchedule.setComponentPopupMenu(popupPlans);
+        listSchedule.setName("listSchedule"); // NOI18N
+        listSchedule.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                listScheduleMouseClicked(evt);
+            }
+        });
+        jScrollPane12.setViewportView(listSchedule);
+        listSchedule.getAccessibleContext().setAccessibleName(resourceMap.getString("jList1.AccessibleContext.accessibleName")); // NOI18N
+
+        jLabel21.setText(resourceMap.getString("jLabel21.text")); // NOI18N
+        jLabel21.setName("jLabel21"); // NOI18N
+
+        textFieldScheduleName.setEditable(false);
+        textFieldScheduleName.setText(resourceMap.getString("textFieldScheduleName.text")); // NOI18N
+        textFieldScheduleName.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        textFieldScheduleName.setFocusable(false);
+        textFieldScheduleName.setName("textFieldScheduleName"); // NOI18N
+        textFieldScheduleName.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                textFieldScheduleNameKeyReleased(evt);
+            }
+        });
+
+        buttonScheduleAdd.setAction(actionMap.get("addSchedule")); // NOI18N
+        buttonScheduleAdd.setText(resourceMap.getString("buttonScheduleAdd.text")); // NOI18N
+        buttonScheduleAdd.setName("buttonScheduleAdd"); // NOI18N
+
+        buttonSchedulleDelete.setAction(actionMap.get("deleteSchedule")); // NOI18N
+        buttonSchedulleDelete.setText(resourceMap.getString("buttonSchedulleDelete.text")); // NOI18N
+        buttonSchedulleDelete.setName("buttonSchedulleDelete"); // NOI18N
+
+        labelSchedule.setText(resourceMap.getString("labelSchedule.text")); // NOI18N
+        labelSchedule.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        labelSchedule.setName("labelSchedule"); // NOI18N
+
+        jScrollPane21.setName("jScrollPane21"); // NOI18N
+
+        listBreaks.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("listBreaks.border.title"))); // NOI18N
+        listBreaks.setComponentPopupMenu(popupBreaks);
+        listBreaks.setName("listBreaks"); // NOI18N
+        listBreaks.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                listBreaksMouseClicked(evt);
+            }
+        });
+        jScrollPane21.setViewportView(listBreaks);
+
+        jButton13.setAction(actionMap.get("editSchedule")); // NOI18N
+        jButton13.setName("jButton13"); // NOI18N
+
+        jButton14.setAction(actionMap.get("addBreakToList")); // NOI18N
+        jButton14.setName("jButton14"); // NOI18N
+
+        jButton19.setAction(actionMap.get("deleteBreakFromList")); // NOI18N
+        jButton19.setName("jButton19"); // NOI18N
+
+        jButton20.setAction(actionMap.get("editBreak")); // NOI18N
+        jButton20.setName("jButton20"); // NOI18N
+
+        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel10.border.title"))); // NOI18N
+        jPanel10.setName("jPanel10"); // NOI18N
+
+        jLabel10.setText(resourceMap.getString("jLabel10.text")); // NOI18N
+        jLabel10.setName("jLabel10"); // NOI18N
+
+        jLabel14.setText(resourceMap.getString("jLabel14.text")); // NOI18N
+        jLabel14.setName("jLabel14"); // NOI18N
+
+        textFieldStartTime.setText(resourceMap.getString("textFieldStartTime.text")); // NOI18N
+        textFieldStartTime.setName("textFieldStartTime"); // NOI18N
+
+        textFieldFinishTime.setText(resourceMap.getString("textFieldFinishTime.text")); // NOI18N
+        textFieldFinishTime.setName("textFieldFinishTime"); // NOI18N
+
+        javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
+        jPanel10.setLayout(jPanel10Layout);
+        jPanel10Layout.setHorizontalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel10Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel10)
+                    .addComponent(jLabel14))
+                .addGap(30, 30, 30)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(textFieldStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textFieldFinishTime, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel10Layout.setVerticalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(textFieldStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel10))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(textFieldFinishTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel14))
+                .addContainerGap())
+        );
+
+        javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
+        jPanel17.setLayout(jPanel17Layout);
+        jPanel17Layout.setHorizontalGroup(
+            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel17Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton13)
+                    .addComponent(buttonScheduleAdd)
+                    .addComponent(jScrollPane12, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonSchedulleDelete))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel17Layout.createSequentialGroup()
+                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(labelSchedule, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
+                            .addGroup(jPanel17Layout.createSequentialGroup()
+                                .addComponent(jLabel21)
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(18, 18, 18))
+                    .addGroup(jPanel17Layout.createSequentialGroup()
+                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jPanel10, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(textFieldScheduleName))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton20, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jButton14, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane21, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton19, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addContainerGap())
+        );
+        jPanel17Layout.setVerticalGroup(
+            jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel17Layout.createSequentialGroup()
+                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
+                                .addComponent(jScrollPane21, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton14)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton20))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
+                                .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(buttonScheduleAdd)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton13)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jButton19)
+                            .addComponent(buttonSchedulleDelete))
+                        .addContainerGap())
+                    .addGroup(jPanel17Layout.createSequentialGroup()
+                        .addComponent(jLabel21)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textFieldScheduleName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(labelSchedule, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+        );
+
+        tabbedPaneMain.addTab(resourceMap.getString("jPanel17.TabConstraints.tabTitle"), jPanel17); // NOI18N
 
         jPanel2.setAutoscrolls(true);
         jPanel2.setName("jPanel2"); // NOI18N
@@ -3301,7 +3407,7 @@ public class FAdmin extends javax.swing.JFrame {
         jPanel14.setLayout(jPanel14Layout);
         jPanel14Layout.setHorizontalGroup(
             jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane17, javax.swing.GroupLayout.DEFAULT_SIZE, 660, Short.MAX_VALUE)
+            .addComponent(jScrollPane17, javax.swing.GroupLayout.DEFAULT_SIZE, 635, Short.MAX_VALUE)
         );
         jPanel14Layout.setVerticalGroup(
             jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3316,7 +3422,7 @@ public class FAdmin extends javax.swing.JFrame {
             jPanel29Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel29Layout.createSequentialGroup()
                 .addComponent(butWysInfo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(593, Short.MAX_VALUE))
+                .addContainerGap(568, Short.MAX_VALUE))
             .addComponent(jSplitPane6, javax.swing.GroupLayout.Alignment.TRAILING)
         );
         jPanel29Layout.setVerticalGroup(
@@ -3436,7 +3542,7 @@ public class FAdmin extends javax.swing.JFrame {
             jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel15Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(labelRespinse, javax.swing.GroupLayout.DEFAULT_SIZE, 692, Short.MAX_VALUE)
+                .addComponent(labelRespinse, javax.swing.GroupLayout.DEFAULT_SIZE, 667, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel15Layout.setVerticalGroup(
@@ -3491,7 +3597,7 @@ public class FAdmin extends javax.swing.JFrame {
                 .addGroup(jPanel33Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel16)
                     .addComponent(btnWysResp1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(601, Short.MAX_VALUE))
+                .addContainerGap(576, Short.MAX_VALUE))
             .addComponent(jScrollPane11)
         );
         jPanel33Layout.setVerticalGroup(
@@ -3573,12 +3679,18 @@ public class FAdmin extends javax.swing.JFrame {
         jLabel35.setText(resourceMap.getString("jLabel35.text")); // NOI18N
         jLabel35.setName("jLabel35"); // NOI18N
 
+        jLabel6.setText(resourceMap.getString("jLabel6.text")); // NOI18N
+        jLabel6.setName("jLabel6"); // NOI18N
+
+        spinnerBlackListTimeMin.setModel(new javax.swing.SpinnerNumberModel(0, 0, 1440, 1));
+        spinnerBlackListTimeMin.setName("spinnerBlackListTimeMin"); // NOI18N
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addComponent(jLabel26)
@@ -3603,8 +3715,11 @@ public class FAdmin extends javax.swing.JFrame {
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addComponent(jLabel35)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(spinnerRelocation, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(spinnerRelocation, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel7Layout.createSequentialGroup()
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(spinnerBlackListTimeMin, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE))))
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3633,7 +3748,11 @@ public class FAdmin extends javax.swing.JFrame {
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel35)
                     .addComponent(spinnerRelocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(32, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(spinnerBlackListTimeMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         spinnerRemoveRecall.setModel(new javax.swing.SpinnerNumberModel(0, 0, 5, 1));
@@ -3716,9 +3835,9 @@ public class FAdmin extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(dateChooserFinishCsv, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(dateChooserStartCsv, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
-                    .addComponent(cbSeparateCSV, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 65, Short.MAX_VALUE)
+                    .addComponent(dateChooserStartCsv, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cbSeparateCSV, javax.swing.GroupLayout.Alignment.TRAILING, 0, 102, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 45, Short.MAX_VALUE)
                 .addComponent(buttonExportToCSV)
                 .addContainerGap())
         );
@@ -3755,15 +3874,16 @@ public class FAdmin extends javax.swing.JFrame {
                 .addGroup(jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel18Layout.createSequentialGroup()
                         .addGroup(jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jPanel12, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel18Layout.createSequentialGroup()
+                                .addGap(0, 306, Short.MAX_VALUE)
                                 .addComponent(jButton11)
                                 .addGap(18, 18, 18)
                                 .addComponent(jButton12))
-                            .addComponent(jSplitPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 610, Short.MAX_VALUE)))
+                            .addComponent(jSplitPane4)))
                     .addGroup(jPanel18Layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jLabel25)
@@ -3784,8 +3904,8 @@ public class FAdmin extends javax.swing.JFrame {
                         .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel12, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel18Layout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel18Layout.createSequentialGroup()
                         .addComponent(jSplitPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 455, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -3851,65 +3971,8 @@ public class FAdmin extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(spinnerPropClientPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel9)))
-        );
-
-        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel10.border.title"))); // NOI18N
-        jPanel10.setName("jPanel10"); // NOI18N
-
-        jLabel10.setText(resourceMap.getString("jLabel10.text")); // NOI18N
-        jLabel10.setName("jLabel10"); // NOI18N
-
-        jLabel14.setText(resourceMap.getString("jLabel14.text")); // NOI18N
-        jLabel14.setName("jLabel14"); // NOI18N
-
-        textFieldStartTime.setText(resourceMap.getString("textFieldStartTime.text")); // NOI18N
-        textFieldStartTime.setName("textFieldStartTime"); // NOI18N
-
-        textFieldFinishTime.setText(resourceMap.getString("textFieldFinishTime.text")); // NOI18N
-        textFieldFinishTime.setName("textFieldFinishTime"); // NOI18N
-
-        spinnerBlackListTimeMin.setModel(new javax.swing.SpinnerNumberModel(0, 0, 1440, 1));
-        spinnerBlackListTimeMin.setName("spinnerBlackListTimeMin"); // NOI18N
-
-        jLabel6.setText(resourceMap.getString("jLabel6.text")); // NOI18N
-        jLabel6.setName("jLabel6"); // NOI18N
-
-        javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
-        jPanel10.setLayout(jPanel10Layout);
-        jPanel10Layout.setHorizontalGroup(
-            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel10Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel10)
-                    .addComponent(jLabel14)
-                    .addComponent(jLabel6))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel10Layout.createSequentialGroup()
-                        .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(textFieldStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textFieldFinishTime, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(10, 10, 10))
-                    .addGroup(jPanel10Layout.createSequentialGroup()
-                        .addComponent(spinnerBlackListTimeMin, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
-                        .addContainerGap())))
-        );
-        jPanel10Layout.setVerticalGroup(
-            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel10Layout.createSequentialGroup()
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(textFieldStartTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel10))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(textFieldFinishTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel14))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel6)
-                    .addComponent(spinnerBlackListTimeMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jLabel9))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel16.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel16.border.title"))); // NOI18N
@@ -3920,120 +3983,6 @@ public class FAdmin extends javax.swing.JFrame {
 
         spinnerLastNumber.setModel(new javax.swing.SpinnerNumberModel(99, 99, 10000, 1));
         spinnerLastNumber.setName("spinnerLastNumber"); // NOI18N
-
-        jPanel20.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel20.border.title"))); // NOI18N
-        jPanel20.setName("jPanel20"); // NOI18N
-
-        buttonGroupPoint.add(rbPointOffice);
-        rbPointOffice.setText(resourceMap.getString("rbPointOffice.text")); // NOI18N
-        rbPointOffice.setName("rbPointOffice"); // NOI18N
-
-        buttonGroupPoint.add(rbPointWindow);
-        rbPointWindow.setText(resourceMap.getString("rbPointWindow.text")); // NOI18N
-        rbPointWindow.setName("rbPointWindow"); // NOI18N
-
-        buttonGroupPoint.add(rbPointStoika);
-        rbPointStoika.setText(resourceMap.getString("rbPointStoika.text")); // NOI18N
-        rbPointStoika.setName("rbPointStoika"); // NOI18N
-
-        javax.swing.GroupLayout jPanel20Layout = new javax.swing.GroupLayout(jPanel20);
-        jPanel20.setLayout(jPanel20Layout);
-        jPanel20Layout.setHorizontalGroup(
-            jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel20Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(rbPointOffice)
-                    .addComponent(rbPointWindow)
-                    .addComponent(rbPointStoika))
-                .addContainerGap(50, Short.MAX_VALUE))
-        );
-        jPanel20Layout.setVerticalGroup(
-            jPanel20Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel20Layout.createSequentialGroup()
-                .addComponent(rbPointOffice)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(rbPointWindow)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(rbPointStoika))
-        );
-
-        jPanel21.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel21.border.title"))); // NOI18N
-        jPanel21.setName("jPanel21"); // NOI18N
-
-        buttonGroupVoice.add(rbNotificationNo);
-        rbNotificationNo.setText(resourceMap.getString("rbNotificationNo.text")); // NOI18N
-        rbNotificationNo.setName("rbNotificationNo"); // NOI18N
-        rbNotificationNo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rbNotificationGongVoiceActionPerformed(evt);
-            }
-        });
-
-        buttonGroupVoice.add(rbNotificationGong);
-        rbNotificationGong.setText(resourceMap.getString("rbNotificationGong.text")); // NOI18N
-        rbNotificationGong.setName("rbNotificationGong"); // NOI18N
-        rbNotificationGong.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rbNotificationGongVoiceActionPerformed(evt);
-            }
-        });
-
-        buttonGroupVoice.add(rbNotificationGongVoice);
-        rbNotificationGongVoice.setText(resourceMap.getString("rbNotificationGongVoice.text")); // NOI18N
-        rbNotificationGongVoice.setName("rbNotificationGongVoice"); // NOI18N
-        rbNotificationGongVoice.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rbNotificationGongVoiceActionPerformed(evt);
-            }
-        });
-
-        comboBoxVoices.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Даша", "Алёна", "Николай", "Ольга" }));
-        comboBoxVoices.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("comboBoxVoices.border.title"))); // NOI18N
-        comboBoxVoices.setEnabled(false);
-        comboBoxVoices.setFocusable(false);
-        comboBoxVoices.setName("comboBoxVoices"); // NOI18N
-
-        buttonGroupVoice.add(rbNotificationGongOrVoice);
-        rbNotificationGongOrVoice.setText(resourceMap.getString("rbNotificationGongOrVoice.text")); // NOI18N
-        rbNotificationGongOrVoice.setName("rbNotificationGongOrVoice"); // NOI18N
-        rbNotificationGongOrVoice.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                rbNotificationGongVoiceActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel21Layout = new javax.swing.GroupLayout(jPanel21);
-        jPanel21.setLayout(jPanel21Layout);
-        jPanel21Layout.setHorizontalGroup(
-            jPanel21Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel21Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel21Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(comboBoxVoices, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel21Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanel21Layout.createSequentialGroup()
-                            .addComponent(rbNotificationGongVoice)
-                            .addContainerGap())
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel21Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(rbNotificationNo)
-                            .addComponent(rbNotificationGong)
-                            .addComponent(rbNotificationGongOrVoice)))))
-        );
-        jPanel21Layout.setVerticalGroup(
-            jPanel21Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel21Layout.createSequentialGroup()
-                .addComponent(rbNotificationNo)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(rbNotificationGong)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(rbNotificationGongOrVoice)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(rbNotificationGongVoice)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(comboBoxVoices, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                .addContainerGap())
-        );
 
         jLabel11.setText(resourceMap.getString("jLabel11.text")); // NOI18N
         jLabel11.setName("jLabel11"); // NOI18N
@@ -4088,17 +4037,12 @@ public class FAdmin extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(spinnerFirstNumber)
-                            .addComponent(spinnerLastNumber, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE)))
+                            .addComponent(spinnerLastNumber, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel22, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel16Layout.createSequentialGroup()
                         .addContainerGap()
-                        .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(chBoxBtnFreeDsn)
-                            .addGroup(jPanel16Layout.createSequentialGroup()
-                                .addComponent(jPanel22, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jPanel20, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jPanel21, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                        .addComponent(chBoxBtnFreeDsn)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel16Layout.setVerticalGroup(
@@ -4113,12 +4057,8 @@ public class FAdmin extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel12)
-                            .addComponent(spinnerLastNumber, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel22, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel20, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(jPanel21, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(spinnerLastNumber, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jPanel22, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chBoxBtnFreeDsn)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -4172,13 +4112,13 @@ public class FAdmin extends javax.swing.JFrame {
                                 .addGap(10, 10, 10)
                                 .addComponent(spinnerBranchId, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(jLabel13))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 109, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 567, Short.MAX_VALUE)
                         .addGroup(jPanel23Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(buttonCloudTest, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(buttonSendDataToSky, javax.swing.GroupLayout.DEFAULT_SIZE, 177, Short.MAX_VALUE)))
                     .addGroup(jPanel23Layout.createSequentialGroup()
                         .addGap(20, 20, 20)
-                        .addComponent(textFieldURLWebService, javax.swing.GroupLayout.DEFAULT_SIZE, 470, Short.MAX_VALUE)))
+                        .addComponent(textFieldURLWebService, javax.swing.GroupLayout.DEFAULT_SIZE, 928, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel23Layout.setVerticalGroup(
@@ -4237,9 +4177,9 @@ public class FAdmin extends javax.swing.JFrame {
                 .addGroup(jPanel24Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel24Layout.createSequentialGroup()
                         .addComponent(spinnerZonBoadrServPort, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 98, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 556, Short.MAX_VALUE)
                         .addComponent(buttonCheckZoneBoardServ, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(textFieldZonBoadrServAddr, javax.swing.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE))
+                    .addComponent(textFieldZonBoadrServAddr, javax.swing.GroupLayout.DEFAULT_SIZE, 845, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel24Layout.setVerticalGroup(
@@ -4264,29 +4204,25 @@ public class FAdmin extends javax.swing.JFrame {
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jPanel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane2)
+                        .addComponent(jPanel16, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jTabbedPane2))
                 .addContainerGap())
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTabbedPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel8Layout.createSequentialGroup()
-                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel16, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(218, Short.MAX_VALUE))
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTabbedPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(237, Short.MAX_VALUE))
         );
 
         tabbedPaneMain.addTab(resourceMap.getString("jPanel8.TabConstraints.tabTitle"), jPanel8); // NOI18N
@@ -4428,7 +4364,7 @@ public class FAdmin extends javax.swing.JFrame {
             panelPagerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPagerLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(labelPager, javax.swing.GroupLayout.DEFAULT_SIZE, 89, Short.MAX_VALUE)
+                .addComponent(labelPager, javax.swing.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelEditPager, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -4586,8 +4522,8 @@ public class FAdmin extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1039, Short.MAX_VALUE)
-            .addComponent(panelPager, javax.swing.GroupLayout.DEFAULT_SIZE, 1039, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1014, Short.MAX_VALUE)
+            .addComponent(panelPager, javax.swing.GroupLayout.DEFAULT_SIZE, 1014, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -4953,10 +4889,6 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
 
     }//GEN-LAST:event_buttonCheckZoneBoardServActionPerformed
 
-    private void rbNotificationGongVoiceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbNotificationGongVoiceActionPerformed
-        comboBoxVoices.setEnabled(rbNotificationGongVoice.isSelected() || rbNotificationGongOrVoice.isSelected());
-    }//GEN-LAST:event_rbNotificationGongVoiceActionPerformed
-
     private void buttonRefreshBanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRefreshBanActionPerformed
         listBan.setModel(new DefaultComboBoxModel(NetCommander.getBanedList(new ServerNetProperty()).toArray()));
     }//GEN-LAST:event_buttonRefreshBanActionPerformed
@@ -5161,7 +5093,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
 
     private void jMenuItemBagtrackerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemBagtrackerActionPerformed
         try {
-            Desktop.getDesktop().browse(new URI("https://code.google.com/p/apertum-qsystem/issues/list"));
+            Desktop.getDesktop().browse(new URI("https://bitbucket.org/Apertum/qsystem/issues"));
         } catch (URISyntaxException | IOException ex) {
             QLog.l().logger().error(ex);
         }
@@ -5194,6 +5126,55 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
         textPaneResponse.setText(WysiwygDlg.showInstance(textPaneResponse.getText()));
         labelRespinse.setText(textPaneResponse.getText());
     }//GEN-LAST:event_btnWysResp1ActionPerformed
+
+    private void butAddSpecScedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butAddSpecScedActionPerformed
+        QSpecSchedule sps = FSpecScheduleDialog.changeQSpecSchedule(form, true, null);
+        if (sps != null) {
+            final QCalendar item = (QCalendar) listCalendar.getSelectedValue();
+            if (item == null) {
+                return;
+            }
+            sps.setCalendar(item);
+            item.getSpecSchedules().add(sps);
+            listSpecSced.setModel(new DefaultComboBoxModel(item.getSpecSchedules().toArray()));
+        }
+    }//GEN-LAST:event_butAddSpecScedActionPerformed
+
+    private void butEditSpecScedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butEditSpecScedActionPerformed
+        if (listSpecSced.getSelectedIndex() != -1) {
+            QSpecSchedule sps = FSpecScheduleDialog.changeQSpecSchedule(form, true, (QSpecSchedule) listSpecSced.getSelectedValue());
+            if (sps != null) {
+                final QCalendar item = (QCalendar) listCalendar.getSelectedValue();
+                if (item == null) {
+                    return;
+                }
+                listSpecSced.setModel(new DefaultComboBoxModel(item.getSpecSchedules().toArray()));
+            }
+        }
+    }//GEN-LAST:event_butEditSpecScedActionPerformed
+
+    private void butDeleteSpecScedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butDeleteSpecScedActionPerformed
+        if (listSpecSced.getSelectedIndex() != -1) {
+            if (0 != JOptionPane.showConfirmDialog(this, "Do you really want remove the special schedule?", "Removing", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)) {
+                return;
+            }
+            QSpecSchedule sps = (QSpecSchedule) listSpecSced.getSelectedValue();
+            if (sps != null) {
+                final QCalendar item = (QCalendar) listCalendar.getSelectedValue();
+                if (item == null) {
+                    return;
+                }
+                item.getSpecSchedules().remove(sps);
+                listSpecSced.setModel(new DefaultComboBoxModel(item.getSpecSchedules().toArray()));
+            }
+        }
+    }//GEN-LAST:event_butDeleteSpecScedActionPerformed
+
+    private void listSpecScedMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_listSpecScedMouseClicked
+        if (evt.getClickCount() > 1) {
+            butEditSpecScedActionPerformed(null);
+        }
+    }//GEN-LAST:event_listSpecScedMouseClicked
 
     private void sendPager() {
         if (forPager != null) {
@@ -5462,6 +5443,18 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
             QServiceTree.getInstance().getNodes().stream().filter((service) -> (item.equals(service.getSchedule()))).forEach((service) -> {
                 service.setSchedule(null);
             });
+
+            // Удалим это расписание как специальное у календарей.
+            QCalendarList.getInstance().getItems().forEach(calc -> {
+                final LinkedList<QSpecSchedule> fordel = new LinkedList<>();
+                calc.getSpecSchedules().forEach(sps -> {
+                    if (sps.getSchedule().getId().equals(item.getId())) {
+                        fordel.add(sps);
+                    }
+                });
+                calc.getSpecSchedules().removeAll(fordel);
+            });
+            calendarListChange();
 
             QScheduleList.getInstance().removeElement(item);
 
@@ -6034,6 +6027,9 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup bgPager;
     private javax.swing.JButton btnWysResp1;
+    private javax.swing.JButton butAddSpecSced;
+    private javax.swing.JButton butDeleteSpecSced;
+    private javax.swing.JButton butEditSpecSced;
     private javax.swing.JButton butWysInfo1;
     private javax.swing.JButton buttonAddCalendar;
     private javax.swing.JButton buttonCheckZoneBoardServ;
@@ -6064,7 +6060,6 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JCheckBox checkBoxReport;
     private javax.swing.JCheckBox checkBoxServerAuto;
     private javax.swing.JComboBox comboBoxPager;
-    private javax.swing.JComboBox comboBoxVoices;
     private com.toedter.calendar.JDateChooser dateChooserFinishCsv;
     private com.toedter.calendar.JDateChooser dateChooserStartCsv;
     private javax.swing.JButton jButton1;
@@ -6184,8 +6179,6 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JPanel jPanel18;
     private javax.swing.JPanel jPanel19;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel20;
-    private javax.swing.JPanel jPanel21;
     private javax.swing.JPanel jPanel22;
     private javax.swing.JPanel jPanel23;
     private javax.swing.JPanel jPanel24;
@@ -6220,6 +6213,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JScrollPane jScrollPane20;
     private javax.swing.JScrollPane jScrollPane21;
     private javax.swing.JScrollPane jScrollPane22;
+    private javax.swing.JScrollPane jScrollPane23;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
@@ -6273,6 +6267,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JList listResponse;
     private javax.swing.JList listResults;
     private javax.swing.JList listSchedule;
+    private javax.swing.JList listSpecSced;
     private javax.swing.JList listUserService;
     private javax.swing.JList listUsers;
     private javax.swing.JMenu menuAbout;
@@ -6286,6 +6281,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JPanel panelPager;
     private javax.swing.JPanel panelPagerCombo;
     private javax.swing.JPanel panelPagerRadio;
+    private javax.swing.JPanel panelSpecSc;
     private javax.swing.JPasswordField passwordFieldUser;
     private javax.swing.JPopupMenu popupBreaks;
     private javax.swing.JPopupMenu popupCalendar;
@@ -6298,16 +6294,9 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JPopupMenu popupUser;
     private javax.swing.JRadioButton rbKindCommon;
     private javax.swing.JRadioButton rbKindPersonal;
-    private javax.swing.JRadioButton rbNotificationGong;
-    private javax.swing.JRadioButton rbNotificationGongOrVoice;
-    private javax.swing.JRadioButton rbNotificationGongVoice;
-    private javax.swing.JRadioButton rbNotificationNo;
     private javax.swing.JRadioButton rbPager1;
     private javax.swing.JRadioButton rbPager2;
     private javax.swing.JRadioButton rbPager3;
-    private javax.swing.JRadioButton rbPointOffice;
-    private javax.swing.JRadioButton rbPointStoika;
-    private javax.swing.JRadioButton rbPointWindow;
     private javax.swing.JSpinner spinCalendarYear;
     private javax.swing.JSpinner spinnerBlackListTimeMin;
     private javax.swing.JSpinner spinnerBranchId;

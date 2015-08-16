@@ -57,7 +57,7 @@ public final class Locales {
 
         // Загрузка плагинов из папки plugins
         QLog.l().logger().info("Languages are loading...");
-        final File[] list = new File("languages").listFiles((File dir, String name) -> name.toLowerCase().endsWith(".jar"));
+        final File[] list = new File("languages").listFiles((File dir, String name) -> name.matches(".._..\\.(jar|JAR)"));
         if (list != null && list.length != 0) {
             final URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
             final Class sysclass = URLClassLoader.class;
@@ -129,7 +129,7 @@ public final class Locales {
             throw new RuntimeException(ex);
         }
         config.setAutoSave(true);
-
+        
         locs.stream().forEach((loc) -> {
             lngs_welcome.put(loc, config.getString(loc, "1"));
         });
