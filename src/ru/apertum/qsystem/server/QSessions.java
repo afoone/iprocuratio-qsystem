@@ -69,10 +69,10 @@ public class QSessions {
     public boolean check(Long userId, String ipAdress, byte[] IP) {
         for (QSession session : sessions) {
             if ((session.isValid())
-                    && ((ipAdress.equals(session.getIpAdress()) || Arrays.equals(IP, session.getIP()))
+                    && ((!QLog.l().isTerminal() && (ipAdress.equals(session.getIpAdress()) || Arrays.equals(IP, session.getIP())))
                     || (userId != null && userId.equals(session.getUser().getId())))) {
 
-                if ((ipAdress.equals(session.getIpAdress()) || Arrays.equals(IP, session.getIP()))
+                if ((QLog.l().isTerminal() || (ipAdress.equals(session.getIpAdress()) || Arrays.equals(IP, session.getIP())))
                         && (userId != null && userId.equals(session.getUser().getId()))) {
                     continue;
                 }
