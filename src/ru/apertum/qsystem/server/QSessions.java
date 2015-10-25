@@ -18,6 +18,7 @@ package ru.apertum.qsystem.server;
 
 import java.util.Arrays;
 import java.util.LinkedList;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.server.model.QUserList;
 
@@ -69,15 +70,15 @@ public class QSessions {
     public boolean check(Long userId, String ipAdress, byte[] IP) {
         for (QSession session : sessions) {
             if ((session.isValid())
-                    && ((!QLog.l().isTerminal() && (ipAdress.equals(session.getIpAdress()) || Arrays.equals(IP, session.getIP())))
+                    && ((!QConfig.cfg().isTerminal() && (ipAdress.equals(session.getIpAdress()) || Arrays.equals(IP, session.getIP())))
                     || (userId != null && userId.equals(session.getUser().getId())))) {
 
-                if ((QLog.l().isTerminal() || (ipAdress.equals(session.getIpAdress()) || Arrays.equals(IP, session.getIP())))
+                if ((QConfig.cfg().isTerminal() || (ipAdress.equals(session.getIpAdress()) || Arrays.equals(IP, session.getIP())))
                         && (userId != null && userId.equals(session.getUser().getId()))) {
                     continue;
                 }
 
-                QLog.l().logger().trace("Bad QSession for userID=" + userId + " adress=" + ipAdress + " ip=" + Arrays.toString(IP));
+                QLog.l().logger().warn("Bad QSession for userID=" + userId + " adress=" + ipAdress + " ip=" + Arrays.toString(IP));
                 return false;
             }
         }

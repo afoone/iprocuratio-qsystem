@@ -27,6 +27,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import ru.apertum.qsystem.client.forms.FBoardConfig;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.exceptions.ServerException;
@@ -38,30 +39,30 @@ import ru.apertum.qsystem.common.exceptions.ServerException;
  */
 public class TabloRedactor {
 
-    private static String filePath;
+    private static File file;
     private static Element root;
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        QLog.initial(args, 17);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
 
         // проверить есть ли файл /config/clientboard.xml и если есть отправить его на редактирование
-        if (args.length == 0) {
-            throw new ServerException("No param file context.");
+        if (args.length < 2) {
+            throw new ServerException("No param '-tcfg' file for context.");
         }
-        final File file = new File(args[0]);
+        file = new File(QConfig.cfg().getTabloBoardCfgFile());
         if (!file.exists()) {
-            throw new ServerException("File context not exist.");
+            throw new ServerException("File context \"" + QConfig.cfg().getTabloBoardCfgFile() + "\" not exist.");
         }
-        filePath = args[0];
-        QLog.l().logger().info("Загрузим файл " + file.getAbsolutePath());
+        QLog.l().logger().info("Load file: " + file.getAbsolutePath());
         final SAXReader reader = new SAXReader(false);
         try {
             root = reader.read(file).getRootElement();
         } catch (DocumentException ex) {
-            throw new ServerException("Невозможно прочитать файл настроек. " + ex.getMessage());
+            throw new ServerException("Wrong xml file. " + ex.getMessage());
         }
         /*
          java.awt.EventQueue.invokeLater(new Runnable() {
@@ -69,7 +70,7 @@ public class TabloRedactor {
          @Override
          public void run() {*/
         final FBoardConfig bc = new FBoardConfigImpl(null, false);
-        bc.setTitle("Редактор клиентского табло");
+        bc.setTitle(bc.getTitle() + " " + file.getAbsolutePath());
         bc.setParams(root);
         Uses.setLocation(bc);
         bc.setVisible(true);
@@ -107,7 +108,7 @@ public class TabloRedactor {
         // в файл
         final FileOutputStream fos;
         try {
-            fos = new FileOutputStream(new File(filePath));
+            fos = new FileOutputStream(file);
         } catch (FileNotFoundException ex) {
             throw new ServerException("Не возможно создать файл настроек табло. " + ex.getMessage());
         }

@@ -48,19 +48,19 @@ public class RpcToZoneServer extends JsonRPC20 {
 
         @Expose
         @SerializedName("userName")
-         public String userName;
+        public String userName;
         @Expose
         @SerializedName("userPoint")
-         public String userPoint;
+        public String userPoint;
         @Expose
         @SerializedName("customerPrefix")
-         public String customerPrefix;
+        public String customerPrefix;
         @Expose
         @SerializedName("customerNumber")
-         public int customerNumber;
+        public int customerNumber;
         @Expose
         @SerializedName("userAddrRS")
-         public int userAddrRS;
+        public int userAddrRS;
 
         public int getCustomerNumber() {
             return customerNumber;

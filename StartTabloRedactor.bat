@@ -1,2 +1,2 @@
-start javaw -cp dist/QSystem.jar ru.apertum.qsystem.client.TabloRedactor config/clientboard.xml
+start javaw -cp dist/QSystem.jar ru.apertum.qsystem.client.TabloRedactor -tcfg config/clientboard.xml
 

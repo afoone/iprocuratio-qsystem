@@ -31,11 +31,17 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.MemoryImageSource;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.ImageIcon;
 /*
  import javafx.animation.PathTransition;
  import javafx.animation.Timeline;
@@ -56,15 +62,16 @@ import java.util.regex.Pattern;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
-import javax.swing.border.TitledBorder;
+import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
 import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.model.QPanel;
 import ru.apertum.qsystem.common.BrowserFX;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.RunningLabel;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
@@ -92,7 +99,9 @@ public class FIndicatorBoard extends javax.swing.JFrame {
     private final Element rightElement;
     private final Element mainElement;
     private static FIndicatorBoard indicatorBoard = null;
+    private final FCallDialog callDialog;
     private Element root = null;
+    private final boolean fractal;
     /**
      * Режим. Главное табло или клиентское.
      */
@@ -110,7 +119,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
             return null;
         }
         if (indicatorBoard == null || rootParams != indicatorBoard.root) {
-            indicatorBoard = new FIndicatorBoard(rootParams, QLog.l().isDebug());
+            indicatorBoard = new FIndicatorBoard(rootParams, QConfig.cfg().isDebug(), false);
             indicatorBoard.loadConfig();
             indicatorBoard.root = rootParams;
         }
@@ -131,7 +140,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         if (!"1".equals(rootParams.attributeValue(Uses.TAG_BOARD_VISIBLE_PANEL))) {
             return null;
         }
-        final FIndicatorBoard iBoard = new FIndicatorBoard(rootParams, isDebug);
+        final FIndicatorBoard iBoard = new FIndicatorBoard(rootParams, isDebug, false);
         iBoard.loadConfig();
         iBoard.root = rootParams;
         iBoard.zoneDebug = isDebug;
@@ -160,10 +169,11 @@ public class FIndicatorBoard extends javax.swing.JFrame {
      *
      * @param configFilePath файл конфигурации табло.
      */
-    private FIndicatorBoard(Element rootParams, boolean isDebug) {
+    private FIndicatorBoard(Element rootParams, boolean isDebug, boolean fractal) {
 
         QLog.l().logger().info("Создаем окно для информации.");
 
+        this.fractal = fractal;
         topElement = rootParams.element(Uses.TAG_BOARD_TOP);
         bottomElement = rootParams.element(Uses.TAG_BOARD_BOTTOM);
         bottomElement2 = rootParams.element(Uses.TAG_BOARD_BOTTOM_2);
@@ -180,13 +190,46 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         // Определим цвет табло
         this.bgColor = Color.decode("#" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FON_COLOR).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
         this.fgColorCaprion = Color.decode("#" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
-        this.fgColorLeft = Color.decode("#" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_LEFT).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
-        this.fgColorRight = Color.decode("#" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_RIGHT).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
-        this.borderLine = "1".equals(Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LINE_BORDER).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
-        this.delimiter = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LINE_DELIMITER).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
 
-        this.colorTextLine = Color.decode("#" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_LINE).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
-        this.colorRow = Color.decode("#" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LINE_COLOR).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
+        String clrs = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_LEFT).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+        String[] cls = clrs.split("(\\s*,\\s*|\\s*;\\s*|\\s+)");
+        this.fgColorLeft = new Color[cls.length];
+        for (int i = 0; i < cls.length; i++) {
+            fgColorLeft[i] = Color.decode("#" + (cls[i].trim().isEmpty() ? "F0F0F0" : cls[i].trim()));
+        }
+
+        clrs = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_RIGHT).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+        cls = clrs.split("(\\s*,\\s*|\\s*;\\s*|\\s+)");
+        this.fgColorRight = new Color[cls.length];
+        for (int i = 0; i < cls.length; i++) {
+            fgColorRight[i] = Color.decode("#" + (cls[i].trim().isEmpty() ? "F0F0F0" : cls[i].trim()));
+        }
+
+        this.borderLine = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LINE_BORDER).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+        this.delimiter = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LINE_DELIMITER).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+        this.leftPic = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LEFT_PIC).isEmpty() ? "" : Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LEFT_PIC).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+        this.rightPic = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_RIGHT_PIC).isEmpty() ? "" : Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_RIGHT_PIC).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+        this.extPic = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_EXT_PIC).isEmpty() ? "" : Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_EXT_PIC).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+
+        // этим сделаем зебру из табло.
+        clrs = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_LINE).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+        if (clrs == null || clrs.isEmpty()) {
+            this.colorFonLine = new Color[0];
+        } else {
+            cls = clrs.split("(\\s*,\\s*|\\s*;\\s*|\\s+)");
+            this.colorFonLine = new Color[cls.length];
+            for (int i = 0; i < cls.length; i++) {
+                colorFonLine[i] = Color.decode("#" + (cls[i].trim().isEmpty() ? "F0F0F0" : cls[i].trim()));
+            }
+        }
+
+        clrs = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LINE_COLOR).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+        cls = clrs.split("(\\s*,\\s*|\\s*;\\s*|\\s+)");
+        this.colorRow = new Color[cls.length];
+        for (int i = 0; i < cls.length; i++) {
+            colorRow[i] = Color.decode("#" + (cls[i].trim().isEmpty() ? "F0F0F0" : cls[i].trim()));
+        }
+
         final String rowCap = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LINE_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
         this.rowCaption = !"".equals(rowCap) ? rowCap : getLocaleMessage("line_caption");
         this.leftColCaption = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LEFT_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
@@ -202,8 +245,21 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         this.extColPosition = t;
         final String cap = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_GRID_NEXT_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
         this.nextGridCaption = (!"".equals(cap) ? cap : getLocaleMessage("board.next_caption"));
-        this.border = new TitledBorder(new LineBorder(colorRow), "".equals(rowCaption) ? getLocaleMessage("board.cell") : rowCaption);//  MatteBorder(1, 3, 1, 2, Color.LIGHT_GRAY);
-        border.setTitleColor(colorTextLine);
+
+        String[] borderLines = (borderLine.isEmpty() ? "0,0,0,0" : borderLine).split("\\s*;\\s*");
+        this.border = new MatteBorder[100];
+        String ss1[] = borderLines[0].replaceAll("[\\D&&[^,;\\s]]", "").split("(\\s*,\\s*|\\s*;\\s*|\\s+)");
+        border[0] = ss1.length < 4 ? new MatteBorder(0, 0, 0, 0, colorRow[0]) : new MatteBorder(Integer.parseInt(ss1[0]), Integer.parseInt(ss1[1]), Integer.parseInt(ss1[2]), Integer.parseInt(ss1[3]), colorRow[0]);//  MatteBorder(1, 3, 1, 2, Color.LIGHT_GRAY);
+        for (int i = 0; i < 99; i++) {
+            Color c = colorRow.length == 1 ? colorRow[0] : (colorRow.length == 2 ? colorRow[1] : colorRow[i % (colorRow.length - 1) + 1]);
+            String ss[] = borderLines[borderLines.length == 1 ? 0 : (borderLines.length == 2 ? 1 : (i % (borderLines.length - 1) + 1))].replaceAll("[\\D&&[^,;\\s]]", "").split("(\\s*,\\s*|\\s*;\\s*|\\s+)");
+            if (ss.length < 4) {
+                QLog.l().logger().warn("Bad parameters for Matte Border: \"" + Arrays.toString(ss) + "\"");
+            }
+            border[i + 1] = ss.length < 4
+                    ? new MatteBorder(0, 0, 0, 0, c)
+                    : new MatteBorder(Integer.parseInt(ss[0].trim()), Integer.parseInt(ss[1].trim()), Integer.parseInt(ss[2].trim()), Integer.parseInt(ss[3].trim()), c);
+        }
 
         if (!isDebug) {
             setUndecorated(true);
@@ -211,6 +267,14 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         }
         initComponents();
         panelCommon.setBackground(bgColor);
+        if (fractal) {
+            panelMain.setVisible(false);
+        }
+        if (mainElement != null && !QConfig.cfg().isClient()) {
+            callDialog = new FCallDialog(this, false, mainElement);
+        } else {
+            callDialog = null;
+        }
         QLog.l().logger().trace("Прочитали настройки для окна информации.");
     }
 
@@ -339,7 +403,9 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         loadPanel(bottomElement2, rlDown2, panelDown2);
         loadPanel(leftElement, rlLeft, panelLeft);
         loadPanel(rightElement, rlRight, panelRight);
-        showLines();
+        if (!fractal) {
+            showLines();
+        }
     }
 
     private void loadPanel(Element params, RunningLabel label, QPanel panel) {
@@ -349,7 +415,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         // цвет панельки
         label.setBackground(bgColor);
         //загрузим размер и цвет шрифта
-        final Font font = new Font(label.getFont().getName(), label.getFont().getStyle(), Integer.parseInt(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_SIZE).get(0).attributeValue(Uses.TAG_BOARD_VALUE)));
+        final Font font = new Font(getFontName(), label.getFont().getStyle(), Integer.parseInt(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_SIZE).get(0).attributeValue(Uses.TAG_BOARD_VALUE)));
         label.setForeground(Color.decode("#" + (Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR).get(0).attributeValue(Uses.TAG_BOARD_VALUE))));
         label.setFont(font);
 
@@ -360,68 +426,88 @@ public class FIndicatorBoard extends javax.swing.JFrame {
             label.setBackgroundImage(filePath);
         }
 
-        //загрузим видео
-        final String filePathVid = Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_VIDEO_FILE).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
-        File fv = new File(filePathVid);
-        if (fv.exists()) {
-            label.setVisible(false);
-            panel.setVideoFileName(filePathVid);
-            panel.startVideo();
+        //загрузим фрактал
+        String fileFractalXml = "";
+        if (Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FRACTAL).size() > 0) {
+            fileFractalXml = Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FRACTAL).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+        }
+        final File frX = new File(fileFractalXml);
+        if (frX.exists()) {
+            panel.removeAll();
+            panel.setLayout(new GridLayout(1, 1));
+            final FIndicatorBoard fi;
+            try {
+                fi = new FIndicatorBoard(new SAXReader(false).read(frX).getRootElement(), true, true);
+                fi.loadConfig();
+                panel.add(fi.panelCommon);
+            } catch (DocumentException ex) {
+                System.err.println(ex);
+            }
         } else {
-            // если не видео, то простая дата или таблица ближайших
-            if ("1".equals(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_SIMPLE_DATE).get(0).attributeValue(Uses.TAG_BOARD_VALUE))) {
-                label.setRunningText("");
-                label.setText("");
-                label.setShowTime(true);
-            } else {
-                // загрузим текст
-                if ("1".equals(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_GRID_NEXT).get(0).attributeValue(Uses.TAG_BOARD_VALUE))) {
-                    // таблица ближайших
-                    label.setVerticalAlignment(1);
-                    label.setRunningText("");
-                    label.setText("<HTML>"
-                            + "<table  cellpadding='5' align='center' border='"
-                            + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_GRID_NEXT_FRAME_BORDER).get(0).attributeValue(Uses.TAG_BOARD_VALUE)
-                            + "' bordercolor='0'>"
-                            + "<tr><td>"
-                            + "<p align=center>"
-                            + "<span style='font-size:" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_SIZE_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE) + ".0pt;color:" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE) + ";'>"
-                            + nextGridCaption
-                            + "</span></p>"
-                            + "</td></tr>"
-                            + "<tr>"
-                            + "</table>");
-                    nexts.add(label);
-                    el_nexts.put(label, params);
-                } else {
-                    final String rt = Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_RUNNING_TEXT).get(0).attributeValue(Uses.TAG_BOARD_VALUE).trim();
-                    if (!"".equals(rt)) {
-                        label.setRunningText(rt);
-                        label.setText("");
-                        label.setSpeedRunningText(Integer.parseInt(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_SPEED_TEXT).get(0).attributeValue(Uses.TAG_BOARD_VALUE)));
-                        label.start();
 
+            //загрузим видео
+            final String filePathVid = Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_VIDEO_FILE).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
+            File fv = new File(filePathVid);
+            if (fv.exists()) {
+                label.setVisible(false);
+                panel.setVideoFileName(filePathVid);
+                panel.startVideo();
+            } else {
+                // если не видео, то простая дата или таблица ближайших
+                if ("1".equals(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_SIMPLE_DATE).get(0).attributeValue(Uses.TAG_BOARD_VALUE))) {
+                    label.setRunningText("");
+                    label.setText("");
+                    label.setShowTime(true);
+                } else {
+                    // загрузим текст
+                    if ("1".equals(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_GRID_NEXT).get(0).attributeValue(Uses.TAG_BOARD_VALUE))) {
+                        // таблица ближайших
+                        label.setVerticalAlignment(1);
+                        label.setRunningText("");
+                        label.setText("<HTML>"
+                                + "<table  cellpadding='5' align='center' border='"
+                                + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_GRID_NEXT_FRAME_BORDER).get(0).attributeValue(Uses.TAG_BOARD_VALUE)
+                                + "' bordercolor='0'>"
+                                + "<tr><td>"
+                                + "<p align=center>"
+                                + "<span style='font-size:" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_SIZE_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE) + ".0pt;color:" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE) + ";'>"
+                                + nextGridCaption
+                                + "</span></p>"
+                                + "</td></tr>"
+                                + "<tr>"
+                                + "</table>");
+                        nexts.add(label);
+                        el_nexts.put(label, params);
                     } else {
-                        // просто хтмл-текст или URL
-                        final String txt = params.getTextTrim();
-                        Pattern replace = Pattern.compile(pattern);
-                        Matcher matcher = replace.matcher(txt);
-                        if (new File(txt).exists() || matcher.matches() || txt.contains("localhost") || txt.contains("127.0.0.1")) {
-                            panel.removeAll();
-                            GridLayout gl = new GridLayout(1, 1);
-                            panel.setLayout(gl);
-                            BrowserFX bfx = new BrowserFX();
-                            panel.add(bfx, BorderLayout.CENTER);
-                            //bfx.load(txt);
-                            bfx.load(Uses.prepareAbsolutPathForImg(txt));
+                        final String rt = Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_RUNNING_TEXT).get(0).attributeValue(Uses.TAG_BOARD_VALUE).trim();
+                        if (!"".equals(rt)) {
+                            label.setRunningText(rt);
+                            label.setText("");
+                            label.setSpeedRunningText(Integer.parseInt(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_SPEED_TEXT).get(0).attributeValue(Uses.TAG_BOARD_VALUE)));
+                            label.start();
+
                         } else {
-                            label.setText(Uses.prepareAbsolutPathForImg(txt));
-                            label.setRunningText("");
-                        }
-                    }//бегущий
-                }//ближайшие
-            }//время
-        }//видео
+                            // просто хтмл-текст или URL
+                            final String txt = params.getTextTrim();
+                            Pattern replace = Pattern.compile(pattern);
+                            Matcher matcher = replace.matcher(txt);
+                            if (new File(txt).exists() || matcher.matches() || txt.contains("localhost") || txt.contains("127.0.0.1")) {
+                                panel.removeAll();
+                                GridLayout gl = new GridLayout(1, 1);
+                                panel.setLayout(gl);
+                                BrowserFX bfx = new BrowserFX();
+                                panel.add(bfx, BorderLayout.CENTER);
+                                //bfx.load(txt);
+                                bfx.load(Uses.prepareAbsolutPathForImg(txt));
+                            } else {
+                                label.setText(Uses.prepareAbsolutPathForImg(txt));
+                                label.setRunningText("");
+                            }
+                        }//бегущий
+                    }//ближайшие
+                }//время
+            }//видео
+        }// фрактал
     }
     private final static String pattern = "(file|http|ftp|https):\\/\\/\\/*[\\w\\-_:\\/]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&amp;:/~\\+#]*[\\w\\-\\@?^=%&amp;/~\\+#])?";
 
@@ -488,7 +574,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         }
         return localeMap.getString(key);
     }
-    private final TitledBorder border;
+    private final MatteBorder[] border;
 
     public class Line extends JPanel {
 
@@ -496,20 +582,23 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         private final JLabel right;
         private JLabel ext;
 
-        public Line() {
+        public Line(int n) {
             super();
-            setOpaque(false);
-            if (borderLine) {
-                setBorder(border);
+            if (colorFonLine.length > 1) {
+                setOpaque(true);
+                setBackground(colorFonLine[colorFonLine.length == 2 ? 1 : (n % (colorFonLine.length - 1) + 1)]);
+            } else {
+                setOpaque(false);
             }
+            setBorder(border[(n > border.length - 3) ? 1 : n + 1]);
             left = new JLabel();
-            final Font font = new Font(left.getFont().getName(), left.getFont().getStyle(), Integer.parseInt(Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_SIZE_LINE).get(0).attributeValue(Uses.TAG_BOARD_VALUE)));
+            final Font font = new Font(getFontName(), left.getFont().getStyle(), Integer.parseInt(Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_SIZE_LINE).get(0).attributeValue(Uses.TAG_BOARD_VALUE)));
 
             if (isMain && extColPosition > 0) {
                 ext = new JLabel();
                 ext.setFont(font);
                 ext.setBackground(bgColor);
-                ext.setForeground(fgColorRight);
+                ext.setForeground(fgColorRight[0]);
                 ext.setHorizontalAlignment(JLabel.CENTER);
                 ext.setVerticalAlignment(JLabel.CENTER);
                 //lab.setOpaque(true);
@@ -527,7 +616,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
 
             left.setFont(font);
             left.setBackground(bgColor);
-            left.setForeground(fgColorLeft);
+            left.setForeground(fgColorLeft[fgColorLeft.length == 1 ? 0 : (n % fgColorLeft.length)]);
             left.setHorizontalAlignment(JLabel.CENTER);
             left.setVerticalAlignment(JLabel.CENTER);
             //left.setOpaque(true);
@@ -543,7 +632,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
                 right = new JLabel();
                 right.setFont(font);
                 right.setBackground(bgColor);
-                right.setForeground(fgColorRight);
+                right.setForeground(fgColorRight[fgColorRight.length == 1 ? 0 : (n % fgColorRight.length)]);
                 right.setHorizontalAlignment(JLabel.CENTER);
                 right.setVerticalAlignment(JLabel.CENTER);
                 //lab.setOpaque(true);
@@ -557,34 +646,63 @@ public class FIndicatorBoard extends javax.swing.JFrame {
             } else {
                 right = null;
             }
-        }
 
-        public void setLineData(String text, String ext_data) {
-            if (isMain) {
-                final String[] ss = text.split(delimiter);
-                if (ss.length == 2) {
-                    left.setText(ss[0]);
-                    right.setText(ss[1]);
-                    if (ext != null) {
-                        ext.setText(ext_data);
-                    }
-                } else {
-                    if (ss.length == 1) {
-                        left.setText(ss[0]);
-                        right.setText("");
-                        if (ext != null) {
-                            ext.setText("");
-                        }
-                    } else {
-                        left.setText("");
-                        right.setText("");
-                        if (ext != null) {
-                            ext.setText("");
-                        }
-                    }
+            final String delPic = Uses.prepareAbsolutPathForImg(delimiter);
+            boolean delEx2 = false;
+            try {
+                delEx2 = new File(new URI(delPic)).exists();
+            } catch (URISyntaxException | IllegalArgumentException ex) {
+                System.err.println(ex);
+                delEx2 = false;
+            }
+            ImageIcon arrow2 = null;
+            if (delEx2) {
+                try {
+                    arrow2 = new javax.swing.ImageIcon(new URL(delPic));
+                } catch (MalformedURLException ex) {
+                    delEx2 = false;
+                    arrow2 = null;
                 }
             } else {
-                left.setText(text);
+                arrow2 = null;
+            }
+            arrow = arrow2;
+            delEx = delEx2;
+        }
+        final private boolean delEx;
+        final private ImageIcon arrow;
+
+        public void setLineData(String number, String point, String ext_data) {
+            if (isMain) {
+                if (number == null || number.isEmpty()) {
+                    left.setText("");
+                } else {
+                    left.setText(number);
+                }
+                if (point == null || point.isEmpty()) {
+                    right.setText("");
+                    right.setIcon(null);
+                } else {
+                    if (delimiter == null || delimiter.isEmpty()) {
+                        right.setHorizontalAlignment(JLabel.CENTER);
+                        right.setText(point);
+                    } else {
+                        right.setHorizontalAlignment(JLabel.LEFT);
+
+                        if (delEx) {
+                            right.setIcon(arrow);
+                            right.setText(point);
+                        } else {
+                            right.setText(delimiter + " " + point);
+                        }
+
+                    }
+                }
+                if (ext != null) {
+                    ext.setText(ext_data);
+                }
+            } else {
+                left.setText(number);
             }
         }
         /**
@@ -670,23 +788,35 @@ public class FIndicatorBoard extends javax.swing.JFrame {
     /**
      * Цвет шрифта левого столбца
      */
-    private final Color fgColorLeft;
+    private final Color[] fgColorLeft;
     /**
      * Цвет шрифта правого столбца
      */
-    private final Color fgColorRight;
+    private final Color[] fgColorRight;
     /**
      * Окантовка Строк
      */
-    private final boolean borderLine;
+    private final String borderLine;
     /**
      * Чем разделяются столбци клиента и пункта вызова на главном табло
      */
     private final String delimiter;
     /**
+     * Иконка у заголовка левого столбца
+     */
+    private final String leftPic;
+    /**
+     * Иконка у заголовка правого столбца
+     */
+    private final String rightPic;
+    /**
+     * Иконка у заголовка доп. столбца
+     */
+    private final String extPic;
+    /**
      * Цвет рамки строки табло
      */
-    private final Color colorRow;
+    private final Color[] colorRow;
     /**
      * Заголовок строки табло
      */
@@ -706,7 +836,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
     /**
      * Цвет надписи строки табло
      */
-    private final Color colorTextLine;
+    private final Color[] colorFonLine;
 
     public int getLinesCount() {
         return linesCount * colsCount;
@@ -718,6 +848,19 @@ public class FIndicatorBoard extends javax.swing.JFrame {
 
     public int getPause() {
         return pause;
+    }
+
+    private String fontName = null;
+
+    private String getFontName() {
+        if (fontName == null) {
+            ArrayList<Element> are = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_NAME);
+            fontName = are.isEmpty() ? null : are.get(0).attributeValue(Uses.TAG_BOARD_VALUE).trim();
+            if (fontName == null || fontName.isEmpty()) {
+                fontName = new JLabel().getFont().getName();
+            }
+        }
+        return fontName;
     }
 
     /**
@@ -732,21 +875,32 @@ public class FIndicatorBoard extends javax.swing.JFrame {
             if (isMain) {
                 final JPanel panel_cap = new JPanel();
                 caps.add(panel_cap);
-                if (borderLine) {
-                    panel_cap.setBorder(new MatteBorder(5, 3, 1, 2, colorRow));
-                    //panel_cap.setBorder(new LineBorder(Color.lightGray, 6));
+                panel_cap.setBorder(border[0]);
+                if (colorFonLine.length > 0) {
+                    panel_cap.setOpaque(true);
+                    panel_cap.setBackground(colorFonLine[0]);
                 } else {
-                    panel_cap.setBorder(new LineBorder(colorRow, 0));
+                    panel_cap.setOpaque(false);
                 }
-                panel_cap.setOpaque(false);
+
                 panel_cap.setLayout(new GridLayout(1, extColPosition > 0 ? 3 : 2, 0, 0));
                 //panelMain.add(panel_cap);
                 panel_cap.setBounds(0, 0, 100, 100);
                 JLabel lab_cap_l = new JLabel();
+                try {
+                    lab_cap_l.setIcon(new javax.swing.ImageIcon(new URL(Uses.prepareAbsolutPathForImg(leftPic))));
+                } catch (MalformedURLException ex) {
+                    System.err.println(ex);
+                }
                 //lab_cap_l.setFont(Font.decode("ub.ttf"));
-                final Font font_cap = new Font(lab_cap_l.getFont().getName(), lab_cap_l.getFont().getStyle(), Integer.parseInt(Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_SIZE_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE)));
+                final Font font_cap = new Font(getFontName(), 0/*lab_cap_l.getFont().getStyle()*/, Integer.parseInt(Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_SIZE_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE)));
 
                 JLabel lab_cap_ext = new JLabel();
+                try {
+                    lab_cap_ext.setIcon(new javax.swing.ImageIcon(new URL(Uses.prepareAbsolutPathForImg(extPic))));
+                } catch (MalformedURLException ex) {
+                    System.err.println(ex);
+                }
                 if (extColPosition > 0) {
                     lab_cap_ext = new JLabel();
                     lab_cap_ext.setFont(font_cap);
@@ -777,6 +931,11 @@ public class FIndicatorBoard extends javax.swing.JFrame {
                 }
 
                 lab_cap_l = new JLabel();
+                try {
+                    lab_cap_l.setIcon(new javax.swing.ImageIcon(new URL(Uses.prepareAbsolutPathForImg(rightPic))));
+                } catch (MalformedURLException ex) {
+                    System.err.println(ex);
+                }
                 lab_cap_l.setFont(font_cap);
                 lab_cap_l.setBackground(bgColor);
                 lab_cap_l.setForeground(fgColorCaprion);
@@ -800,7 +959,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         final Line[][] cels = new Line[linesCount][colsCount];
         for (int c = 0; c < colsCount; c++) {
             for (int i = 0; i < linesCount; i++) {
-                final Line panel = new Line();
+                final Line panel = new Line(i);
                 labels.add(panel);
                 cels[i][c] = panel;
             }
@@ -817,14 +976,17 @@ public class FIndicatorBoard extends javax.swing.JFrame {
      * Метод вывода инфы на табло.
      *
      * @param index номер строки.
-     * @param number номер клиента - часть выводимого текста
+     * @param prefix номер клиента - часть выводимого текста
+     * @param num номер клиента - часть выводимого текста
      * @param point пункт куда позвали клиента - часть выводимого текста
      * @param ext_data Третья колонка
      * @param blinkCount 0 - постоянное мигание, -1 не мигает. число - количество миганий
      */
-    public void printRecord(int index, String number, String point, String ext_data, int blinkCount) {
+    public void printRecord(int index, String prefix, Integer num, String point, String ext_data, int blinkCount) {
         if (index < getLinesCount()) {
-            labels.get(index).setLineData(number + (isMain ? delimiter + point : ""), ext_data);
+            String nn = (num == null ? "" : num.toString());
+            String number = prefix + (nn.isEmpty() ? "" : QConfig.cfg().getNumDivider(prefix)) + nn;
+            labels.get(index).setLineData(number, point, ext_data);
             labels.get(index).setBlinkCount(blinkCount == -1 ? -1 : blinkCount * 2);
             if (blinkCount != -1) {
                 labels.get(index).startBlink();
@@ -835,7 +997,9 @@ public class FIndicatorBoard extends javax.swing.JFrame {
     public void showCallPanel(String number, String point) {
         if (isMain && "1".equals(Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_CALL_PANEL).get(0).attributeValue(Uses.TAG_BOARD_VALUE))) {
             QLog.l().logger().info("Демонстрация номера вызванного \"" + number + " - " + point + "\" для показа в диалоге на главном табло.");
-            FCallDialog.getInstance(this, mainElement).show(number, point);
+            if (callDialog != null) {
+                callDialog.show(number, point);
+            }
         }
     }
 
@@ -1032,7 +1196,6 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         spRight.setName("spRight"); // NOI18N
         spRight.setOpaque(false);
 
-        panelRight.setBackground(resourceMap.getColor("panelRight.background")); // NOI18N
         panelRight.setBorder(new javax.swing.border.MatteBorder(null));
         panelRight.setName("panelRight"); // NOI18N
         panelRight.setNativePosition(java.lang.Boolean.FALSE);
@@ -1238,14 +1401,14 @@ private void panelLeftComponentResized(java.awt.event.ComponentEvent evt) {//GEN
     loadDividerLocation();
 }//GEN-LAST:event_panelLeftComponentResized
 
-private void panelRightComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_panelRightComponentResized
+    private void panelRightComponentResized(java.awt.event.ComponentEvent evt) {
 
-    loadDividerLocation();
-}//GEN-LAST:event_panelRightComponentResized
+        loadDividerLocation();
+    }
     private Point p = null;
 
 private void mouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_mouseMoved
-    if (p != null && !QLog.l().isDebug() && !zoneDebug) {
+    if (p != null && !QConfig.cfg().isDebug() && !zoneDebug) {
         try {
             Robot rob = new Robot();
             rob.mouseMove(p.x, p.y);

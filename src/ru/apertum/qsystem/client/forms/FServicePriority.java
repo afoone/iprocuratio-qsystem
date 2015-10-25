@@ -51,6 +51,7 @@ public class FServicePriority extends javax.swing.JDialog {
 
     /**
      * Сделано паблик чтоб отсюда брать названия приоритетов услуг
+     *
      * @param key какой требуется текст
      * @return локализованный текст
      */
@@ -65,9 +66,12 @@ public class FServicePriority extends javax.swing.JDialog {
      */
     private static FServicePriority dialog;
 
-    /** Creates new form FServicePriority
+    /**
+     * Creates new form FServicePriority
+     *
      * @param parent
-     * @param modal */
+     * @param modal
+     */
     public FServicePriority(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
@@ -75,6 +79,7 @@ public class FServicePriority extends javax.swing.JDialog {
 
     /**
      * Показать список обрабатываемых услуг с возможностью менять им приоритеты
+     *
      * @param netProperty свойства коннекта
      * @param owner для модальности
      * @param plan список обрабатываемых услуг
@@ -125,9 +130,12 @@ public class FServicePriority extends javax.swing.JDialog {
         tablePlan.setModel(new FlexPriorityMableModel(plan));
 
         JComboBox<String> cb = new JComboBox<>();
-        cb.addItem(Uses.get_COEFF_WORD().get(Uses.SERVICE_REMAINS));
-        cb.addItem(Uses.get_COEFF_WORD().get(Uses.SERVICE_NORMAL));
-        cb.addItem(Uses.get_COEFF_WORD().get(Uses.SERVICE_VIP));
+        /*
+         cb.addItem(Uses.get_COEFF_WORD().get(Uses.SERVICE_REMAINS));
+         cb.addItem(Uses.get_COEFF_WORD().get(Uses.SERVICE_NORMAL));
+         cb.addItem(Uses.get_COEFF_WORD().get(Uses.SERVICE_VIP));
+         */
+        Uses.get_COEFF_WORD().values().forEach(pr -> cb.addItem(pr));
         TableCellEditor editor = new DefaultCellEditor(cb);
         TableColumnModel cm = tablePlan.getColumnModel();
         TableColumn tc = cm.getColumn(1);
@@ -137,8 +145,8 @@ public class FServicePriority extends javax.swing.JDialog {
     }
 
     /**
-     * команду на сервер для изменения текущих приоритетов.
-     * Изменения только текущие, ничего не сохранияется в БД
+     * команду на сервер для изменения текущих приоритетов. Изменения только текущие, ничего не сохранияется в БД
+     *
      * @param netProperty
      * @param userId
      */

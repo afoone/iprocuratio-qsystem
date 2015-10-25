@@ -49,6 +49,7 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.common.WelcomeParams;
 import ru.apertum.qsystem.client.model.QButton;
 import ru.apertum.qsystem.client.model.QPanel;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.model.ATalkingClock;
@@ -125,7 +126,7 @@ public class FInfoDialog extends javax.swing.JDialog {
         FInfoDialog.setRoot(respList);
         FInfoDialog.result = null;
         Uses.setLocation(infoDialog);
-        if (!(QLog.l().isDebug() || QLog.l().isDemo() && !fullscreen)) {
+        if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo() && !fullscreen)) {
             Uses.setFullSize(infoDialog);
             int[] pixels = new int[16 * 16];
             Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));

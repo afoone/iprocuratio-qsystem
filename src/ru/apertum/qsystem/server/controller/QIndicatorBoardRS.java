@@ -21,7 +21,7 @@ import java.awt.event.ActionListener;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import javax.swing.Timer;
 import org.dom4j.Element;
@@ -30,8 +30,6 @@ import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.server.model.QUser;
-import ru.evgenic.rxtx.serialPort.ISerialExceptionListener;
-import ru.evgenic.rxtx.serialPort.ISerialLoggerListener;
 import ru.evgenic.rxtx.serialPort.ISerialPort;
 
 /**
@@ -97,6 +95,16 @@ public class QIndicatorBoardRS extends AIndicatorBoard {
     @Override
     public long getUID() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected Integer getLinesCount() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Object getBoardForm() {
+        return null;
     }
 
     /**
@@ -206,13 +214,14 @@ public class QIndicatorBoardRS extends AIndicatorBoard {
      */
     @Override
     protected void showToUser(Record record) {
-            sendMessage(record.customerNumber, record.adressRS.byteValue());
+            sendMessage(record.customerPrefix + (record.customerNumber == null ? "" : record.customerNumber), record.adressRS.byteValue());
     }
 
 
+    @Override
     protected void show(Record record) {
         // У юзера высветим номер кастомера и если надо на главном табло.
-        String nom = record.customerNumber;
+        String nom = record.customerPrefix + record.customerNumber;
         // высветим на главном табло если нужно
         showToBoard(record);
         if (nom.length() < 3) {
@@ -241,9 +250,9 @@ public class QIndicatorBoardRS extends AIndicatorBoard {
 
     @Override
     public void close() {
-        for (Integer i : adresses) {
+        adresses.forEach((i) -> {
             sendMessage("       ", i.byteValue());
-        }
+        });
     }
     /**
      * COM порт через который будем работать с герляндой.
@@ -256,23 +265,15 @@ public class QIndicatorBoardRS extends AIndicatorBoard {
      */
     public void setComPort(ISerialPort serialPort) {
         this.serialPort = serialPort;
-        this.serialPort.setLoggerListener(new ISerialLoggerListener() {
-
-            @Override
-            public void actionPerformed(String message, boolean isError) {
-                if (isError) {
-                    QLog.l().logger().error(message);
-                } else {
-                    QLog.l().logger().debug(message);
-                }
+        this.serialPort.setLoggerListener((String message, boolean isError) -> {
+            if (isError) {
+                QLog.l().logger().error(message);
+            } else {
+                QLog.l().logger().debug(message);
             }
         });
-        this.serialPort.setExceptionListener(new ISerialExceptionListener() {
-
-            @Override
-            public void actionPerformed(String message) {
-                throw new ServerException(message);
-            }
+        this.serialPort.setExceptionListener((String message) -> {
+            throw new ServerException(message);
         });
     }
 
@@ -311,7 +312,7 @@ public class QIndicatorBoardRS extends AIndicatorBoard {
     }
 
     @Override
-    protected void showOnBoard(LinkedHashSet<Record> records) {
+    protected void showOnBoard(LinkedList<Record> records) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

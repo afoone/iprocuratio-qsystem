@@ -49,17 +49,24 @@ public class BrowserFX extends JPanel {
         GridLayout gl = new GridLayout(1, 1);
         setLayout(gl);
         add(javafxPanel, BorderLayout.CENTER);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ex) {
+        }
 
         Platform.runLater(() -> {
             bro = new Browser();
             Scene scene = new Scene(bro, 750, 500, Color.web("#666970"));
             javafxPanel.setScene(scene);
+            redy = true;
         });
     }
 
+    volatile boolean redy = false;
+
     private void waitBrowser() {
         int k = 0;
-        while ((bro == null || bro.getWebEngine() == null) && k < 50) {
+        while (!redy || ((bro == null || bro.getWebEngine() == null) && k < 150)) {
             k++;
             try {
                 Thread.sleep(100);
@@ -72,30 +79,36 @@ public class BrowserFX extends JPanel {
     }
 
     public void load(final String url) {
+        redy = false;
         waitBrowser();
         Platform.runLater(() -> {
             bro.load(url);
+            redy = true;
         });
     }
 
     public void loadContent(final String cnt) {
+        redy = false;
         waitBrowser();
         Platform.runLater(() -> {
             bro.loadContent(cnt);
+            redy = true;
         });
     }
 
     public void loadContent(final String cnt, final String str) {
+        redy = false;
         waitBrowser();
         Platform.runLater(() -> {
             bro.loadContent(cnt, str);
+            redy = true;
         });
     }
-    
+
     public String goBack() {
         return bro.goBack();
     }
-    
+
     public String goForward() {
         return bro.goForward();
     }

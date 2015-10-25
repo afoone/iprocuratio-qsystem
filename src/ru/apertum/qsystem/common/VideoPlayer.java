@@ -181,11 +181,21 @@ public class VideoPlayer extends JPanel {
     private final static HashMap<String, MediaPlayer> vids = new HashMap<>();
 
     private synchronized static MediaPlayer getMediaPlayer(String videoFilePath) {
+        // продолжает падать видео через несколько часов после старта на нескольких объектах
+        // проделаем такое раз в два часа
+        // поможет? а кто его знает, я не в курсе, спросите в Оракле.
+        if (System.currentTimeMillis() - dropMp > 2 * 60 * 60 * 1000) {
+            vids.values().forEach(mp -> mp.dispose());
+            vids.clear();
+            dropMp = System.currentTimeMillis();
+        }
         if (vids.get(videoFilePath) == null) {
             vids.put(videoFilePath, new MediaPlayer(new Media(new File(videoFilePath).toURI().toString())));
         }
         return vids.get(videoFilePath);
     }
+
+    private static long dropMp = System.currentTimeMillis();
 
     /**
      * Сначала установи ресурс

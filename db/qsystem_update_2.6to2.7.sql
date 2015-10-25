@@ -10,8 +10,8 @@ ALTER TABLE `services` ADD `link_service_id` BIGINT;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `qsystem`.`spec_schedule` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '',
-  `date_from` DATE NOT NULL COMMENT 'Это спец расписание для этого календаря действует с этой даты',
-  `date_to` DATE NOT NULL COMMENT 'Это спец расписание для этого календаря действует до этой даты',
+  `date_from` DATE NOT NULL COMMENT 'Р­С‚Рѕ СЃРїРµС† СЂР°СЃРїРёСЃР°РЅРёРµ РґР»СЏ СЌС‚РѕРіРѕ РєР°Р»РµРЅРґР°СЂСЏ РґРµР№СЃС‚РІСѓРµС‚ СЃ СЌС‚РѕР№ РґР°С‚С‹',
+  `date_to` DATE NOT NULL COMMENT 'Р­С‚Рѕ СЃРїРµС† СЂР°СЃРїРёСЃР°РЅРёРµ РґР»СЏ СЌС‚РѕРіРѕ РєР°Р»РµРЅРґР°СЂСЏ РґРµР№СЃС‚РІСѓРµС‚ РґРѕ СЌС‚РѕР№ РґР°С‚С‹',
   `calendar_id` BIGINT NOT NULL COMMENT '',
   `schedule_id` BIGINT NOT NULL COMMENT '',
   PRIMARY KEY (`id`)  COMMENT '',
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `qsystem`.`spec_schedule` (
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB
-COMMENT = 'Специальные расписания для периодов для конкретных календарей. Перекрывают стардартное расписание.';
+COMMENT = 'РЎРїРµС†РёР°Р»СЊРЅС‹Рµ СЂР°СЃРїРёСЃР°РЅРёСЏ РґР»СЏ РїРµСЂРёРѕРґРѕРІ РґР»СЏ РєРѕРЅРєСЂРµС‚РЅС‹С… РєР°Р»РµРЅРґР°СЂРµР№. РџРµСЂРµРєСЂС‹РІР°СЋС‚ СЃС‚Р°СЂРґР°СЂС‚РЅРѕРµ СЂР°СЃРїРёСЃР°РЅРёРµ.';
 
 CREATE INDEX `idx_spec_chedule_calendar` ON `qsystem`.`spec_schedule` (`calendar_id` ASC)  COMMENT '';
 
@@ -35,6 +35,7 @@ CREATE INDEX `idx_spec_chedule_schedule` ON `qsystem`.`spec_schedule` (`schedule
 -- -----------------------------------------------------
 -- Table `qsystem`.`net`
 -- -----------------------------------------------------
+ALTER TABLE `net` ADD `ext_priority` INT NOT NULL DEFAULT 0 COMMENT 'РљРѕР»РёС‡РµСЃС‚РІРѕ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹С… РїСЂРёРѕСЂРёС‚РµС‚РѕРІ';
 UPDATE net SET version = '2.7' where id<>-1;
 
 COMMIT;

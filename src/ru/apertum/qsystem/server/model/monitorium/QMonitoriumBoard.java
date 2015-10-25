@@ -16,7 +16,7 @@
  */
 package ru.apertum.qsystem.server.model.monitorium;
 
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import org.dom4j.Element;
 import ru.apertum.qsystem.client.forms.AFBoardRedactor;
 import ru.apertum.qsystem.server.controller.AIndicatorBoard;
@@ -39,7 +39,7 @@ public class QMonitoriumBoard extends AIndicatorBoard {
 
 
     @Override
-    protected void showOnBoard(LinkedHashSet<Record> records) {
+    protected void showOnBoard(LinkedList<Record> records) {
         // throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -85,6 +85,16 @@ public class QMonitoriumBoard extends AIndicatorBoard {
 
     @Override
     public long getUID() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    protected Integer getLinesCount() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Object getBoardForm() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

@@ -82,8 +82,10 @@ public class QReportsList extends ATListModel<QReport> implements ComboBoxModel 
                     + "<a href=\"" + report.getHref() + ".rtf\" target=\"_blank\">[RTF]</a>\n"
                     + "<a href=\"" + report.getHref() + ".pdf\" target=\"_blank\">[PDF]</a>\n"
                     + "<a href=\"" + report.getHref() + ".xlsx\" target=\"_blank\">[XLSX]</a>\n"
+                    + "<a href=\"" + report.getHref() + ".csv\" target=\"_blank\">[CSV]</a>\n"
                     + "</td>\n"
                     + "</tr>\n");
+            report.setName(RepResBundle.getInstance().present(report.getHref()) ? RepResBundle.getInstance().getStringSafe(report.getHref()) : report.getName());
         });
         /*
          * Это не отчет. это генератор списка отчетов, который проверяет пароль и пользователя и формирует

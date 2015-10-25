@@ -37,6 +37,7 @@ import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.CustomerState;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.cmd.CmdParams;
 import ru.apertum.qsystem.common.cmd.AJsonRPC20;
 import ru.apertum.qsystem.common.cmd.JsonRPC20;
@@ -294,11 +295,11 @@ public final class Executer {
 
             @Override
             public void run() {
-                final long delta = new Date().getTime() - user.getCustomer().getStandTime().getTime();
-                System.out.println("################## " + QLog.l().getPauseFirst());
-                if (delta < QLog.l().getPauseFirst() * 1000) {
+                final long delta = System.currentTimeMillis() - user.getCustomer().getStandTime().getTime();
+                //System.out.println("################## " + QLog.l().getPauseFirst());
+                if (delta < QConfig.cfg().getDelayFirstInvite() * 1000) {
                     try {
-                        Thread.sleep(QLog.l().getPauseFirst() * 1000 - delta);
+                        Thread.sleep(QConfig.cfg().getDelayFirstInvite() * 1000 - delta);
                     } catch (InterruptedException ex) {
                     }
                 }
@@ -713,6 +714,7 @@ public final class Executer {
                     user.getCustomer(),
                     QPostponedList.getInstance().getPostponedCustomers(),
                     ServerProps.getInstance().getProps().getLimitRecall(),
+                    ServerProps.getInstance().getProps().getExtPriorNumber(),
                     user.getShadow()));
         }
     };
@@ -863,6 +865,8 @@ public final class Executer {
             customer.setPostponedStatus(cmdParams.textData);
             // на сколько отложили. 0 - бессрочно
             customer.setPostponPeriod(cmdParams.postponedPeriod);
+            // если отложили бессрочно и поставили галку, то можно видеть только отложенному
+            customer.setIsMine(cmdParams.isMine != null && cmdParams.isMine ? cmdParams.userId : null);
             // в этом случае завершаем с пациентом
             //"все что хирург забыл в вас - в пул отложенных"
             // но сначала обозначим результат работы юзера с кастомером, если такой результат найдется в списке результатов
@@ -1435,7 +1439,7 @@ public final class Executer {
             super.process(cmdParams, ipAdress, IP);
 
             final QService service = QServiceTree.getInstance().getById(cmdParams.serviceId);
-            QLog.l().logger().trace("Предварительно записываем к услуге \"" + cmdParams.serviceId + "\" -> " + service.getPrefix() + ' ' + service.getName() + '\'');
+            QLog.l().logger().trace("Предварительно записываем c ID=" + cmdParams.customerId + " к услуге \"" + service.getName() + "\"(" + service.getPrefix() + "/" + cmdParams.serviceId + ")" + " ко времени " + new Date(cmdParams.date));
             // Создадим вновь испеченного кастомера
             final QAdvanceCustomer customer = new QAdvanceCustomer(cmdParams.textData);
 
@@ -1641,10 +1645,10 @@ public final class Executer {
             super.process(cmdParams, ipAdress, IP);
             final Long authCustID = Long.parseLong(cmdParams.clientAuthId);
             // Вытащим из базы предварительного кастомера
-            final QAuthorizationCustomer authCust = new QAuthorizationCustomer();
-            Spring.getInstance().getHt().load(authCust, authCustID);
-            if (authCust.getId() == null || authCust.getName() == null) {
-                throw new ServerException("не найден клиент по его ID");
+            QAuthorizationCustomer authCust = Spring.getInstance().getHt().get(QAuthorizationCustomer.class, authCustID);
+            if (authCust == null || authCust.getId() == null || authCust.getName() == null) {
+                QLog.l().logger().trace("не найден клиент по его ID");
+                authCust = null;
             }
             return new RpcGetAuthorizCustomer(authCust);
         }
@@ -1858,7 +1862,7 @@ public final class Executer {
      */
     public Object doTask(JsonRPC20 rpc, String ipAdress, byte[] IP) {
         final long start = System.currentTimeMillis();
-        if (!QLog.l().isDebug()) {
+        if (!QConfig.cfg().isDebug()) {
             System.out.println("Task processing: '" + rpc.getMethod());
         }
         QLog.l().logger().info("Task processing: '" + rpc.getMethod() + "'");

@@ -34,9 +34,13 @@ import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.export.JRCsvExporter;
+import net.sf.jasperreports.engine.export.JRCsvExporterParameter;
 import net.sf.jasperreports.engine.export.JRHtmlExporter;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.engine.export.JRPdfExporterParameter;
 import net.sf.jasperreports.engine.export.JRRtfExporter;
+import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import org.apache.http.HttpRequest;
 import ru.apertum.qsystem.client.Locales;
@@ -47,8 +51,8 @@ import ru.apertum.qsystem.reports.common.Response;
 import ru.apertum.qsystem.reports.net.NetUtil;
 
 /**
- * Базовый класс генераторов отчетов. сам себя складывает в HashMap [ String, IGenerator ] generators. Для получения отчета генератор использует методы интерфейса
- * IFormirovator. метод process генерирует отчет.
+ * Базовый класс генераторов отчетов. сам себя складывает в HashMap [ String, IGenerator ] generators. Для получения отчета генератор использует методы
+ * интерфейса IFormirovator. метод process генерирует отчет.
  *
  * @author Evgeniy Egorov
  */
@@ -262,6 +266,12 @@ public abstract class AGenerator implements IGenerator {
                 exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
                 final ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, baos);
+                exporter.setParameter(JRXlsExporterParameter.IS_REMOVE_EMPTY_SPACE_BETWEEN_ROWS, true);
+                exporter.setParameter(JRXlsExporterParameter.IS_REMOVE_EMPTY_SPACE_BETWEEN_COLUMNS, true);
+                exporter.setParameter(JRXlsExporterParameter.IS_COLLAPSE_ROW_SPAN, true);
+                exporter.setParameter(JRXlsExporterParameter.IS_IGNORE_GRAPHICS, true);
+                exporter.setParameter(JRXlsExporterParameter.IS_WHITE_PAGE_BACKGROUND, true);
+                exporter.setParameter(JRXlsExporterParameter.IS_DETECT_CELL_TYPE, true);
                 exporter.exportReport();
                 result = baos.toByteArray();
                 //dataType = "application/ods";    
@@ -279,6 +289,15 @@ public abstract class AGenerator implements IGenerator {
                 }
                 result = genPDF(jasperPrint);
                 dataType = "application/pdf";
+            } else if (Uses.REPORT_FORMAT_CSV.equalsIgnoreCase(format)) {
+                JRCsvExporter exporter = new JRCsvExporter();
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+                exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, baos);
+                exporter.setParameter(JRExporterParameter.CHARACTER_ENCODING, "cp1251");
+                exporter.setParameter(JRCsvExporterParameter.FIELD_DELIMITER, ";");
+                exporter.exportReport();
+                result = baos.toByteArray();
             }
             return new Response(result, dataType);
         } catch (FileNotFoundException ex) {

@@ -134,4 +134,9 @@ public class OrangeMainboardImpl implements IIndicatorBoard {
     public long getUID() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public Object getBoardForm() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

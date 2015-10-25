@@ -138,6 +138,10 @@
 			<singlefile src="../plugins/" target="$INSTALL_PATH/plugins"/>
 			<file os="windows" src="resource/txt/version.bat" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/version.sh" targetdir="$INSTALL_PATH"/>
+			<executable targetfile="$INSTALL_PATH/version.sh" stage="never">
+                <os family="unix"/>
+            </executable>
+			<file src="../config/qsystem.properties" targetdir="$INSTALL_PATH/config/"/>
         </pack>
         <!-- 
         Для сервера кроме самих исполняемых библиотек еще нужно 
@@ -178,24 +182,28 @@
             <file os="unix" src="resource/bin/libjli.so" targetdir="$INSTALL_PATH/dist"/-->
             <file os="unix" src="resource/txt/admspr.sh" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/admdbcom.sh" targetdir="$INSTALL_PATH"/>
-            <file src="../db/qsystem.sql" targetdir="$INSTALL_PATH/DB/"/>
-            <file src="../db/qsystem_eng.sql" targetdir="$INSTALL_PATH/DB/"/>
-            <file src="../db/qsystem_H2.sql" targetdir="$INSTALL_PATH/DB/"/>
-            <file src="../db/qsystem_H2_eng.sql" targetdir="$INSTALL_PATH/DB/"/>
+            <file src="../db/qsystem.sql" targetdir="$INSTALL_PATH/db/"/>
+            <file src="../db/qsystem_eng.sql" targetdir="$INSTALL_PATH/db/"/>
+            <file src="../db/qsystem_H2.sql" targetdir="$INSTALL_PATH/db/"/>
+            <file src="../db/qsystem_H2_eng.sql" targetdir="$INSTALL_PATH/db/"/>
             <file src="../config/mainboard.xml" targetdir="$INSTALL_PATH/config/"/>
+            <file src="../config/fractal-part-board.xml" targetdir="$INSTALL_PATH/config/"/>
             <file src="resource/txt/asfb.dat" targetdir="$INSTALL_PATH/config/"/>
-            <file src="resource/bin/QSystemDB.mv.db" targetdir="$INSTALL_PATH/DB/"/>
+            <file src="resource/bin/QSystemDB.mv.db" targetdir="$INSTALL_PATH/db/"/>
 			<parsable encoding="utf-8" targetfile="$INSTALL_PATH/config/mainboard.xml"/>
 			<file src="../config/reporter.properties" targetdir="$INSTALL_PATH/config/"/>
 			<file src="../config/reporter.html" targetdir="$INSTALL_PATH/config/"/>
 			<fileset dir="../www/" includes="*.jpg,*.gif,*.png,*.mpg,*.htm,*.html,*.js,*.css" targetdir="$INSTALL_PATH/www/"/>
 			<fileset dir="../www/led-string/" includes="*.jpg,*.gif,*.png,*.mpg,*.htm,*.html,*.js,*.css" targetdir="$INSTALL_PATH/www/led-string/"/>
 			<fileset dir="../www/img/" includes="*.jpg,*.gif,*.png" targetdir="$INSTALL_PATH/www/img/"/>
-			<singlefile src="../www/war/" target="$INSTALL_PATH//www/war"/>
+			<singlefile src="../www/war/" target="$INSTALL_PATH/www/war"/>
             <file os="windows" src="resource/txt/StartServer.bat" targetdir="$INSTALL_PATH"/>
             <file os="windows" src="resource/txt/StopServer.bat" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/server.sh" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/stopserver.sh" targetdir="$INSTALL_PATH"/>
+			<executable targetfile="$INSTALL_PATH/stopserver.sh" stage="never">
+                <os family="unix"/>
+            </executable>
 			<file os="windows" src="resource/txt/StartServerDemo.bat" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/serverdemo.sh" targetdir="$INSTALL_PATH"/>
 			<executable targetfile="$INSTALL_PATH/serverdemo.sh" stage="never">
@@ -211,6 +219,11 @@
 			<file os="windows" src="resource/txt/h2.bat" targetdir="$INSTALL_PATH"/>
 			<file os="windows" src="resource/txt/h2w.bat" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/h2.sh" targetdir="$INSTALL_PATH"/>
+			<file os="windows" src="resource/txt/FractalTabloRedactor.bat" targetdir="$INSTALL_PATH"/>
+            <file os="unix" src="resource/txt/fractaltabloredactor.sh" targetdir="$INSTALL_PATH"/>
+			<executable targetfile="$INSTALL_PATH/fractaltabloredactor.sh" stage="never">
+                <os family="unix"/>
+            </executable>
         </pack>
         <pack id="admin" name="Administrator" required="no" preselected="no">
             <description>Администрирование</description>
@@ -240,13 +253,20 @@
 			<file os="windows" src="resource/txt/h2.bat" targetdir="$INSTALL_PATH"/>
 			<file os="windows" src="resource/txt/h2w.bat" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/h2.sh" targetdir="$INSTALL_PATH"/>
+			<executable targetfile="$INSTALL_PATH/h2.sh" stage="never">
+                <os family="unix"/>
+            </executable>
         </pack>
         <pack id="registrationPoint" name="Registration point" required="no" preselected="no">
             <description>Пункт регистрации</description>
             <file src="../config/welcome.properties" targetdir="$INSTALL_PATH/config/"/>
             <file src="../config/welcome_bg.properties" targetdir="$INSTALL_PATH/config/"/>
             <file src="../config/welcome_buttons.properties" targetdir="$INSTALL_PATH/config/"/>
-            <file os="windows" src="../multilangs.bat" targetdir="$INSTALL_PATH"/>
+            <file os="windows" src="resource/txt/multilangs.bat" targetdir="$INSTALL_PATH"/>
+            <file os="unix" src="resource/txt/multilangs.sh" targetdir="$INSTALL_PATH"/>
+			<executable targetfile="$INSTALL_PATH/multilangs.sh" stage="never">
+                <os family="unix"/>
+            </executable>
             <file os="windows" src="resource/txt/Welcome.bat" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/welcome.sh" targetdir="$INSTALL_PATH"/>
 			<file os="windows" src="resource/txt/WelcomeDemo.bat" targetdir="$INSTALL_PATH"/>
@@ -265,6 +285,9 @@
 			<parsable targetfile="$INSTALL_PATH/config/langs.properties"/>
 			<file os="windows" src="resource/txt/xsltest.bat" targetdir="$INSTALL_PATH"/>
             <file os="unix" src="resource/txt/xsltest.sh" targetdir="$INSTALL_PATH"/>
+			<executable targetfile="$INSTALL_PATH/xsltest.sh" stage="never">
+                <os family="unix"/>
+            </executable>
         </pack>
 		<pack id="reception" name="Reception" required="no" preselected="no">
             <description>Приемная</description>
@@ -283,6 +306,11 @@
             <description>Journal</description>
 			<file src="../config/journal.properties" targetdir="$INSTALL_PATH/config/"/>
             <file  src="../plugins/Journal.jar" targetdir="$INSTALL_PATH/plugins/"/>
+            <!-- Reccursive adding -->
+        </pack>
+		<pack id="microsound" name="Microsound" required="no" preselected="no">
+            <description>Microsound</description>
+            <file  src="../plugins/Microsound.jar" targetdir="$INSTALL_PATH/plugins/"/>
             <!-- Reccursive adding -->
         </pack>
 		<pack id="docs" name="Documentation" required="no">

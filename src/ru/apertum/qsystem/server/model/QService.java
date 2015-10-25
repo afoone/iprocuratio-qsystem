@@ -464,7 +464,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
 
     @Override
     public String toString() {
-        return getName();
+        return getName().trim().isEmpty() ? "<NO_NAME>" : getName();
     }
 
     /**

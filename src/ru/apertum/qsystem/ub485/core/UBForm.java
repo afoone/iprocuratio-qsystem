@@ -31,6 +31,7 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.model.QTray;
 import ru.apertum.qsystem.common.NetCommander;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.cmd.RpcGetServerState.ServiceInfo;
 import ru.apertum.qsystem.common.model.INetProperty;
@@ -87,7 +88,7 @@ public class UBForm extends JFrame {
             System.exit(0);
         });
 
-        if (QLog.isSTART) {
+        if (QConfig.cfg().isUbtnStart()) {
             final Thread th_start = new Thread(() -> {
                 buttonStartActionPerformed(null);
             });

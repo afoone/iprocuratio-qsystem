@@ -62,18 +62,18 @@ public class FlexPriorityMableModel extends AbstractTableModel {
                     case 1:
                         return Uses.get_COEFF_WORD().get(service.getPriority());
                     /*
-                    switch (service.getPriority()) {
-                    case -1:
-                    return "Не обслуживается";
-                    case 0:
-                    return "Низкий";
-                    case 1:
-                    return "Основной";
-                    case 2:
-                    return "V.I.P.";
-                    default:
-                    throw new AssertionError();
-                    }
+                     switch (service.getPriority()) {
+                     case -1:
+                     return "Не обслуживается";
+                     case 0:
+                     return "Низкий";
+                     case 1:
+                     return "Основной";
+                     case 2:
+                     return "V.I.P.";
+                     default:
+                     throw new AssertionError();
+                     }
                      * 
                      */
                     default:
@@ -88,14 +88,21 @@ public class FlexPriorityMableModel extends AbstractTableModel {
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         int res = 1;
 
-        if (Uses.get_COEFF_WORD().get(Uses.SERVICE_REMAINS).equalsIgnoreCase((String) aValue)) {
-            res = Uses.SERVICE_REMAINS;
-        } else if (Uses.get_COEFF_WORD().get(Uses.SERVICE_NORMAL).equalsIgnoreCase((String) aValue)) {
-            res = Uses.SERVICE_NORMAL;
-        } else if (Uses.get_COEFF_WORD().get(Uses.SERVICE_VIP).equalsIgnoreCase((String) aValue)) {
-            res = Uses.SERVICE_VIP;
-        } else {
-            throw new AssertionError();
+        /*
+         if (Uses.get_COEFF_WORD().get(Uses.SERVICE_REMAINS).equalsIgnoreCase((String) aValue)) {
+         res = Uses.SERVICE_REMAINS;
+         } else if (Uses.get_COEFF_WORD().get(Uses.SERVICE_NORMAL).equalsIgnoreCase((String) aValue)) {
+         res = Uses.SERVICE_NORMAL;
+         } else if (Uses.get_COEFF_WORD().get(Uses.SERVICE_VIP).equalsIgnoreCase((String) aValue)) {
+         res = Uses.SERVICE_VIP;
+         } else {
+         throw new AssertionError();
+         }
+         */
+        for (int i = 0; i < Uses.get_COEFF_WORD().size(); i++) {
+            if (((String) aValue).equals(Uses.get_COEFF_WORD().get(i))) {
+                res = i;
+            }
         }
         services.get(rowIndex).setPriority(res);
         super.setValueAt(services.get(rowIndex), rowIndex, columnIndex);

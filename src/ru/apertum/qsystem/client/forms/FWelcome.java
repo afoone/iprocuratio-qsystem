@@ -25,6 +25,7 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import gnu.io.SerialPortEvent;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -50,6 +51,7 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -64,6 +66,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.ServiceLoader;
 import javax.imageio.ImageIO;
@@ -92,8 +95,12 @@ import ru.apertum.qsystem.client.model.QButton;
 import ru.apertum.qsystem.client.model.QPanel;
 import ru.apertum.qsystem.common.BrowserFX;
 import ru.apertum.qsystem.common.GsonPool;
+import ru.apertum.qsystem.common.Mailer;
+import ru.apertum.qsystem.common.QConfig;
+import static ru.apertum.qsystem.common.QConfig.KEY_WELCOME_KBD;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
+import ru.apertum.qsystem.common.cmd.CmdParams;
 import ru.apertum.qsystem.common.cmd.JsonRPC20;
 import ru.apertum.qsystem.common.cmd.RpcGetAllServices;
 import ru.apertum.qsystem.common.cmd.RpcGetSrt;
@@ -103,6 +110,7 @@ import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.ATalkingClock;
 import ru.apertum.qsystem.common.model.IClientNetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
+import ru.apertum.qsystem.extra.IBytesButtensAdapter;
 import ru.apertum.qsystem.extra.IPrintTicket;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QAuthorizationCustomer;
@@ -131,12 +139,12 @@ public class FWelcome extends javax.swing.JFrame {
         return localeMap.getString(key);
     }
     // Состояния пункта регистрации
-    public static final String LOCK = "Заблокирован";
-    public static final String UNLOCK = "Готов к работе";
-    public static final String OFF = "Выключен";
-    public static String LOCK_MESSAGE = "<HTML><p align=center><b><span style='font-size:40.0pt;color:red'>" + getLocaleMessage("messages.lock_messages") + "</span></b></p>";
+    public final String LOCK = getLocaleMessage("lock");
+    public final String UNLOCK = getLocaleMessage("unlock");
+    public final String OFF = getLocaleMessage("off");
+    public String LOCK_MESSAGE = "<HTML><p align=center><b><span style='font-size:40.0pt;color:red'>" + getLocaleMessage("messages.lock_messages") + "</span></b></p>";
     public static QService root;
-    public static int pageNumber = 0;// на одном уровне может понадобиться листать услуги, не то они расползуться. Это вместо скрола.
+    public int pageNumber = 0;// на одном уровне может понадобиться листать услуги, не то они расползуться. Это вместо скрола.
     /**
      * XML-список отзывов. перврначально null, грузится при первом обращении. Использовать через геттер.
      */
@@ -262,6 +270,7 @@ public class FWelcome extends javax.swing.JFrame {
                 //С рабочего места администратора должна быть возможность заблокировать пункт постановки в очередь, 
                 //разблокировать, выключить, провести инициализация заново.
                 // В любом другом случае будет выслано состояние.
+                String upp = ".  " + increaseTicketCount(0) + " " + getLocaleMessage("tickets_were_printed");
                 if (Uses.WELCOME_LOCK.equals(rpc.getMethod())) {
                     lock(LOCK_MESSAGE);
                 }
@@ -272,15 +281,15 @@ public class FWelcome extends javax.swing.JFrame {
                     off();
                 }
                 if (Uses.WELCOME_REINIT.equals(rpc.getMethod())) {
-                    reinit();
+                    reinit(rpc.getParams());
                 }
 
                 // выводим данные:
-                QLog.l().logger().trace("Ответ:\n" + stateWindow);
+                QLog.l().logger().trace("Ответ: " + stateWindow + upp);
                 final String rpc_resp;
                 final Gson gson_resp = GsonPool.getInstance().borrowGson();
                 try {
-                    rpc_resp = gson.toJson(new RpcGetSrt(stateWindow));
+                    rpc_resp = gson.toJson(new RpcGetSrt(stateWindow + upp));
                 } finally {
                     GsonPool.getInstance().returnGson(gson_resp);
                 }
@@ -345,7 +354,7 @@ public class FWelcome extends javax.swing.JFrame {
         Locale.setDefault(Locales.getInstance().getLangCurrent());
 
         // выберем нужные языки на велкоме если первый раз запускаем или ключ -clangs
-        if ((Locales.getInstance().isWelcomeMultylangs() && Locales.getInstance().isWelcomeFirstLaunch()) || QLog.chooseLANGS) {
+        if ((Locales.getInstance().isWelcomeMultylangs() && Locales.getInstance().isWelcomeFirstLaunch()) || QConfig.cfg().isChangeLangs()) {
 
             JFrame form = new FLangsOnWelcome();
             java.awt.EventQueue.invokeLater(() -> {
@@ -357,7 +366,6 @@ public class FWelcome extends javax.swing.JFrame {
             }
         }
 
-        LOCK_MESSAGE = "<HTML><p align=center><b><span style='font-size:40.0pt;color:red'>" + getLocaleMessage("messages.lock_messages") + "</span></b></p>";
         netProperty = new ClientNetProperty(args);
         // определим режим пользовательского интерфейса
         for (String s : args) {
@@ -388,8 +396,9 @@ public class FWelcome extends javax.swing.JFrame {
         FWelcome.finishTime = servs.getFinishTime();
         FWelcome.btnFreeDesign = servs.getButtonFreeDesign();
 
-        switch (QLog.l().isButtons()) {
-            case 2: {
+        //touch,info,med,btn,kbd
+        switch (QConfig.cfg().getWelcomeMode()) {
+            case KEY_WELCOME_KBD: {
                 // ***************************************************************************************************************************************
                 // ***  Это клавиатурный ввод символа
                 // ***************************************************************************************************************************************
@@ -422,7 +431,22 @@ public class FWelcome extends javax.swing.JFrame {
                 }
 
                 final JFrame fr = new JFrame("Keyboard input");
+
+                // спрячем курсор мыши
+                final int[] pixels = new int[16 * 16];
+                final Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
+                Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
+                fr.setCursor(transparentCursor);
+
                 fr.setUndecorated(true);
+                fr.setVisible(true);
+                fr.setAlwaysOnTop(false);
+                fr.setAlwaysOnTop(true);
+                fr.setVisible(true);
+                fr.toFront();
+                fr.requestFocus();
+                fr.setForeground(Color.red);
+                fr.setBackground(Color.red);
                 fr.setOpacity(0.1f);
                 final Robot r = new Robot();
                 fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -474,7 +498,7 @@ public class FWelcome extends javax.swing.JFrame {
 
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        //System.out.println("ccc " + e.getButton());
+                        System.out.println("MouseEvent=" + e.getButton());
                         if (System.currentTimeMillis() - t < 5000) {
                             return;
                         }
@@ -484,14 +508,14 @@ public class FWelcome extends javax.swing.JFrame {
                         if (now > stime && now < ftime) {
                             final QService serv = addrs.get("" + e.getButton());
                             if (serv == null) {
-                                QLog.l().logger().error("Service is not found by " + e.getButton());
+                                QLog.l().logger().error("Service was not found by " + e.getButton());
                                 return;
                             }
                             final QCustomer customer;
                             try {
                                 customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "");
                             } catch (Exception ex) {
-                                QLog.l().logger().error("Fail to put in line " + serv.getName() + "  ID=" + serv.getId(), ex);
+                                QLog.l().logger().error("Fail to put in line '" + serv.getName() + "'  ID=" + serv.getId(), ex);
                                 return;
                             }
                             FWelcome.printTicket(customer, root.getName());
@@ -522,10 +546,11 @@ public class FWelcome extends javax.swing.JFrame {
                 fr.setVisible(true);
                 final Timer t = new Timer(30000, (ActionEvent e) -> {
                     fr.setState(JFrame.NORMAL);
+                    //fr.setVisible(false);
+                    fr.setAlwaysOnTop(false);
+                    fr.setAlwaysOnTop(true);
                     fr.setVisible(true);
                     fr.setAlwaysOnTop(true);
-                    fr.setAlwaysOnTop(false);
-                    fr.setVisible(true);
                     fr.toFront();
                     fr.requestFocus();
                     r.mouseMove(fr.getLocation().x + 3, fr.getLocation().y + 3);
@@ -535,7 +560,7 @@ public class FWelcome extends javax.swing.JFrame {
                 break;
                 // ***************************************************************************************************************************************
             }
-            case 1: {
+            case QConfig.KEY_WELCOME_BTN: {
                 // ***************************************************************************************************************************************
                 // ***  Это кнопочный терминал
                 // ***************************************************************************************************************************************
@@ -579,10 +604,24 @@ public class FWelcome extends javax.swing.JFrame {
                         final GregorianCalendar gc = new GregorianCalendar();
                         final long now = gc.get(GregorianCalendar.HOUR_OF_DAY) * 60 + gc.get(GregorianCalendar.MINUTE);
                         if (now > stime && now < ftime) {
-                            if (bytes.length == 4 && bytes[0] == 0x01 && bytes[3] == 0x07) {
-                                final QService serv = addrs.get(bytes[2]);
-                                if (addrs.get(bytes[2]) == null) {
-                                    QLog.l().logger().error("Не найдена услуга по нажатию кнопки " + bytes[2]);
+                            // поддержка расширяемости плагинами
+                            Byte flag = null;
+                            for (final IBytesButtensAdapter event : ServiceLoader.load(IBytesButtensAdapter.class)) {
+                                QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+                                try {
+                                    flag = event.convert(bytes);
+                                } catch (Throwable tr) {
+                                    QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: ", tr);
+                                }
+                                // раз конвертнули и хорошь
+                                if (flag != null) {
+                                    break;
+                                }
+                            }
+                            if (flag != null || (bytes.length == 4 && bytes[0] == 0x01 && bytes[3] == 0x07)) {
+                                final QService serv = addrs.get(flag != null ? flag : bytes[2]);
+                                if (serv == null) {
+                                    QLog.l().logger().error("Не найдена услуга по нажатию кнопки " + (flag != null ? flag : bytes[2]));
                                     return;
                                 }
                                 final QCustomer customer;
@@ -617,7 +656,7 @@ public class FWelcome extends javax.swing.JFrame {
                     // ждём нового подключения, после чего запускаем обработку клиента
                     // в новый вычислительный поток и увеличиваем счётчик на единичку
 
-                    if (!QLog.l().isDebug()) {
+                    if (!QConfig.cfg().isDebug()) {
                         final char ch = '*';
                         String progres = "Process: " + ch;
                         final int len = 5;
@@ -658,7 +697,7 @@ public class FWelcome extends javax.swing.JFrame {
                 break;
                 // ***************************************************************************************************************************************
             }
-            case 0: {
+            default: {
                 // ***************************************************************************************************************************************
                 // ***  Это тачевый терминал
                 // ***************************************************************************************************************************************
@@ -674,8 +713,8 @@ public class FWelcome extends javax.swing.JFrame {
     public FWelcome(QService root) {
         QLog.l().logger().info("Создаем окно приглашения.");
         setLocation(0, 0);
-        if (!QLog.l().isDebug()) {
-            if (!QLog.l().isDemo()) {
+        if (!QConfig.cfg().isDebug()) {
+            if (!QConfig.cfg().isDemo()) {
                 setUndecorated(true);
                 //setAlwaysOnTop(true);
                 //setResizable(false);
@@ -695,7 +734,7 @@ public class FWelcome extends javax.swing.JFrame {
             });
         }
 
-        if (QLog.l().isDemo()) {
+        if (QConfig.cfg().isDemo()) {
             addWindowListener(new WindowAdapter() {
 
                 @Override
@@ -732,7 +771,7 @@ public class FWelcome extends javax.swing.JFrame {
         } catch (IOException ex) {
             System.err.println(ex);
         }
-        if (QLog.l().isDebug()) {
+        if (QConfig.cfg().isDebug()) {
             setSize(1280, 1024);
         }
         FWelcome.root = root;
@@ -835,7 +874,7 @@ public class FWelcome extends javax.swing.JFrame {
                         if (customer != null) {
                             advancedCustomer = customer.getId();
                             setAdvanceRegim(true);
-                            labelCaption.setText("<html><b><p align=center><span style='font-size:35.0pt;color:green'>" + customer.getSurname() + " " + customer.getName() + " " + customer.getOtchestvo() + "<br></span><span style='font-size:30.0pt;color:red'>" + getLocaleMessage("messages.select_adv_servece"));
+                            labelCaption.setText("<html><p align=center><span style='font-size:55.0pt;color:green'>" + customer.getSurname() + " " + customer.getName() + " " + customer.getOtchestvo() + "<br></span><span style='font-size:40.0pt;color:red'>" + getLocaleMessage("messages.select_adv_servece"));
                         } else {
                             throw new ClientException("Нельзя выбирать услугу если не идентифицирован клиент.");
                         }
@@ -969,13 +1008,59 @@ public class FWelcome extends javax.swing.JFrame {
         panel.repaint();
     }
 
+    public final static String TEMP_FILE_PROPS = "temp/wlcm.properties";
+
+    private static synchronized int increaseTicketCount(int d) {
+        File f = new File("temp");
+        if (!f.exists()) {
+            f.mkdir();
+        }
+
+        f = new File(TEMP_FILE_PROPS);
+        if (!f.exists()) {
+            try {
+                f.createNewFile();
+            } catch (IOException ex) {
+                System.err.println(ex);
+            }
+        }
+        final Properties p = new Properties();
+        try {
+            p.load(new FileInputStream(f));
+        } catch (IOException ex) {
+            System.err.println(ex);
+            throw new RuntimeException(ex);
+        }
+        int i = Math.max(Integer.parseInt(p.getProperty("tickets_cnt", "0").trim()) + d, 0);
+        p.setProperty("tickets_cnt", String.valueOf(i));
+
+        try {
+            p.store(new FileOutputStream(f), "QSystem Welcome temp properties");
+        } catch (IOException ex) {
+            System.err.println(ex);
+            throw new RuntimeException(ex);
+        }
+        // разошлем весточку о том что бумага заканчивается
+        int st = (i - WelcomeParams.getInstance().paper_size_alarm) % WelcomeParams.getInstance().paper_alarm_step;
+        if (0 <= st && st < d) {
+            final String m = Mailer.fetchConfig().getProperty("paper_alarm_mailing", "0");
+            if ("1".equals(m) || "true".equalsIgnoreCase(m)) {
+                Mailer.sendReporterMailAtFon(Mailer.fetchConfig().getProperty("mail.paper_alarm_subject", "QSystem. Printing paper run out!"),
+                        "QSystem. Paper running out / израсходование бумаги. " + i + " tickets were printed.",
+                        Mailer.fetchConfig().getProperty("mail.smtp.paper_alarm_to"),
+                        null);
+            }
+        }
+        return i;
+    }
+
     public static void printTicket(QCustomer customer, String caption) {
         FWelcome.caption = caption;
         printTicket(customer);
     }
 
     public static synchronized void printTicket(final QCustomer customer) {
-
+        increaseTicketCount(1);
         // поддержка расширяемости плагинами
         boolean flag = false;
         for (final IPrintTicket event : ServiceLoader.load(IPrintTicket.class)) {
@@ -1021,28 +1106,28 @@ public class FWelcome extends javax.swing.JFrame {
                 write(getLocaleMessage("ticket.your_number"), ++line, 80, 1, 1);
 
                 int x;
-                final String num = ("".equals(customer.getPrefix()) ? "" : customer.getPrefix() + "-") + customer.getNumber();
+                final String num = customer.getPrefix() + QConfig.cfg().getNumDivider(customer.getPrefix()) + customer.getNumber();
                 switch (num.length()) {
                     case 1:
-                        x = 21;
+                        x = 21 - 5;
                         break;
                     case 2:
-                        x = 18;
+                        x = 18 - 6;
                         break;
                     case 3:
-                        x = 15;
+                        x = 15 - 3;
                         break;
                     case 4:
-                        x = 12;
+                        x = 12 - 2;
                         break;
                     case 5:
-                        x = 9;
+                        x = 9 - 2;
                         break;
                     case 6:
-                        x = 6;
+                        x = 6 - 2;
                         break;
                     case 7:
-                        x = 3;
+                        x = 3 - 3;
                         break;
                     default: {
                         x = 0;
@@ -1129,7 +1214,7 @@ public class FWelcome extends javax.swing.JFrame {
                         write(prn, ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
                     }
                 }
-                write(getLocaleMessage("ticket.wait"), ++line, WelcomeParams.getInstance().leftMargin, 1.8, 1);
+                write(WelcomeParams.getInstance().waitText == null || WelcomeParams.getInstance().waitText.isEmpty() ? getLocaleMessage("ticket.wait") : WelcomeParams.getInstance().waitText, ++line, WelcomeParams.getInstance().leftMargin, 1.8, 1);
                 write(WelcomeParams.getInstance().promoText, ++line, WelcomeParams.getInstance().leftMargin, 0.7, 0.4);
                 int y = write("", ++line, 0, 1, 1);
                 if (WelcomeParams.getInstance().barcode != 0) {
@@ -1219,7 +1304,7 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     public static synchronized void printTicketAdvance(final QAdvanceCustomer advCustomer) {
-
+        increaseTicketCount(1);
         // поддержка расширяемости плагинами
         boolean flag = false;
         for (final IPrintTicket event : ServiceLoader.load(IPrintTicket.class)) {
@@ -1447,7 +1532,7 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     public static synchronized void printPreInfoText(final String preInfo) {
-
+        increaseTicketCount(2);
         Printable canvas = new Printable() {
 
             private int write(String text, int line, int x, double kx, double ky, int pageIndex) {
@@ -1655,8 +1740,10 @@ public class FWelcome extends javax.swing.JFrame {
 
     /**
      * Инициализация заново пункта постановки в очередь.
+     *
+     * @param params
      */
-    public void reinit() {
+    public void reinit(CmdParams params) {
         final RpcGetAllServices.ServicesForWelcome servs = NetCommander.getServiсes(netProperty);
         final QService reroot = servs.getRoot();
         FWelcome.root = reroot;
@@ -1667,6 +1754,9 @@ public class FWelcome extends javax.swing.JFrame {
         FWelcome.finishTime = servs.getFinishTime();
         FWelcome.btnFreeDesign = servs.getButtonFreeDesign();
         loadRootParam();
+        if (params.dropTicketsCounter) {
+            increaseTicketCount(Integer.MIN_VALUE);
+        }
         QLog.l().logger().info("Пункт регистрации реинициализирован. Состояние \"" + stateWindow + "\"");
     }
     /**

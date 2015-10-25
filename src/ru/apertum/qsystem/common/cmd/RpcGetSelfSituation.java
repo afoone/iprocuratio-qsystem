@@ -41,11 +41,12 @@ public class RpcGetSelfSituation extends JsonRPC20 {
         public SelfSituation() {
         }
 
-        public SelfSituation(LinkedList<SelfService> selfservices, QCustomer customer, LinkedList<QCustomer> postponedList, int limitRecall, Shadow shadow) {
+        public SelfSituation(LinkedList<SelfService> selfservices, QCustomer customer, LinkedList<QCustomer> postponedList, int limitRecall, int extPrior, Shadow shadow) {
             this.selfservices = selfservices;
             this.customer = customer;
             this.postponedList = postponedList;
             this.limitRecall = limitRecall;
+            this.extPror = extPrior;
             this.shadow = shadow;
         }
         @Expose
@@ -81,7 +82,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
         public void setPostponedList(LinkedList<QCustomer> postponedList) {
             this.postponedList = postponedList;
         }
-        
+
         @Expose
         @SerializedName("limit_remove")
         private Integer limitRecall;
@@ -93,7 +94,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
         public void setLimitRemove(Integer limitRemove) {
             this.limitRecall = limitRemove;
         }
-        
+
         @Expose
         @SerializedName("shadow")
         private Shadow shadow;
@@ -105,7 +106,40 @@ public class RpcGetSelfSituation extends JsonRPC20 {
         public void setShadow(Shadow shadow) {
             this.shadow = shadow;
         }
-        
+
+        @Expose
+        @SerializedName("ext_prior")
+        private Integer extPror = 0;
+
+        public Integer getExtPror() {
+            return extPror;
+        }
+
+        public void setExtPror(Integer extPror) {
+            this.extPror = extPror;
+        }
+
+    }
+
+    public static class StPair {
+
+        @Expose
+        @SerializedName("num")
+        public final String number;
+        @Expose
+        @SerializedName("dat")
+        public final String data;
+
+        public StPair(String number, String data) {
+            this.number = number;
+            this.data = data;
+        }
+
+        public StPair() {
+            this.number = null;
+            this.data = null;
+        }
+
     }
 
     public static class SelfService {
@@ -126,6 +160,8 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.priority = priority;
             this.flexy = flexy;
             this.id = service.getId();
+            this.line = new LinkedList<>();
+            service.getClients().forEach(cu -> line.addLast(new StPair(cu.getFullNumber(), cu.getInput_data())));
         }
         @Expose
         @SerializedName("id")
@@ -160,7 +196,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
         public void setServiceName(String serviceName) {
             this.serviceName = serviceName;
         }
-        
+
         @Expose
         @SerializedName("priority")
         private int priority;
@@ -183,6 +219,19 @@ public class RpcGetSelfSituation extends JsonRPC20 {
         public void setFlexy(boolean flexy) {
             this.flexy = flexy;
         }
+
+        @Expose
+        @SerializedName("line")
+        private LinkedList<StPair> line;
+
+        public LinkedList<StPair> getLine() {
+            return line;
+        }
+
+        public void setLine(LinkedList<StPair> line) {
+            this.line = line;
+        }
+
     }
     @Expose
     @SerializedName("result")

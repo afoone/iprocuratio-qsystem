@@ -26,7 +26,6 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.MemoryImageSource;
-import java.util.Date;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.border.BevelBorder;
@@ -37,6 +36,7 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.common.WelcomeParams;
 import ru.apertum.qsystem.client.model.QButton;
 import ru.apertum.qsystem.client.model.QPanel;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.model.ATalkingClock;
@@ -92,12 +92,9 @@ public class FInputDialog extends javax.swing.JDialog {
                 final JButton b = new JButton(s.trim());
                 b.setFont(new Font("Tahoma", 0, 36));
                 b.setName("but_spec_" + s);
-                b.addActionListener(new java.awt.event.ActionListener() {
-                    
-                    public void actionPerformed(java.awt.event.ActionEvent evt) {
-                        java.awt.event.ActionEvent se = new ActionEvent(b, evt.getID(), s);
-                        buttonClickNumeric(se);
-                    }
+                b.addActionListener((java.awt.event.ActionEvent evt) -> {
+                    java.awt.event.ActionEvent se = new ActionEvent(b, evt.getID(), s);
+                    buttonClickNumeric(se);
                 });
                 b.setBorder(new CompoundBorder(new BevelBorder(0), new BevelBorder(0)));
                 panelSpecButtons.add(b);
@@ -217,11 +214,9 @@ public class FInputDialog extends javax.swing.JDialog {
         inputDialog.setSize(1280, 1024);
         Uses.setLocation(inputDialog);
         FInputDialog.netProperty = netProperty;
-        FInputDialog.serviceName = serviceName;
-        FInputDialog.siteMark = siteMark;
         inputDialog.jLabel2.setText(caption);
         inputDialog.changeTextToLocale();
-        if (!(QLog.l().isDebug() || QLog.l().isDemo() && !fullscreen)) {
+        if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo() && !fullscreen)) {
             Uses.setFullSize(inputDialog);
             int[] pixels = new int[16 * 16];
             Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));

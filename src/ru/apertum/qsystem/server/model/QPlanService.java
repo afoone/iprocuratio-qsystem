@@ -80,7 +80,7 @@ public class QPlanService implements Serializable {
     public void setCoefficient(Integer coefficient) {
         // выставим корректные параметры приоритета обслуживаемой услуге
         // по умолчанию "норма"
-        if (coefficient >= Uses.SERVICE_EXCLUDE && coefficient <= Uses.SERVICE_VIP) {
+        if (coefficient >= Uses.SERVICE_REMAINS && coefficient <= Uses.get_COEFF_WORD().size()) {
             this.coefficient = coefficient;
         } else {
             this.coefficient = 1;

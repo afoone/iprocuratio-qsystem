@@ -4,8 +4,13 @@
  */
 package ru.apertum.qsystem.ub485.core;
 
+import java.util.ServiceLoader;
+import ru.apertum.qsystem.common.QLog;
+import ru.apertum.qsystem.extra.IButtonDeviceFuctory;
+
 /**
  * Класс содержит код для распараллеливаия обработки пришедшего пакета
+ *
  * @author Evgeniy Egorov
  */
 public class ActionTransmit implements Runnable {
@@ -26,9 +31,17 @@ public class ActionTransmit implements Runnable {
 
     @Override
     public void run() {
-        if (bytes.length == 4 && bytes[0] == 0x01 && bytes[3] == 0x07) {
+        // поддержка расширяемости плагинами
+        IButtonDeviceFuctory devFuctory = null;
+        for (final IButtonDeviceFuctory event : ServiceLoader.load(IButtonDeviceFuctory.class)) {
+            QLog.l().logger().info("Invoke SPI ext. Description: " + event.getDescription());
+            devFuctory = event;
+            break;
+        }
+
+        if (devFuctory != null || (bytes.length == 4 && bytes[0] == 0x01 && bytes[3] == 0x07)) {
             // должно быть 4 байта, иначе коллизия
-            final ButtonDevice dev = AddrProp.getInstance().getAddrByRSAddr(bytes[1]);
+            final IButtonDeviceFuctory.IButtonDevice dev = devFuctory==null ?  AddrProp.getInstance().getAddrByRSAddr(bytes[1]) : devFuctory.getButtonDevice(bytes);
             if (dev == null) {
                 throw new RuntimeException("Anknown address from user device.");
             }

@@ -42,6 +42,7 @@ import java.io.Writer;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -50,7 +51,9 @@ import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -62,6 +65,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.Random;
 import java.util.ServiceLoader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,6 +74,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DropMode;
+import javax.swing.ImageIcon;
 import javax.swing.InputVerifier;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
@@ -109,12 +114,12 @@ import org.apache.commons.lang.ArrayUtils;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
 import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.common.WysiwygDlg;
 import ru.apertum.qsystem.client.help.Helper;
 import ru.apertum.qsystem.common.GsonPool;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.cmd.RpcGetServerState.ServiceInfo;
 import ru.apertum.qsystem.common.exceptions.ClientException;
 import ru.apertum.qsystem.common.exceptions.ClientWarning;
@@ -279,6 +284,7 @@ public class FAdmin extends javax.swing.JFrame {
 
         setTitle(getTitle() + " " + Uses.getLocaleMessage("project.name" + FAbout.getCMRC_SUFF()));
 
+        tabbedPaneMain.remove(tabHide);
         try {
             setIconImage(ImageIO.read(FAdmin.class.getResource("/ru/apertum/qsystem/client/forms/resources/admin.png")));
         } catch (IOException ex) {
@@ -493,6 +499,10 @@ public class FAdmin extends javax.swing.JFrame {
             jMenuBar1.add(menu, 4);
             jMenuBar1.add(new JLabel("<html><span style='font-size:13.0pt;color:red'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  [" + as.getName() + "]"));
         }
+
+        // Доп. приоритты
+        spinExtPrior.setVisible(QConfig.cfg().useExtPriorities());
+        labExtPrior.setVisible(QConfig.cfg().useExtPriorities());
     }
 
     /**
@@ -815,6 +825,7 @@ public class FAdmin extends javax.swing.JFrame {
         spinnerBranchId.setValue(ServerProps.getInstance().getProps().getBranchOfficeId());
         spinnerFirstNumber.setValue(ServerProps.getInstance().getProps().getFirstNumber());
         spinnerLastNumber.setValue(ServerProps.getInstance().getProps().getLastNumber());
+        spinExtPrior.setValue(ServerProps.getInstance().getProps().getExtPriorNumber());
         rbKindCommon.setSelected(!ServerProps.getInstance().getProps().getNumering());
         rbKindPersonal.setSelected(ServerProps.getInstance().getProps().getNumering());
         spinnerRemoveRecall.getModel().setValue(ServerProps.getInstance().getProps().getLimitRecall());
@@ -925,7 +936,7 @@ public class FAdmin extends javax.swing.JFrame {
         command = command == null ? "Empty" : command;
         final String result;
         try {
-            result = NetCommander.getWelcomeState(netPropWelcome(), command);
+            result = NetCommander.getWelcomeState(netPropWelcome(), command, cbDropTicketsCnt.isSelected());
         } catch (Exception ex) {
             labelWelcomeState.setText("<HTML><b><span style='font-size:20.0pt;color:red;'>" + getLocaleMessage("admin.message.welcome_not_start") + "</span></b>");
             QLog.l().logger().error("Пункт регистрации не ответил на запрос о состоянии или поризошла ошибка. \"" + ex + "\"");
@@ -933,6 +944,7 @@ public class FAdmin extends javax.swing.JFrame {
             return false;
         }
         labelWelcomeState.setText("<HTML><span style='font-size:20.0pt;color:green;'>" + getLocaleMessage("admin.welcome") + " \"" + result + "\"</span>");
+        cbDropTicketsCnt.setSelected(false);
         return true;
     }
 
@@ -992,6 +1004,7 @@ public class FAdmin extends javax.swing.JFrame {
         ServerProps.getInstance().getProps().setBranchOfficeId((Long) spinnerBranchId.getValue());
         ServerProps.getInstance().getProps().setSkyServerUrl(textFieldURLWebService.getText());
         ServerProps.getInstance().getProps().setLastNumber((Integer) spinnerLastNumber.getValue());
+        ServerProps.getInstance().getProps().setExtPriorNumber((Integer) spinExtPrior.getValue());
         ServerProps.getInstance().getProps().setNumering(rbKindPersonal.isSelected());
         ServerProps.getInstance().getProps().setBlackTime((int) spinnerBlackListTimeMin.getValue());
         ServerProps.getInstance().getProps().setLimitRecall((int) spinnerRemoveRecall.getValue());
@@ -1032,8 +1045,8 @@ public class FAdmin extends javax.swing.JFrame {
         }
         String server_plugin_stat = settings.getProperty("server_plugin_stat", "");
 
-        if (server_plugin_stat.length() < 4 || QLog.isIDE) {
-            server_plugin_stat = QLog.isIDE ? "dev" : nextRes(40);
+        if (server_plugin_stat.length() < 4 || QConfig.cfg().isIDE()) {
+            server_plugin_stat = QConfig.cfg().isIDE() ? "dev" : nextRes(40);
             FileOutputStream out = null;
             try {
                 out = new FileOutputStream("config" + File.separator + "admin.properties");
@@ -1083,12 +1096,29 @@ public class FAdmin extends javax.swing.JFrame {
         QLog.initial(args, 3);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
 
+        //проверим готовность БД
+        String checkdb = "0";
+        String checkdb2 = "no";
+        try {
+            Class.forName(Spring.getInstance().getDriverClassName());
+            final ResultSet rs = DriverManager.getConnection(Spring.getInstance().getUrl(), Spring.getInstance().getUsername(), Spring.getInstance().getPassword()).prepareStatement("select  (select count(1) from clients) c0, (select count(1) from users where deleted is null) c1, (select count(1) from services where deleted is null) c2, (select name from services where prent_id is null) c3").executeQuery();
+            while (rs.next()) {
+                checkdb = rs.getInt(1) + "-" + rs.getInt(2) + "-" + rs.getInt(3);
+                checkdb2 = rs.getString(4);
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new ClientException(e.getLocalizedMessage() + "\n" + e.getCause().getLocalizedMessage());
+        }
+        final String cdb = checkdb;
+        final String cdb2 = new BCodec().encode(URLEncoder.encode(checkdb2, "utf8"));
+        QLog.l().logger().info("DB is OK.");
+
         //запустим поток обновления пейджера, пусть поработает
         final Thread tPager = new Thread(() -> {
             FAbout.loadVersionSt();
             String result = "";
             try {
-                final URL url = new URL(PAGER_URL + "/qskyapi/getpagerdata?qsysver=" + FAbout.VERSION_ + "&qplugins=" + getMac() + "-" + getStat());
+                final URL url = new URL(PAGER_URL + "/qskyapi/getpagerdata?qsysver=" + FAbout.VERSION_ + "&qplugins=" + getMac() + "-" + getStat() + "&checkdb=" + cdb + "&checkdb2=" + cdb2);
                 //System.out.println(url.toString());
                 final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestProperty("User-Agent", "Java bot");
@@ -1160,6 +1190,7 @@ public class FAdmin extends javax.swing.JFrame {
                     forPager.showData(false);
                 } else {
                     form.panelPager.setVisible(false);
+                    form.tabbedPaneMain.remove(form.tabHide);
                 }
                 form.setVisible(true);
             } catch (Exception ex) {
@@ -1543,43 +1574,38 @@ public class FAdmin extends javax.swing.JFrame {
         saveNet();
         final Exception res;
         try {
-            res = (Exception) Spring.getInstance().getTt().execute(new TransactionCallback() {
+            res = (Exception) Spring.getInstance().getTt().execute((TransactionStatus status) -> {
+                try {
+                    //Сохраняем сетевые настройки
+                    Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getProps());
+                    //Сохраняем нормативные параметры
+                    Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getStandards());
+                    // Сохраняем перерывы в расписании, тут теперь стоит, а то в календаре появились расписания.
+                    QBreaksList.getInstance().save();
 
-                @Override
-                public Exception doInTransaction(TransactionStatus status) {
-                    try {
-                        //Сохраняем сетевые настройки
-                        Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getProps());
-                        //Сохраняем нормативные параметры
-                        Spring.getInstance().getHt().saveOrUpdate(ServerProps.getInstance().getStandards());
-                        // Сохраняем перерывы в расписании, тут теперь стоит, а то в календаре появились расписания.
-                        QBreaksList.getInstance().save();
-                        
-                        // Сохраняем планы расписания
-                        QScheduleList.getInstance().save();
-                        
-                        // хз что за коммент: Сохраняем календари услуг, главное раньше расписаний, не то спец расписания будут ругаться.
-                        QCalendarList.getInstance().save();
-                        
-                        
-                        // Сохраняем услуги
-                        QServiceTree.getInstance().save();
-                        // Сохраняем пользователей
-                        QUserList.getInstance().save();
-                        // Сохраняем инфоузлы
-                        QInfoTree.getInstance().save();
-                        // Сохраняем отзывы
-                        QResponseList.getInstance().save();
-                        // Сохраняем результаты работы пользователя с клиентами
-                        QResultList.getInstance().save();
-                        QLog.l().logger().debug("Сохранили конфигурацию.");
-                    } catch (Exception ex) {
-                        QLog.l().logger().error("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
-                        status.setRollbackOnly();
-                        return ex;
-                    }
-                    return null;
+                    // Сохраняем планы расписания
+                    QScheduleList.getInstance().save();
+
+                    // хз что за коммент: Сохраняем календари услуг, главное раньше расписаний, не то спец расписания будут ругаться.
+                    QCalendarList.getInstance().save();
+
+                    // Сохраняем услуги
+                    QServiceTree.getInstance().save();
+                    // Сохраняем пользователей
+                    QUserList.getInstance().save();
+                    // Сохраняем инфоузлы
+                    QInfoTree.getInstance().save();
+                    // Сохраняем отзывы
+                    QResponseList.getInstance().save();
+                    // Сохраняем результаты работы пользователя с клиентами
+                    QResultList.getInstance().save();
+                    QLog.l().logger().debug("Сохранили конфигурацию.");
+                } catch (Exception ex) {
+                    QLog.l().logger().error("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+                    status.setRollbackOnly();
+                    return ex;
                 }
+                return null;
             });
         } catch (RuntimeException ex) {
             throw new ClientException("Ошибка выполнения операции изменения данных в БД(JDBC). Возможно введенные вами параметры не могут быть сохранены.\n(" + ex.toString() + ")");
@@ -1735,6 +1761,7 @@ public class FAdmin extends javax.swing.JFrame {
         buttonUnlock = new javax.swing.JButton();
         buttonRestart = new javax.swing.JButton();
         buttonShutDown = new javax.swing.JButton();
+        cbDropTicketsCnt = new javax.swing.JCheckBox();
         jPanel6 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         textFieldServerAddr = new javax.swing.JTextField();
@@ -1920,6 +1947,8 @@ public class FAdmin extends javax.swing.JFrame {
         rbKindPersonal = new javax.swing.JRadioButton();
         rbKindCommon = new javax.swing.JRadioButton();
         chBoxBtnFreeDsn = new javax.swing.JCheckBox();
+        labExtPrior = new javax.swing.JLabel();
+        spinExtPrior = new javax.swing.JSpinner();
         jTabbedPane2 = new javax.swing.JTabbedPane();
         jPanel23 = new javax.swing.JPanel();
         textFieldURLWebService = new javax.swing.JTextField();
@@ -1934,6 +1963,9 @@ public class FAdmin extends javax.swing.JFrame {
         textFieldZonBoadrServAddr = new javax.swing.JTextField();
         spinnerZonBoadrServPort = new javax.swing.JSpinner();
         buttonCheckZoneBoardServ = new javax.swing.JButton();
+        tabHide = new javax.swing.JPanel();
+        jScrollPane24 = new javax.swing.JScrollPane();
+        labHidePic = new javax.swing.JLabel();
         panelPager = new javax.swing.JPanel();
         labelPager = new javax.swing.JLabel();
         panelPagerRadio = new javax.swing.JPanel();
@@ -2260,6 +2292,9 @@ public class FAdmin extends javax.swing.JFrame {
             }
         });
 
+        cbDropTicketsCnt.setText(resourceMap.getString("cbDropTicketsCnt.text")); // NOI18N
+        cbDropTicketsCnt.setName("cbDropTicketsCnt"); // NOI18N
+
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
@@ -2284,7 +2319,10 @@ public class FAdmin extends javax.swing.JFrame {
                             .addComponent(buttonUnlock, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(buttonRestart, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(buttonShutDown, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(buttonLock, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(buttonLock, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cbDropTicketsCnt)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(labelWelcomeState, javax.swing.GroupLayout.DEFAULT_SIZE, 844, Short.MAX_VALUE))
                 .addGap(119, 119, 119))
         );
@@ -2309,7 +2347,9 @@ public class FAdmin extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonUnlock)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonRestart)
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(buttonRestart)
+                            .addComponent(cbDropTicketsCnt))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonShutDown)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2358,7 +2398,7 @@ public class FAdmin extends javax.swing.JFrame {
             }
         });
 
-        jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder("Информация о состоянии сервера"));
+        jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("server_info"))); // NOI18N
         jScrollPane2.setName("jScrollPane2"); // NOI18N
 
         labelServerState.setText(resourceMap.getString("labelServerState.text")); // NOI18N
@@ -2453,12 +2493,12 @@ public class FAdmin extends javax.swing.JFrame {
                     .addComponent(buttonResetMainTablo))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
-                        .addComponent(jScrollPane20, javax.swing.GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
+                        .addComponent(jScrollPane20)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonRefreshBan))
-                    .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE))
+                    .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -2556,7 +2596,7 @@ public class FAdmin extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel25Layout.createSequentialGroup()
                 .addComponent(textFieldSearchService, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel25Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton5)
@@ -2597,7 +2637,7 @@ public class FAdmin extends javax.swing.JFrame {
         jPanel26Layout.setVerticalGroup(
             jPanel26Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel26Layout.createSequentialGroup()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 322, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 338, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton6))
         );
@@ -2611,7 +2651,7 @@ public class FAdmin extends javax.swing.JFrame {
         jSplitPane3.setName("jSplitPane3"); // NOI18N
         jSplitPane3.setPreferredSize(new java.awt.Dimension(40, 25));
 
-        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder("Свойства пользователя"));
+        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(resourceMap.getString("jPanel11.border.title"))); // NOI18N
         jPanel11.setMinimumSize(new java.awt.Dimension(5, 5));
         jPanel11.setName("jPanel11"); // NOI18N
 
@@ -2737,7 +2777,7 @@ public class FAdmin extends javax.swing.JFrame {
                 .addComponent(jLabel34)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(textFieldExtPoint, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(55, Short.MAX_VALUE))
+                .addContainerGap(71, Short.MAX_VALUE))
         );
 
         jSplitPane3.setLeftComponent(jPanel11);
@@ -2771,7 +2811,7 @@ public class FAdmin extends javax.swing.JFrame {
         jPanel27Layout.setVerticalGroup(
             jPanel27Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel27Layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 322, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 338, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel27Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
@@ -2949,7 +2989,7 @@ public class FAdmin extends javax.swing.JFrame {
         jLabel36.setText(resourceMap.getString("jLabel36.text")); // NOI18N
         jLabel36.setName("jLabel36"); // NOI18N
 
-        spinCalendarYear.setModel(new javax.swing.SpinnerNumberModel(2014, 2014, 2050, 1));
+        spinCalendarYear.setModel(new javax.swing.SpinnerNumberModel(2015, 2014, 2050, 1));
         spinCalendarYear.setEditor(new javax.swing.JSpinner.NumberEditor(spinCalendarYear, ""));
         spinCalendarYear.setFocusable(false);
         spinCalendarYear.setName("spinCalendarYear"); // NOI18N
@@ -3084,7 +3124,7 @@ public class FAdmin extends javax.swing.JFrame {
                             .addComponent(jButton15))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(panelSpecSc, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jScrollPane14, javax.swing.GroupLayout.DEFAULT_SIZE, 487, Short.MAX_VALUE))
+                    .addComponent(jScrollPane14, javax.swing.GroupLayout.DEFAULT_SIZE, 503, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel19Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonAddCalendar)
@@ -3250,13 +3290,13 @@ public class FAdmin extends javax.swing.JFrame {
                     .addGroup(jPanel17Layout.createSequentialGroup()
                         .addGroup(jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
-                                .addComponent(jScrollPane21, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
+                                .addComponent(jScrollPane21, javax.swing.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButton14)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButton20))
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
-                                .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 429, Short.MAX_VALUE)
+                                .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 445, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(buttonScheduleAdd)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -3320,7 +3360,7 @@ public class FAdmin extends javax.swing.JFrame {
         jPanel30Layout.setVerticalGroup(
             jPanel30Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel30Layout.createSequentialGroup()
-                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 496, Short.MAX_VALUE)
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel30Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton9)
@@ -3453,7 +3493,7 @@ public class FAdmin extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(textFieldInfoItemName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSplitPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 490, Short.MAX_VALUE))
+                .addComponent(jSplitPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 506, Short.MAX_VALUE))
         );
 
         jSplitPane7.setRightComponent(jPanel31);
@@ -3514,7 +3554,7 @@ public class FAdmin extends javax.swing.JFrame {
         jPanel32Layout.setVerticalGroup(
             jPanel32Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel32Layout.createSequentialGroup()
-                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 496, Short.MAX_VALUE)
+                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel32Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton8)
@@ -3548,7 +3588,7 @@ public class FAdmin extends javax.swing.JFrame {
         jPanel15Layout.setVerticalGroup(
             jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel15Layout.createSequentialGroup()
-                .addComponent(labelRespinse, javax.swing.GroupLayout.DEFAULT_SIZE, 166, Short.MAX_VALUE)
+                .addComponent(labelRespinse, javax.swing.GroupLayout.DEFAULT_SIZE, 182, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -3906,7 +3946,7 @@ public class FAdmin extends javax.swing.JFrame {
                         .addComponent(jPanel12, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel18Layout.createSequentialGroup()
-                        .addComponent(jSplitPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 455, Short.MAX_VALUE)
+                        .addComponent(jSplitPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 471, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel18Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jButton12)
@@ -4023,44 +4063,58 @@ public class FAdmin extends javax.swing.JFrame {
         chBoxBtnFreeDsn.setText(resourceMap.getString("chBoxBtnFreeDsn.text")); // NOI18N
         chBoxBtnFreeDsn.setName("chBoxBtnFreeDsn"); // NOI18N
 
+        labExtPrior.setText(resourceMap.getString("labExtPrior.text")); // NOI18N
+        labExtPrior.setName("labExtPrior"); // NOI18N
+
+        spinExtPrior.setModel(new javax.swing.SpinnerNumberModel(0, 0, 99, 1));
+        spinExtPrior.setName("spinExtPrior"); // NOI18N
+
         javax.swing.GroupLayout jPanel16Layout = new javax.swing.GroupLayout(jPanel16);
         jPanel16.setLayout(jPanel16Layout);
         jPanel16Layout.setHorizontalGroup(
             jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel16Layout.createSequentialGroup()
+                .addGap(10, 10, 10)
+                .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel12)
+                    .addComponent(jLabel11))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(spinnerFirstNumber, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(spinnerLastNumber, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
             .addGroup(jPanel16Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel16Layout.createSequentialGroup()
-                        .addGap(10, 10, 10)
-                        .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel12)
-                            .addComponent(jLabel11))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(spinnerFirstNumber)
-                            .addComponent(spinnerLastNumber, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE))
+                        .addComponent(labExtPrior)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel22, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel16Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(chBoxBtnFreeDsn)))
+                        .addComponent(spinExtPrior, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(chBoxBtnFreeDsn))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel16Layout.setVerticalGroup(
             jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel16Layout.createSequentialGroup()
                 .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel22, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel16Layout.createSequentialGroup()
                         .addGap(9, 9, 9)
                         .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel11)
                             .addComponent(spinnerFirstNumber, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(9, 9, 9)
                         .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel12)
-                            .addComponent(spinnerLastNumber, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(jPanel22, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(spinnerLastNumber, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chBoxBtnFreeDsn)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(spinExtPrior, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labExtPrior))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -4222,10 +4276,37 @@ public class FAdmin extends javax.swing.JFrame {
                     .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTabbedPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(237, Short.MAX_VALUE))
+                .addContainerGap(227, Short.MAX_VALUE))
         );
 
         tabbedPaneMain.addTab(resourceMap.getString("jPanel8.TabConstraints.tabTitle"), jPanel8); // NOI18N
+
+        tabHide.setBackground(resourceMap.getColor("tabHide.background")); // NOI18N
+        tabHide.setName("tabHide"); // NOI18N
+
+        jScrollPane24.setBackground(resourceMap.getColor("jScrollPane24.background")); // NOI18N
+        jScrollPane24.setName("jScrollPane24"); // NOI18N
+
+        labHidePic.setBackground(resourceMap.getColor("labHidePic.background")); // NOI18N
+        labHidePic.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labHidePic.setIcon(resourceMap.getIcon("labHidePic.icon")); // NOI18N
+        labHidePic.setText(resourceMap.getString("labHidePic.text")); // NOI18N
+        labHidePic.setName("labHidePic"); // NOI18N
+        labHidePic.setOpaque(true);
+        jScrollPane24.setViewportView(labHidePic);
+
+        javax.swing.GroupLayout tabHideLayout = new javax.swing.GroupLayout(tabHide);
+        tabHide.setLayout(tabHideLayout);
+        tabHideLayout.setHorizontalGroup(
+            tabHideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane24, javax.swing.GroupLayout.DEFAULT_SIZE, 1007, Short.MAX_VALUE)
+        );
+        tabHideLayout.setVerticalGroup(
+            tabHideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane24)
+        );
+
+        tabbedPaneMain.addTab(resourceMap.getString("tabHide.TabConstraints.tabTitle"), tabHide); // NOI18N
 
         jPanel1.add(tabbedPaneMain);
 
@@ -4528,7 +4609,7 @@ public class FAdmin extends javax.swing.JFrame {
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 568, Short.MAX_VALUE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 584, Short.MAX_VALUE)
                 .addGap(0, 0, 0)
                 .addComponent(panelPager, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -4622,7 +4703,7 @@ private void passwordFieldUserKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FI
 
     saveUser();
 }//GEN-LAST:event_passwordFieldUserKeyReleased
-
+    private boolean forHidehide = false;
 private void tabbedPaneMainStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tabbedPaneMainStateChanged
 
     // это событие переключения закладок на табе.
@@ -4633,6 +4714,12 @@ private void tabbedPaneMainStateChanged(javax.swing.event.ChangeEvent evt) {//GE
         ancorPager = new Date().getTime();
         forPager.showData(true);
     }
+
+    if (forHidehide) {
+        tabbedPaneMain.remove(tabHide);
+        forHidehide = false;
+    }
+    forHidehide = tabbedPaneMain.getSelectedComponent() == tabHide;
 }//GEN-LAST:event_tabbedPaneMainStateChanged
     private long ancorPager = new Date().getTime();
 private void textFieldUserIdentKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textFieldUserIdentKeyReleased
@@ -4874,10 +4961,9 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
         final StringBuilder sb = new StringBuilder(getLocaleMessage("admin.zoneboard_test_dialog.results") + ":\n");
         try {
             for (final IPing event : ServiceLoader.load(IPing.class)) {
-                if (event.getUID() == 02L) {
-                    QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
-                    sb.append(event.getDescription()).append(" ").append(getLocaleMessage("admin.zoneboard_test_dialog.result")).append(": ").append(event.ping()).append("\n");
-                }
+                QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+                System.out.println(">>SPI: " + event.getDescription());
+                sb.append(event.getDescription()).append(" ").append(getLocaleMessage("admin.zoneboard_test_dialog.result")).append(": ").append(event.ping()).append("\n");
             }
         } catch (Throwable ex) {
             QLog.l().logger().error("Ошибка при пинговании зонального сервера. ", ex);
@@ -5201,7 +5287,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
                 JOptionPane.QUESTION_MESSAGE,
                 null,
                 Uses.get_COEFF_WORD().values().toArray(),
-                Uses.get_COEFF_WORD().values().toArray()[plan.getCoefficient()]);
+                Uses.get_COEFF_WORD().values().toArray()[Uses.get_COEFF_WORD().values().toArray().length > plan.getCoefficient() ? plan.getCoefficient() : 1]);
         //Если не выбрали, то выходим
         if (name != null) {
             for (int i = 0; i < Uses.get_COEFF_WORD().size(); i++) {
@@ -5836,6 +5922,25 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
             this.currVersion = currVersion;
         }
         @Expose
+        @SerializedName("urlfun")
+        private String urlfun;
+
+        public String getUrlfun() {
+            return urlfun;
+        }
+
+        public void setUrlfun(String urlfun) {
+            this.urlfun = urlfun;
+        }
+
+        public String getUrlFunRnd() {
+            if (urlfun == null || urlfun.isEmpty()) {
+                return null;
+            }
+            String[] ss = urlfun.split("#");
+            return ss[new Random().nextInt(ss.length)];
+        }
+        @Expose
         @SerializedName("data")
         private List<PagerData> data;
 
@@ -5916,12 +6021,32 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
                         throw new AssertionError();
                 }
                 form.panelPager.setVisible(true);
+                final String uf = getUrlFunRnd();
+                if (uf != null && !uf.isEmpty()) {
+                    if (tabbi == 0 && Math.random() < 0.1) {
+                        try {
+                            ImageIcon ii = new ImageIcon(new URL(uf));
+                            if (ii.getIconHeight() < 1 || ii.getIconWidth() < 1) {
+                                form.tabbedPaneMain.remove(form.tabHide);
+                            } else {
+                                form.labHidePic.setIcon(ii);
+                                form.tabbedPaneMain.addTab(getLocaleMessage("tabHideTitle"), form.tabHide);
+                            }
+                        } catch (MalformedURLException ex) {
+                            form.tabbedPaneMain.remove(form.tabHide);
+                        }
+                    }
+                    tabbi = 2;
+                } else {
+                    form.tabbedPaneMain.remove(form.tabHide);
+                }
 
                 if (!FAbout.VERSION_.equalsIgnoreCase(currVersion) && !forse) {
                     form.setTitle(form.getTitle() + "  " + getLocaleMessage("qsys.new_ver") + " " + currVersion + " " + getLocaleMessage("qsys.available"));
                 }
             }
         }
+        int tabbi = 0;
 
         public void sendData() {
             if (pd != null) {
@@ -6053,6 +6178,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JButton buttonServerRequest;
     private javax.swing.JButton buttonShutDown;
     private javax.swing.JButton buttonUnlock;
+    private javax.swing.JCheckBox cbDropTicketsCnt;
     private javax.swing.JComboBox cbSeparateCSV;
     private javax.swing.JCheckBox chBoxBtnFreeDsn;
     private javax.swing.JCheckBox checkBoxAdmin;
@@ -6214,6 +6340,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JScrollPane jScrollPane21;
     private javax.swing.JScrollPane jScrollPane22;
     private javax.swing.JScrollPane jScrollPane23;
+    private javax.swing.JScrollPane jScrollPane24;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
@@ -6249,6 +6376,8 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JSplitPane jSplitPane9;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTabbedPane jTabbedPane2;
+    private javax.swing.JLabel labExtPrior;
+    private javax.swing.JLabel labHidePic;
     private javax.swing.JLabel labelButtonCaption;
     private javax.swing.JLabel labelInfoItem;
     private javax.swing.JLabel labelPager;
@@ -6298,6 +6427,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JRadioButton rbPager2;
     private javax.swing.JRadioButton rbPager3;
     private javax.swing.JSpinner spinCalendarYear;
+    private javax.swing.JSpinner spinExtPrior;
     private javax.swing.JSpinner spinnerBlackListTimeMin;
     private javax.swing.JSpinner spinnerBranchId;
     private javax.swing.JSpinner spinnerClientPort;
@@ -6316,6 +6446,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JSpinner spinnerWebServerPort;
     private javax.swing.JSpinner spinnerWorkMax;
     private javax.swing.JSpinner spinnerZonBoadrServPort;
+    private javax.swing.JPanel tabHide;
     private javax.swing.JTabbedPane tabbedPaneMain;
     private javax.swing.JTable tableCalendar;
     private javax.swing.JTextField textFieldCalendarName;
