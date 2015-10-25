@@ -34,6 +34,7 @@ import ru.apertum.qsystem.common.cmd.RpcStandInService;
 import ru.apertum.qsystem.common.model.ATalkingClock;
 import ru.apertum.qsystem.common.model.INetProperty;
 import ru.apertum.qsystem.common.NetCommander;
+import ru.apertum.qsystem.common.QConfig;
 
 /**
  * Created on 18.09.2009, 11:33:46
@@ -87,9 +88,7 @@ public class FStandAdvance extends javax.swing.JDialog {
         result = null;
         Uses.setLocation(standAdvance);
         FStandAdvance.netProperty = netProperty;
-        FStandAdvance.serviceName = serviceName;
-        FStandAdvance.siteMark = siteMark;
-        if (!(QLog.l().isDebug() || QLog.l().isDemo() && !fullscreen)) {
+        if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo() && !fullscreen)) {
             //Uses.setFullSize(standAdvance);
             int[] pixels = new int[16 * 16];
             Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));

@@ -19,14 +19,19 @@ package ru.apertum.qsystem.client.forms;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 import javax.imageio.ImageIO;
+import javax.swing.AbstractAction;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
 import ru.apertum.qsystem.client.Locales;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 
@@ -70,6 +75,25 @@ public class FLangsOnWelcome extends javax.swing.JFrame {
         }).forEach((btn) -> {
             panel.add(btn);
         });
+
+        int ii = 1;
+        final ButtonGroup bg = new ButtonGroup();
+        final String currLng = Locales.getInstance().getLangCurrName();
+        for (String lng : Locales.getInstance().getAvailableLocales()) {
+            final JRadioButtonMenuItem item = new JRadioButtonMenuItem("Press me");
+            item.addActionListener(new AbstractAction() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    setCurrentLang();
+                }
+            });
+            bg.add(item);
+            item.setSelected(lng.equals(currLng));
+            item.setText(lng); // NOI18N
+            item.setName("QRadioButtonMenuItem" + (ii++)); // NOI18N
+            menuLangs.add(item);
+        }
     }
 
     /**
@@ -87,6 +111,9 @@ public class FLangsOnWelcome extends javax.swing.JFrame {
         chMlng = new javax.swing.JCheckBox();
         jScrollPane1 = new javax.swing.JScrollPane();
         panel = new javax.swing.JPanel();
+        menuBar = new javax.swing.JMenuBar();
+        menuFile = new javax.swing.JMenu();
+        menuLangs = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(ru.apertum.qsystem.QSystem.class).getContext().getResourceMap(FLangsOnWelcome.class);
@@ -178,10 +205,23 @@ public class FLangsOnWelcome extends javax.swing.JFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addComponent(jScrollPane1)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
+
+        menuBar.setName("menuBar"); // NOI18N
+
+        menuFile.setText(resourceMap.getString("menuFile.text")); // NOI18N
+        menuFile.setName("menuFile"); // NOI18N
+
+        menuLangs.setText(resourceMap.getString("menuLangs.text")); // NOI18N
+        menuLangs.setName("menuLangs"); // NOI18N
+        menuFile.add(menuLangs);
+
+        menuBar.add(menuFile);
+
+        setJMenuBar(menuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -201,7 +241,7 @@ public class FLangsOnWelcome extends javax.swing.JFrame {
         bxs.stream().forEach((cb) -> {
             Locales.getInstance().setLangWelcome(cb.getText(), cb.isSelected());
         });
-        if (!QLog.isIDE && !Locales.getInstance().isIDE()) {
+        if (!QConfig.cfg().isIDE() && !Locales.getInstance().isIDE()) {
             Locales.getInstance().setWelcome("2");
             Locales.getInstance().setWelcomeMultylangs(chMlng.isSelected());
         }
@@ -248,6 +288,14 @@ public class FLangsOnWelcome extends javax.swing.JFrame {
         System.exit(0);
     }
 
+    public void setCurrentLang() {
+        for (int i = 0; i < menuLangs.getItemCount(); i++) {
+            if (((JRadioButtonMenuItem) menuLangs.getItem(i)).isSelected()) {
+                Locales.getInstance().setLangCurrent(((JRadioButtonMenuItem) menuLangs.getItem(i)).getText());
+            }
+        }
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancel;
     private javax.swing.JButton btnOK;
@@ -255,6 +303,9 @@ public class FLangsOnWelcome extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JMenuBar menuBar;
+    private javax.swing.JMenu menuFile;
+    private javax.swing.JMenu menuLangs;
     private javax.swing.JPanel panel;
     // End of variables declaration//GEN-END:variables
 }

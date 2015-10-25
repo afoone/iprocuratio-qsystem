@@ -36,6 +36,7 @@ import ru.apertum.qsystem.client.forms.FAbout;
 import ru.apertum.qsystem.common.CodepagePrintStream;
 import ru.apertum.qsystem.common.GsonPool;
 import ru.apertum.qsystem.common.Mailer;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.cmd.JsonRPC20;
@@ -63,7 +64,6 @@ import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 public class QServer extends Thread {
 
     private final Socket socket;
-    private static final String KEY_HTML = "-HTTP";
 
     /**
      * @param args - первым параметром передается полное имя настроечного XML-файла
@@ -95,7 +95,7 @@ public class QServer extends Thread {
                 System.out.println("Версия сервера: " + FAbout.VERSION_ + "-community QSystem Server (GPL)");
                 System.out.println("Версия базы данных: " + FAbout.VERSION_DB_ + " for MySQL 5.5-community Server (GPL)");
                 System.out.println("Дата выпуска : " + FAbout.DATE_);
-                System.out.println("Copyright (c) 2013, Apertum Projects. Все права защищены.");
+                System.out.println("Copyright (c) 2016, Apertum Projects. Все права защищены.");
                 System.out.println("QSystem является свободным программным обеспечением, вы можете");
                 System.out.println("распространять и/или изменять его согласно условиям Стандартной Общественной");
                 System.out.println("Лицензии GNU (GNU GPL), опубликованной Фондом свободного программного");
@@ -114,7 +114,7 @@ public class QServer extends Thread {
                 System.out.println("Database version: " + FAbout.VERSION_DB_ + " for MySQL 5.5-community Server (GPL)");
                 System.out.println("Released : " + FAbout.DATE_);
 
-                System.out.println("Copyright (c) 2010-2013, Apertum Projects and/or its affiliates. All rights reserved.");
+                System.out.println("Copyright (c) 2010-2016, Apertum Projects and/or its affiliates. All rights reserved.");
                 System.out.println("This software comes with ABSOLUTELY NO WARRANTY. This is free software,");
                 System.out.println("and you are welcome to modify and redistribute it under the GPL v3 license");
                 System.out.println("Text of this license on your language located in the folder with the program.");
@@ -127,23 +127,19 @@ public class QServer extends Thread {
         final long start = System.currentTimeMillis();
 
         // Загрузка плагинов из папки plugins
-        if (QLog.l().isPlaginable()) {
+        if (!QConfig.cfg().isNoPlugins()) {
             Uses.loadPlugins("./plugins/");
         }
 
         // посмотрим не нужно ли стартануть jetty
         // для этого нужно запускать с ключом http
         // если етсь ключ http, то запускаем сервер и принимаем на нем команды серверу суо
-        for (int i = 0; i < args.length; i++) {
-            if (KEY_HTML.equalsIgnoreCase(args[i]) && i != args.length - 1) {
-                QLog.l().logger().info("Run Jetty.");
-                try {
-                    int port = Integer.parseInt(args[i + 1]);
-                    JettyRunner.start(port);
-                } catch (NumberFormatException ex) {
-                    QLog.l().logger().error("Номер порта для Jetty в параметрах запуска не является числом. Формат параметра для порта 8081 '-http 8081'.", ex);
-                }
-                break;
+        if (QConfig.cfg().getHttp() > 0) {
+            QLog.l().logger().info("Run Jetty.");
+            try {
+                JettyRunner.start(QConfig.cfg().getHttp());
+            } catch (NumberFormatException ex) {
+                QLog.l().logger().error("Номер порта для Jetty в параметрах запуска не является числом. Формат параметра для порта 8081 '-http 8081'.", ex);
             }
         }
 
@@ -162,7 +158,7 @@ public class QServer extends Thread {
                 @Override
                 public void run() {
                     // это обнуление
-                    if (!QLog.isRETAIN && Uses.format_HH_mm.format(new Date(new Date().getTime() + 10 * 60 * 1000)).equals(Uses.format_HH_mm.format(ServerProps.getInstance().getProps().getStartTime()))) {
+                    if (!QConfig.cfg().isRetain() && Uses.format_HH_mm.format(new Date(new Date().getTime() + 10 * 60 * 1000)).equals(Uses.format_HH_mm.format(ServerProps.getInstance().getProps().getStartTime()))) {
                         QLog.l().logger().info("Очистка всех услуг.");
                         // почистим все услуги от трупов кастомеров с прошлого дня
                         QServer.clearAllQueue();
@@ -183,7 +179,7 @@ public class QServer extends Thread {
                                         fos.write(result);
                                         fos.flush();
                                     }
-                                    Mailer.sendReporterMailAtFon("temp/distribution_job_day.pdf");
+                                    Mailer.sendReporterMailAtFon(null, null, null, "temp/distribution_job_day.pdf");
                                 } catch (Exception ex) {
                                     QLog.l().logger().error("Какой-то облом с дневным отчетом", ex);
                                 }
@@ -233,7 +229,7 @@ public class QServer extends Thread {
             try {
                 final QServer qServer = new QServer(server.accept());
                 qServer.start();
-                if (QLog.l().isDebug()) {
+                if (QConfig.cfg().isDebug()) {
                     System.out.println();
                 }
             } catch (SocketTimeoutException e) {
@@ -242,7 +238,7 @@ public class QServer extends Thread {
                 throw new ServerException("Network error: " + e);
             }
 
-            if (!QLog.l().isDebug()) {
+            if (!QConfig.cfg().isDebug()) {
                 final char ch = '*';
                 String progres = "Process: " + ch;
                 final int len = 5;
@@ -517,7 +513,7 @@ public class QServer extends Thread {
             }
 
             // Проверим не просрочился ли кеш. Время просточки 3 часа.
-            if (!QLog.isRETAIN && (recList.date == null || new Date().getTime() - recList.date > 3 * 60 * 60 * 1000)) {
+            if (!QConfig.cfg().isRetain() && (recList.date == null || new Date().getTime() - recList.date > 3 * 60 * 60 * 1000)) {
                 // Просрочился кеш, не грузим
                 QLog.l().logger().warn("Срок давности хранения состояния истек. Если в системе ничего не происходит 3 часа, то считается что сохраненные данные устарели безвозвратно.");
             } else {

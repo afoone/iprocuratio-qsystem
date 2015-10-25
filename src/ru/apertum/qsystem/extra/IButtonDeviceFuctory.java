@@ -16,32 +16,17 @@
  */
 package ru.apertum.qsystem.extra;
 
+import ru.apertum.qsystem.ub485.core.AddrProp;
+
 /**
  *
  * @author Evgeniy Egorov
  */
-public abstract interface IButtonDeviceFuctory {
-    
-    public Assd sd = new Assd();
-    
-    public class Assd{
+public abstract interface IButtonDeviceFuctory extends IExtra {
 
-        public Assd() {
-            System.out.println("Hi");
-        }
-        
-        
-        void Hi(String st){
-            System.out.println("ss");
-            
-        }
-        
-        String ss = "asd";
-    }
+    public final AddrProp addrProp = AddrProp.getInstance();
 
     public static interface IButtonDevice {
-        
-        public Assd sd2 = sd;
 
         /**
          * Приняли от устройства и что-то делаем с этим
@@ -66,7 +51,13 @@ public abstract interface IButtonDeviceFuctory {
         public void check();
 
     }
-    
-    public IButtonDevice getButtonDevice();
+
+    /**
+     * Message from device turn into ID from qub.adr
+     *
+     * @param bytes data from hardware device for pressing a button
+     * @return Some class which ready to do something after receive data from device with ID - look out to qub.adr
+     */
+    public IButtonDevice getButtonDevice(byte[] bytes);
 
 }

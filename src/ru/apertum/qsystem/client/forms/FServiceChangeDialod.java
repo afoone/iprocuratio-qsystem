@@ -22,6 +22,7 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import javax.swing.ComboBoxModel;
 import javax.swing.JOptionPane;
+import javax.swing.border.BevelBorder;
 import javax.swing.tree.TreeNode;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
@@ -82,6 +83,7 @@ public class FServiceChangeDialod extends javax.swing.JDialog {
         }
 
         serviceChangeDialod.comboBoxServices = new JTreeComboBox(QServiceTree.getInstance());
+        serviceChangeDialod.comboBoxServices.setBorder(new BevelBorder(1));
         serviceChangeDialod.comboBoxServices.addActionListener((ActionEvent e) -> {
             QService ser = (QService) serviceChangeDialod.comboBoxServices.getSelectedItem();
             if (ser != null && !ser.isLeaf()) {

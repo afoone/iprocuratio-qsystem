@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
 import javax.imageio.ImageIO;
@@ -33,6 +32,7 @@ import ru.apertum.qsystem.client.forms.AFBoardRedactor;
 import ru.apertum.qsystem.client.forms.FBoardConfig;
 import ru.apertum.qsystem.client.forms.FIndicatorBoard;
 import ru.apertum.qsystem.common.CustomerState;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.SoundPlayer;
 import ru.apertum.qsystem.common.exceptions.ServerException;
@@ -89,13 +89,13 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
             } catch (IOException ex) {
                 System.err.println(ex);
             }
-            // Определим форму нв монитор
-            indicatorBoard.toPosition(QLog.l().isDebug(), Integer.parseInt(rootParams.attributeValue("x")), Integer.parseInt(rootParams.attributeValue("y")));
+            // Определим форму на монитор
+            indicatorBoard.toPosition(QConfig.cfg().isDebug(), Integer.parseInt(rootParams.attributeValue("x")), Integer.parseInt(rootParams.attributeValue("y")));
 
-            setLinesCount(indicatorBoard.getLinesCount());
+            // ушло в абстрактный метод setLinesCount(indicatorBoard.getLinesCount());
             setPause(indicatorBoard.getPause());
             if (records.size() != 0) {
-                showOnBoard(new LinkedHashSet<>(records.values()));
+                showOnBoard(new LinkedList<>(records.values()));
             }
 
             java.awt.EventQueue.invokeLater(() -> {
@@ -108,6 +108,11 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
         QLog.l().logger().info("Создание табло для телевизоров или мониторов.");
     }
 
+    @Override
+    protected Integer getLinesCount() {
+        return indicatorBoard == null ? 1000000 : indicatorBoard.getLinesCount();
+    }
+
     /**
      * Переопределено что бы вызвать появление таблички с номером вызванного поверх главного табло
      *
@@ -118,23 +123,23 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
     public synchronized void inviteCustomer(QUser user, QCustomer customer) {
         super.inviteCustomer(user, customer);
         if (indicatorBoard != null) {
-            indicatorBoard.showCallPanel(customer.getPrefix() + customer.getNumber(), user.getPoint());
+            indicatorBoard.showCallPanel(customer.getFullNumber(), user.getPoint());
         }
     }
 
     @Override
-    protected void showOnBoard(LinkedHashSet<Record> records) {
+    protected void showOnBoard(LinkedList<Record> records) {
         if (indicatorBoard != null) {
             int i = 0;
             for (Record rec : records) {
-                indicatorBoard.printRecord(i++, rec.customerNumber, rec.point, rec.ext_data, rec.getState() == CustomerState.STATE_INVITED ? 0 : -1);
+                indicatorBoard.printRecord(i++, rec.customerPrefix, rec.customerNumber, rec.point, rec.ext_data, rec.getState() == CustomerState.STATE_INVITED ? 0 : -1);
             }
             for (int t = i; t < getLinesCount(); t++) {
-                indicatorBoard.printRecord(t, "", "", "", -1);
+                indicatorBoard.printRecord(t, "", null, "", "", -1);
             }
             markShowed(records);
 
-            if (QLog.isServer1) { // если это не сервер, то QServiceTree полезет в спринг
+            if (QConfig.cfg().isServer()) { // если это не сервер, то QServiceTree полезет в спринг
                 final LinkedList<String> nexts = new LinkedList<>();
                 final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
                 QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
@@ -144,7 +149,7 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
                 });
                 QCustomer qCustomer = customers.poll();
                 while (qCustomer != null) {
-                    nexts.add(qCustomer.getPrefix() + qCustomer.getNumber());
+                    nexts.add(qCustomer.getPrefix() + QConfig.cfg().getNumDivider(qCustomer.getPrefix()) + qCustomer.getNumber());
                     qCustomer = customers.poll();
                 }
                 indicatorBoard.showNext(nexts);
@@ -159,7 +164,7 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
      */
     @Override
     public void customerStandIn(QCustomer customer) {
-        if (indicatorBoard != null && QLog.isServer1) { // если это не сервер, то QServiceTree полезет в спринг
+        if (indicatorBoard != null && QConfig.cfg().isServer()) { // если это не сервер, то QServiceTree полезет в спринг
             final LinkedList<String> nexts = new LinkedList<>();
             final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
             QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
@@ -267,7 +272,7 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
     @Override
     public void clear() {
         records.clear();
-        showOnBoard(new LinkedHashSet(records.values()));
+        showOnBoard(new LinkedList(records.values()));
     }
 
     @Override
@@ -278,5 +283,10 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
     @Override
     public long getUID() {
         return 1;
+    }
+
+    @Override
+    public Object getBoardForm() {
+        return indicatorBoard;
     }
 }

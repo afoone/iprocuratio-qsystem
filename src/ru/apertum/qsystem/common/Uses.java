@@ -59,6 +59,7 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -71,7 +72,9 @@ import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
 import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
+import ru.apertum.qsystem.client.forms.FClient;
 import ru.apertum.qsystem.client.forms.FServicePriority;
+import ru.apertum.qsystem.server.ServerProps;
 
 /**
  * @author Evgeniy Egorov Сдесь находятся константы и общеиспользуемые конструкции
@@ -86,6 +89,7 @@ public final class Uses {
     public static final int PRIORITY_VIP = 3;
     public static final int[] PRIORITYS = {PRIORITY_LOW, PRIORITY_NORMAL, PRIORITY_HI, PRIORITY_VIP};
     private static final LinkedHashMap<Integer, String> PRIORITYS_WORD = new LinkedHashMap<>();
+    public static final String PROPERTIES_FILE = "config/qsystem.properties";
 
     public static LinkedHashMap<Integer, String> get_PRIORITYS_WORD() {
         PRIORITYS_WORD.put(PRIORITY_LOW, FServicePriority.getLocaleMessage("client.priority.low"));
@@ -95,17 +99,28 @@ public final class Uses {
         return PRIORITYS_WORD;
     }
     // значения приоритета обрабатываемых услуг для юзера
-    public static final int SERVICE_EXCLUDE = -1;
+    // public static final int SERVICE_EXCLUDE = -1;
     public static final int SERVICE_REMAINS = 0;
     public static final int SERVICE_NORMAL = 1;
     public static final int SERVICE_VIP = 2;
-    public static final int[] SERVICE_PRIORITYS = {SERVICE_EXCLUDE, SERVICE_REMAINS, SERVICE_NORMAL, SERVICE_VIP};
+    //public static final int[] SERVICE_PRIORITYS = {SERVICE_EXCLUDE, SERVICE_REMAINS, SERVICE_NORMAL, SERVICE_VIP};
     public static final LinkedHashMap<Integer, String> COEFF_WORD = new LinkedHashMap<>();
 
     public static LinkedHashMap<Integer, String> get_COEFF_WORD() {
         COEFF_WORD.put(SERVICE_REMAINS, FServicePriority.getLocaleMessage("service.priority.low"));
         COEFF_WORD.put(SERVICE_NORMAL, FServicePriority.getLocaleMessage("service.priority.basic"));
-        COEFF_WORD.put(SERVICE_VIP, FServicePriority.getLocaleMessage("service.priority.vip"));
+        int n = 0;
+        if (QConfig.cfg().isAdminApp()) {
+            n = ServerProps.getInstance().getProps().getExtPriorNumber();
+        }
+        if (QConfig.cfg().isClient()) {
+            n = FClient.extPriorClient;
+        }
+        for (int i = 2; i <= n + 1; i++) {
+            COEFF_WORD.put(i, Integer.toString(i));
+        }
+        COEFF_WORD.put(SERVICE_VIP + n, FServicePriority.getLocaleMessage("service.priority.vip"));
+
         return COEFF_WORD;
     }
     // Наименования тегов и атрибутов в протоколах XML по статистике
@@ -158,6 +173,7 @@ public final class Uses {
     public static final String TAG_BOARD_VALUE = "Значение";
     public static final String TAG_BOARD_TYPE = "Тип";
     // имена параметров для табло 
+    public static final String TAG_BOARD_FRACTAL = "Fractal";
     public static final String TAG_BOARD_MONITOR = "Номер дополнительного монитора для табло";
     public static final String TAG_BOARD_LINES_COUNT = "Количество строк на табло";
     public static final String TAG_BOARD_COLS_COUNT = "Количество столбцов на табло";
@@ -176,6 +192,7 @@ public final class Uses {
     public static final String TAG_BOARD_GRID_NEXT = "Таблица следующих";
     public static final String TAG_BOARD_FON_COLOR = "Цвет фона";
     public static final String TAG_BOARD_FONT_SIZE_CAPTION = "Размер шрифта заголовка";
+    public static final String TAG_BOARD_FONT_NAME = "Font name";
     public static final String TAG_BOARD_FONT_SIZE_LINE = "Размер шрифта строк";
     public static final String TAG_BOARD_FONT_COLOR_CAPTION = "Цвет шрифта заголовка";
     public static final String TAG_BOARD_FONT_COLOR_LEFT = "Цвет шрифта левого столбца";
@@ -183,6 +200,9 @@ public final class Uses {
     public static final String TAG_BOARD_FONT_COLOR_LINE = "Цвет надписи строки табло";
     public static final String TAG_BOARD_LINE_BORDER = "Окантовка строк";
     public static final String TAG_BOARD_LINE_DELIMITER = "Разделитель столбцов";
+    public static final String TAG_BOARD_LEFT_PIC = "Left column pic";
+    public static final String TAG_BOARD_RIGHT_PIC = "Right column pic";
+    public static final String TAG_BOARD_EXT_PIC = "Ext column pic";
     public static final String TAG_BOARD_LEFT_CAPTION = "Заголовок левого столбца";
     public static final String TAG_BOARD_RIGHT_CAPTION = "Заголовок правого столбца";
     public static final String TAG_BOARD_EXT_CAPTION = "Заголовок дополнительного столбца";
@@ -271,6 +291,7 @@ public final class Uses {
     public static final String REPORT_FORMAT_RTF = "rtf";
     public static final String REPORT_FORMAT_PDF = "pdf";
     public static final String REPORT_FORMAT_XLSX = "xlsx";
+    public static final String REPORT_FORMAT_CSV = "csv";
     // Якорь для списка аналитических отчетов
     public static final String ANCHOR_REPORT_LIST = "<tr><td><center>#REPORT_LIST_ANCHOR#</center></td></tr>";
     public static final String ANCHOR_DATA_FOR_REPORT = "#DATA_FOR_REPORT#";
@@ -682,9 +703,16 @@ public final class Uses {
      *
      * @param component это окно и будем центрировать
      */
-    public static void setLocation(Component component) {
-        component.setLocation((Math.round(firstMonitor.getDefaultConfiguration().getBounds().width - component.getWidth()) / 2),
-                (Math.round(firstMonitor.getDefaultConfiguration().getBounds().height - component.getHeight()) / 2));
+    public static void setLocation(JDialog component) {
+        component.setLocationRelativeTo(null);
+        //component.setLocation((Math.round(firstMonitor.getDefaultConfiguration().getBounds().width - component.getWidth()) / 2),
+        //        (Math.round(firstMonitor.getDefaultConfiguration().getBounds().height - component.getHeight()) / 2));
+    }
+    
+    public static void setLocation(JFrame component) {
+        component.setLocationRelativeTo(null);
+        //component.setLocation((Math.round(firstMonitor.getDefaultConfiguration().getBounds().width - component.getWidth()) / 2),
+        //        (Math.round(firstMonitor.getDefaultConfiguration().getBounds().height - component.getHeight()) / 2));
     }
 
     /**
@@ -825,7 +853,7 @@ public final class Uses {
      * Создание и показ сплэш-заставки с блокировкой запуска второй копии
      */
     public static void startSplashClient() {
-        if (!QLog.l().isTerminal()) {
+        if (!QConfig.cfg().isTerminal()) {
             try {
                 stopStartSecond = new ServerSocket(43210);
             } catch (Exception ex) {

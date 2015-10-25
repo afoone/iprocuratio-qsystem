@@ -19,7 +19,7 @@ package ru.apertum.qsystem.server.controller;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.model.ATalkingClock;
 import ru.apertum.qsystem.common.model.QCustomer;
@@ -35,16 +35,10 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
 
     /**
      * Количество строк на табло.
+     * Реализовать под конкретное табло.
+     * @return Количество строк на табло.
      */
-    private Integer linesCount = 3;
-
-    public void setLinesCount(Integer linesCount) {
-        this.linesCount = linesCount;
-    }
-
-    public Integer getLinesCount() {
-        return linesCount;
-    }
+    abstract protected Integer getLinesCount();
     /**
      * Задержка обновления главного табло в секундах.
      */
@@ -85,7 +79,7 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
         records.remove(record.userName);
     }
 
-    protected LinkedHashSet<Record> getShowRecords() {
+    protected LinkedList<Record> getShowRecords() {
         ArrayList<Record> arr = new ArrayList<>(records.values());
         // перевернуть массив, так как добавленные валятся в конец, а выводить их первыми
         for (int i = 0; i < arr.size() / 2; i++) {
@@ -101,7 +95,7 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
             }
         }
         final int startPos = (getLinesCount() - 1 > pos) ? 0 : pos - getLinesCount() + 1; // позиция первой строки на табло.
-        final LinkedHashSet<Record> res = new LinkedHashSet<>();
+        final LinkedList<Record> res = new LinkedList<>();
         for (int j = 0; j < arr.size(); j++) {
             if (j >= startPos && j < startPos + getLinesCount()) {
                 res.add(arr.get(j));
@@ -116,7 +110,8 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
     public class Record implements Comparable<Record> {
 
         final public String point;
-        final public String customerNumber;
+        final public String customerPrefix;
+        final public Integer customerNumber;
 
         @Override
         public String toString() {
@@ -168,14 +163,16 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
          *
          * @param userName
          * @param point номер кабинета куда вызвали кастомера.
+         * @param customerPrefix
          * @param customerNumber номер кастомера о ком запись.
          * @param ext_data третья колонка
          * @param adressRS адрес клиентского табло.
          * @param interval обязательное время висения строки на табло в секундах
          */
-        public Record(String userName, String point, String customerNumber, String ext_data, Integer adressRS, Integer interval) {
+        public Record(String userName, String point, String customerPrefix, Integer customerNumber, String ext_data, Integer adressRS, Integer interval) {
             this.ext_data = ext_data;
             this.adressRS = adressRS;
+            this.customerPrefix = customerPrefix;
             this.customerNumber = customerNumber;
             this.userName = userName;
             this.point = point;
@@ -192,8 +189,9 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
             };
         }
 
-        public Record(CustomerState state, String point, String customerNumber, String ext_data, Integer adressRS) {
+        public Record(CustomerState state, String point, String customerPrefix, Integer customerNumber, String ext_data, Integer adressRS) {
             this.ext_data = ext_data;
+            this.customerPrefix = customerPrefix;
             this.customerNumber = customerNumber;
             this.point = point;
             this.state = state;
@@ -228,7 +226,7 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
     public synchronized void inviteCustomer(QUser user, QCustomer customer) {
         Record rec = records.get(user.getName());
         if (rec == null) {
-            rec = new Record(user.getName(), user.getPoint(), customer.getPrefix() + customer.getNumber(), user.getPointExt().replace("###", customer.getFullNumber()).replace("@@@", user.getPoint()), user.getAdressRS(), getPause());
+            rec = new Record(user.getName(), user.getPoint(), customer.getPrefix(), customer.getNumber(), user.getPointExt().replace("###", customer.getFullNumber()).replace("@@@", user.getPoint()), user.getAdressRS(), getPause());
         } else {
             addItem(rec);
         }
@@ -246,7 +244,7 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
         Record rec = records.get(user.getName());
         //запись может быть не найдена после рестарта сервера, список номеров на табло не бакапится
         if (rec == null) {
-            rec = new Record(user.getName(), user.getPoint(), ((QUser) user).getCustomer().getPrefix() + ((QUser) user).getCustomer().getNumber(), user.getPointExt().replace("###", ((QUser) user).getCustomer().getFullNumber()).replace("@@@", user.getPoint()), user.getAdressRS(), getPause());
+            rec = new Record(user.getName(), user.getPoint(), ((QUser) user).getCustomer().getPrefix(), ((QUser) user).getCustomer().getNumber(), user.getPointExt().replace("###", ((QUser) user).getCustomer().getFullNumber()).replace("@@@", user.getPoint()), user.getAdressRS(), getPause());
         }
         rec.setState(CustomerState.STATE_WORK);
         show(rec);
@@ -273,15 +271,15 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
      */
     @Override
     public synchronized void close() {
-        showOnBoard(new LinkedHashSet<>());
+        showOnBoard(new LinkedList<>());
     }
     //**************************************************************************
     //************************** Другие методы *********************************
     // чтоб отсеч дублирование
     private Record oldRec = null;
-    private LinkedHashSet<Record> oldList = new LinkedHashSet<>();
+    private LinkedList<Record> oldList = new LinkedList<>();
 
-    private boolean compareList(LinkedHashSet<Record> newList) {
+    private boolean compareList(LinkedList<Record> newList) {
         if (oldList.size() != newList.size()) {
             return false;
         }
@@ -303,18 +301,20 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
      */
     protected void show(Record record) {
 
-        LinkedHashSet<Record> newList = getShowRecords();
+        LinkedList<Record> newList = getShowRecords();
 
+        //System.out.println("--swow " + record + " records for show: " +newList);
         if (!compareList(newList)) {
-            oldList = new LinkedHashSet<>();
+            oldList = new LinkedList<>();
             newList.stream().forEach((rec) -> {
-                oldList.add(new Record(rec.state, rec.point, rec.customerNumber, rec.ext_data, rec.adressRS));
+                oldList.add(new Record(rec.state, rec.point, rec.customerPrefix, rec.customerNumber, rec.ext_data, rec.adressRS));
             });
+            //System.out.println("go to showOnBoard " + newList);
             showOnBoard(newList);
         }
         if (record != null) {
             if (record.compareTo(oldRec) != 0) {
-                oldRec = new Record(record.state, record.point, record.customerNumber, record.ext_data, record.adressRS);
+                oldRec = new Record(record.state, record.point, record.customerPrefix, record.customerNumber, record.ext_data, record.adressRS);
                 showToUser(record);
             }
         }
@@ -339,7 +339,7 @@ abstract public class AIndicatorBoard implements IIndicatorBoard {
      *
      * @param records Высвечиваемые записи.
      */
-    abstract protected void showOnBoard(LinkedHashSet<Record> records);
+    abstract protected void showOnBoard(LinkedList<Record> records);
 
     /**
      * Высветить запись на табло оператора.

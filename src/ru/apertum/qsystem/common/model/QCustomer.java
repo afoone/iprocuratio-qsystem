@@ -41,6 +41,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.CustomerState;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.extra.IChangeCustomerStateEvent;
 import ru.apertum.qsystem.server.Spring;
@@ -359,7 +360,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
 
     @Transient()
     public String getFullNumber() {
-        return getPrefix() + getNumber();
+        return "" + getPrefix() + QConfig.cfg().getNumDivider(getPrefix()) + getNumber();
     }
 
     public void setPrefix(String prefix) {
@@ -505,6 +506,23 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public int getPostponPeriod() {
         return postponPeriod;
     }
+
+    /**
+     * ID того кто видит отложенного, NULL для всех
+     */
+    @Expose
+    @SerializedName("is_mine")
+    private Long isMine = null;
+
+    @Transient
+    public Long getIsMine() {
+        return isMine;
+    }
+
+    public void setIsMine(Long userId) {
+        this.isMine = userId;
+    }
+
     /**
      * Количество повторных вызовов этого клиента
      */
@@ -543,15 +561,16 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
      */
     @Override
     public String toString() {
-        return prefix + getNumber()
+        return getFullNumber()
                 + (getInput_data().isEmpty() ? "" : " " + getInput_data())
-                + (postponedStatus.isEmpty() ? "" : " " + postponedStatus + (postponPeriod > 0 ? " (" + postponPeriod + "min.)" : ""));
+                + (postponedStatus.isEmpty() ? "" : " " + postponedStatus + (postponPeriod > 0 ? " (" + postponPeriod + "min.)" : "")
+                        + (isMine != null ? " Private!" : ""));
     }
 
     @Transient
     @Override
     public String getName() {
-        return prefix + getNumber() + " " + getInput_data();
+        return getFullNumber() + " " + getInput_data();
     }
 
     @Expose

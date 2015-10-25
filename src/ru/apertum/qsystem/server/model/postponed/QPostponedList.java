@@ -24,6 +24,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.Timer;
 import org.apache.commons.collections.CollectionUtils;
 import ru.apertum.qsystem.common.CustomerState;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ServerException;
@@ -63,7 +64,7 @@ public class QPostponedList extends DefaultListModel {
     private Timer timerOut;
 
     private QPostponedList() {
-        if (QLog.isServer1) {
+        if (QConfig.cfg().isServer()) {
             timerOut = new Timer(60 * 1000, (ActionEvent e) -> {
                 Executer.postponedTaskLock.lock();
                 try {

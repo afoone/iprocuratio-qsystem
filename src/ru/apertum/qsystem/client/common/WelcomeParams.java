@@ -77,6 +77,7 @@ public class WelcomeParams {
     private static final String LOGO_IMG = "logo_img";
     private static final String BACKGROUND_IMG = "background_img";
     private static final String PROMO_TXT = "promo_text";
+    private static final String WAIT_TXT = "wait_text";
     private static final String BOTTOM_TXT = "bottom_text";
     private static final String ASK_LIMIT = "ask_limit";
     private static final String PAGE_LINES_COUNT = "page_lines_count";
@@ -107,6 +108,11 @@ public class WelcomeParams {
     private static final String RESPONSE_BUTTON_HTMLTEXT = "response_button_htmltext";
     private static final String TOP_URL = "top_url";
 
+    //#RU Примерный объем талонов в рулоне
+    //#EN Approximate amount of tickets in a roll
+    private static final String PAPER_SIZE_ALARM = "paper_size_alarm";
+    private static final String PAPER_ALARM_STEP = "paper_alarm_step";
+
     private WelcomeParams() {
         loadSettings();
     }
@@ -135,6 +141,7 @@ public class WelcomeParams {
     public String backgroundImg = "/ru/apertum/qsystem/client/forms/resources/fon_welcome.jpg"; // фоновая картинка
     public String promoText = "Aperum projects, e-mail: info@aperum.ru"; // промотекст, печатающийся мелким шрифтом перед штрихкодом.
     public String bottomText = "\u041f\u0440\u0438\u044f\u0442\u043d\u043e\u0433\u043e \u043e\u0436\u0438\u0434\u0430\u043d\u0438\u044f. \u0421\u043f\u0430\u0441\u0438\u0431\u043e."; // произвольный текст, печатающийся в конце квитанции после штрихкода
+    public String waitText = ""; // текст, "Ожидайте вызова на табло". Если пусто, то текст по умолчанию.
     public int askLimit = 3; // Критический размер очереди после которого спрашивать клиентов о готовности встать в очередь
     public int pageLinesCount = 30; // Количество строк на странице.
     public int linesButtonCount = 5; // количество рядов кнопок на киоске, если будет привышение, то начнотся листание страниц
@@ -170,6 +177,9 @@ public class WelcomeParams {
     public String spec_keyboard = ""; // - специальная клавиатура при вводе юзерской инфы
     public int input_font_size = 64; // - размер шрифта при вводе юзерской инфы
 
+    public int paper_size_alarm = 700; //  Примерный объем талонов в рулоне
+    public int paper_alarm_step = 30; //  Примерный объем талонов в рулоне
+
     /**
      * Загрузим настройки.
      */
@@ -191,6 +201,9 @@ public class WelcomeParams {
         } catch (IOException ex) {
             throw new ClientException("\u041f\u0440\u043e\u0431\u043b\u0435\u043c\u044b \u0441 \u0447\u0442\u0435\u043d\u0438\u0435\u043c \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u043e\u0432. " + ex);
         }
+        paper_size_alarm = settings.getProperty(PAPER_SIZE_ALARM, "").trim().isEmpty() ? 700 : Integer.parseInt(settings.getProperty(PAPER_SIZE_ALARM, "700")); // - размер шрифта при вводе юзерской инфы
+        paper_alarm_step = settings.getProperty(PAPER_ALARM_STEP, "").trim().isEmpty() ? 30 : Integer.parseInt(settings.getProperty(PAPER_ALARM_STEP, "30")); // - размер шрифта при вводе юзерской инфы
+        
         point = settings.containsKey(POINT) ? Integer.parseInt(settings.getProperty(POINT)) : 1; // указание для какого пункта регистрации услуга, 0-для всех, х-для киоска х.
         leftMargin = Integer.parseInt(settings.getProperty(LEFT_MARGIN)); // отступ слева
         topMargin = Integer.parseInt(settings.getProperty(TOP_MARGIN)); //  отступ сверху
@@ -212,6 +225,7 @@ public class WelcomeParams {
         }
         promoText = settings.getProperty(PROMO_TXT);
         bottomText = settings.getProperty(BOTTOM_TXT);
+        waitText = settings.getProperty(WAIT_TXT);
         askLimit = Integer.parseInt(settings.getProperty(ASK_LIMIT)); // Критический размер очереди после которого спрашивать клиентов о готовности встать в очередь
         pageLinesCount = settings.getProperty(PAGE_LINES_COUNT) == null ? 70 : Integer.parseInt(settings.getProperty(PAGE_LINES_COUNT)); // Количество строк на странице
         linesButtonCount = settings.getProperty(LINES_BUTTON_COUNT) == null ? 5 : Integer.parseInt(settings.getProperty(LINES_BUTTON_COUNT)); // количество рядов кнопок на киоске, если будет привышение, то начнотся листание страниц

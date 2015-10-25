@@ -107,6 +107,35 @@ CREATE  TABLE IF NOT EXISTS  `calendar` (
   
 COMMENT = 'Календарь услуг на год' ;
 
+-- -----------------------------------------------------
+-- Table `qsystem`.`spec_chedule`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `spec_schedule` ;
+
+CREATE TABLE IF NOT EXISTS `spec_schedule` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '',
+  `date_from` DATE NOT NULL COMMENT 'Это спец расписание для этого календаря действует с этой даты',
+  `date_to` DATE NOT NULL COMMENT 'Это спец расписание для этого календаря действует до этой даты',
+  `calendar_id` BIGINT NOT NULL COMMENT '',
+  `schedule_id` BIGINT NOT NULL COMMENT '',
+  PRIMARY KEY (`id`) ,
+  CONSTRAINT `fk_spec_schedule_calendar`
+    FOREIGN KEY (`calendar_id`)
+    REFERENCES `calendar` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_spec_schedule_schedule`
+    FOREIGN KEY (`schedule_id`)
+    REFERENCES `schedule` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE )
+
+COMMENT = 'Специальные расписания для периодов для конкретных календарей. Перекрывают стардартное расписание.';
+
+CREATE INDEX `idx_spec_schedule_calendar` ON `spec_schedule` (`calendar_id` ASC);
+
+CREATE INDEX `idx_spec_schedule_schedule` ON `spec_schedule` (`schedule_id` ASC);
+
 
 -- -----------------------------------------------------
 -- Table  `services`
@@ -145,6 +174,7 @@ CREATE  TABLE IF NOT EXISTS  `services` (
   `duration` INT NOT NULL DEFAULT '1' COMMENT 'Норматив. Среднее время оказания этой услуги.  Пока для маршрутизации при медосмотре' ,
   `sound_template` VARCHAR(45) NULL COMMENT 'шаблон звукового приглашения. null или 0... - использовать родительский.' ,
   `expectation` INT NOT NULL DEFAULT 0 COMMENT 'Время обязательного ожидания посетителя' ,
+  `link_service_id` BIGINT NULL COMMENT 'Услуга, в которую реально попадет клиент. А эта сама услуга чисто кнопка, ярлык.',
   PRIMARY KEY (`id`) ,
   CONSTRAINT `fk_servises_parent_id_servises_id`
     FOREIGN KEY (`prent_id` )
@@ -323,6 +353,7 @@ CREATE  TABLE IF NOT EXISTS  `net` (
   `black_time` INT NOT NULL DEFAULT 0 COMMENT 'Время нахождения в блеклисте в минутах. 0 - попавшие в блекслист не блокируются' ,
   `limit_recall` INT NOT NULL DEFAULT 0 COMMENT 'Количество повторных вызовов перед отклонением неявившегося посетителя, 0-бесконечно' ,
   `button_free_design` TINYINT(1)  NOT NULL DEFAULT false COMMENT 'авторасстановка кнопок на киоске' ,
+  `ext_priority` INT NOT NULL DEFAULT 0 COMMENT 'Количество дополнительных приоритетов',
   PRIMARY KEY (`id`) )
   
 COMMENT = 'Сетевые настройки сервера.' ;
@@ -662,7 +693,7 @@ COMMIT;
 -- -----------------------------------------------------
 
 INSERT INTO `services` (`id`, `name`, `description`, `service_prefix`, `button_text`, `status`, `enable`, `prent_id`, `day_limit`, `person_day_limit`, `advance_limit`, `advance_limit_period`, `advance_time_period`, `schedule_id`, `input_required`, `input_caption`, `result_required`, `calendar_id`, `pre_info_html`, `pre_info_print_text`, `point`, `ticket_text`, `seq_id`, `but_x`, `but_y`, `but_b`, `but_h`, `deleted`, `duration`, `sound_template`, `expectation`) VALUES (1, 'Root of services', 'Root of services', '-', '<html><p align=center><span style="font-size:55.0;color:#DC143C">QMS QSystem</span><br><span style="font-size:45.0;color:#DC143C"><i>select a service</i>', 1, 1, NULL, 0, 0, 1, 14, 60, NULL, 0, '', 0, NULL, '', '', 0, NULL, 0, 100, 100, 200, 100, NULL, 1, '120050', 0);
-INSERT INTO `services` (`id`, `name`, `description`, `service_prefix`, `button_text`, `status`, `enable`, `prent_id`, `day_limit`, `person_day_limit`, `advance_limit`, `advance_limit_period`, `advance_time_period`, `schedule_id`, `input_required`, `input_caption`, `result_required`, `calendar_id`, `pre_info_html`, `pre_info_print_text`, `point`, `ticket_text`, `seq_id`, `but_x`, `but_y`, `but_b`, `but_h`, `deleted`, `duration`, `sound_template`, `expectation`) VALUES (2, 'Service', 'Description of service', 'А', '<html><b><p align=center><span style="font-size:20.0pt;color:blue">Some service', 1, 1, 1, 0, 0, 1, 14, 60, 1, 0, '', 0, 1, '', '', 0, NULL, 0, 100, 100, 200, 100, NULL, 1, '021111', 0);
+INSERT INTO `services` (`id`, `name`, `description`, `service_prefix`, `button_text`, `status`, `enable`, `prent_id`, `day_limit`, `person_day_limit`, `advance_limit`, `advance_limit_period`, `advance_time_period`, `schedule_id`, `input_required`, `input_caption`, `result_required`, `calendar_id`, `pre_info_html`, `pre_info_print_text`, `point`, `ticket_text`, `seq_id`, `but_x`, `but_y`, `but_b`, `but_h`, `deleted`, `duration`, `sound_template`, `expectation`) VALUES (2, 'Service', 'Description of service', 'A', '<html><b><p align=center><span style="font-size:20.0pt;color:blue">Some service', 1, 1, 1, 0, 0, 1, 14, 60, 1, 0, '', 0, 1, '', '', 0, NULL, 0, 100, 100, 200, 100, NULL, 1, '021111', 0);
 
 COMMIT;
 
@@ -688,7 +719,7 @@ COMMIT;
 -- Data for table `net`
 -- -----------------------------------------------------
 
-INSERT INTO `net` (`id`, `server_port`, `web_server_port`, `client_port`, `finish_time`, `start_time`, `version`, `first_number`, `last_number`, `numering`, `point`, `sound`, `branch_id`, `sky_server_url`, `zone_board_serv_addr`, `zone_board_serv_port`, `voice`, `black_time`, `limit_recall`, `button_free_design`) VALUES (1, 3128, 8088, 3129, '18:00:00', '08:45:00', '2.6', 1, 999, 0, 0, 1, 113, 'http://localhost:8080/qskyapi/customer_events?wsdl', '127.0.0.1', 27007, 0, 0, 0, 0);
+INSERT INTO `net` (`id`, `server_port`, `web_server_port`, `client_port`, `finish_time`, `start_time`, `version`, `first_number`, `last_number`, `numering`, `point`, `sound`, `branch_id`, `sky_server_url`, `zone_board_serv_addr`, `zone_board_serv_port`, `voice`, `black_time`, `limit_recall`, `button_free_design`) VALUES (1, 3128, 8088, 3129, '18:00:00', '08:45:00', '2.7', 1, 999, 0, 0, 1, 113, 'http://localhost:8080/qskyapi/customer_events?wsdl', '127.0.0.1', 27007, 0, 0, 0, 0, 0);
 
 COMMIT;
 

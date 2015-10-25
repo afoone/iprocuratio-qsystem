@@ -284,8 +284,9 @@ public class FLogin extends javax.swing.JDialog {
         if (owner == null) {
             // Отцентирируем
             final Toolkit kit = Toolkit.getDefaultToolkit();
-            loginForm.setLocation((Math.round(kit.getScreenSize().width - loginForm.getWidth()) / 2),
-                    (Math.round(kit.getScreenSize().height - loginForm.getHeight()) / 2));
+            loginForm.setLocationRelativeTo(null);
+            //loginForm.setLocation((Math.round(kit.getScreenSize().width - loginForm.getWidth()) / 2),
+            //        (Math.round(kit.getScreenSize().height - loginForm.getHeight()) / 2));
         }
         Uses.closeSplash();
         loginForm.setVisible(true);
@@ -327,8 +328,9 @@ public class FLogin extends javax.swing.JDialog {
         if (owner == null) {
             // Отцентирируем
             final Toolkit kit = Toolkit.getDefaultToolkit();
-            loginForm.setLocation((Math.round(kit.getScreenSize().width - loginForm.getWidth()) / 2),
-                    (Math.round(kit.getScreenSize().height - loginForm.getHeight()) / 2));
+            loginForm.setLocationRelativeTo(null);
+            //loginForm.setLocation((Math.round(kit.getScreenSize().width - loginForm.getWidth()) / 2),
+            //        (Math.round(kit.getScreenSize().height - loginForm.getHeight()) / 2));
         }
         Uses.closeSplash();
         loginForm.setVisible(true);

@@ -32,6 +32,7 @@ import ru.apertum.qsystem.common.Uses;import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.model.ATalkingClock;
 import ru.apertum.qsystem.common.model.INetProperty;
 import ru.apertum.qsystem.common.NetCommander;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.server.model.QAuthorizationCustomer;
 import ru.evgenic.rxtx.serialPort.IReceiveListener;
 import ru.evgenic.rxtx.serialPort.ISerialPort;
@@ -85,6 +86,7 @@ public class FMedCheckIn extends javax.swing.JDialog {
     public FMedCheckIn(Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        buttonEnter.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ru/apertum/qsystem/client/forms/resources/checkmark.png"))); // NOI18N
     }
 
     /**
@@ -105,7 +107,7 @@ public class FMedCheckIn extends javax.swing.JDialog {
         result = null;
         Uses.setLocation(medCheckIn);
         FMedCheckIn.netProperty = netProperty;
-        if (!(QLog.l().isDebug() || QLog.l().isDemo() && !fullscreen)) {
+        if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo() && !fullscreen)) {
             Uses.setFullSize(medCheckIn);
             int[] pixels = new int[16 * 16];
             Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
@@ -143,18 +145,14 @@ public class FMedCheckIn extends javax.swing.JDialog {
         e.requestFocus();
         e.requestFocusInWindow();
         // фокус для приема данных со сканера штрих-кодов
-        java.awt.EventQueue.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                e.requestFocus();
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            e.requestFocus();
         });
     }
     /**
      * через сколько сотрем введенное
      */
-    private static int delay = 10000;
+    private static final int delay = 10000;
     /**
      * Таймер, по которому будем стирать введенный номер.
      */
@@ -482,7 +480,7 @@ public class FMedCheckIn extends javax.swing.JDialog {
         //Послать запрос на идентификацию клиента и отработать результат
         final QAuthorizationCustomer res = NetCommander.getClientAuthorization(netProperty, textFieldNumber.getText().trim());
             // Шлем отказ
-        final String notFound = "<Ответ><![CDATA[<html><b><p align=center><span style='font-size:40.0pt;color:red'>Номер не обнаружен.</span><br><span style='font-size:60.0pt;color:purple'>Обратитесь в регистратуру.</span>]]></Ответ>";
+        final String notFound = "<html><p align=center><span style='font-size:45.0pt;color:purple'>Номер не обнаружен.</span><br><span style='font-size:60.0pt;color:green'>Обратитесь в регистратуру.</span>";
 
         if (res == null) {
             QLog.l().logger().debug("Не идентифицирован клиент по номеру \"" + textFieldNumber.getText() + "\"");

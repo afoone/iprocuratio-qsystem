@@ -17,7 +17,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import ru.apertum.qsystem.common.QLog;
+import ru.apertum.qsystem.common.QConfig;
 
 /**
  *
@@ -74,12 +74,8 @@ public abstract class ABoardFX extends JPanel /*implements IClientboardFX*/ {
             }
 
 
-            SwingUtilities.invokeLater(new Runnable() {
-
-                @Override
-                public void run() {
-                    initAndShowGUI();
-                }
+            SwingUtilities.invokeLater(() -> {
+                initAndShowGUI();
             });
         }
     }
@@ -87,7 +83,7 @@ public abstract class ABoardFX extends JPanel /*implements IClientboardFX*/ {
     private void initAndShowGUI() {
         JFrame w = new JFrame();
         w.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        if (!QLog.l().isDebug()) {
+        if (!QConfig.cfg().isDebug()) {
             w.setUndecorated(true);
         }
         // Create JavaFX panel.
@@ -104,7 +100,7 @@ public abstract class ABoardFX extends JPanel /*implements IClientboardFX*/ {
         w.pack();
         w.setLocationRelativeTo(null);
         w.setVisible(true);
-        if (QLog.l().isDebug()) {
+        if (QConfig.cfg().isDebug()) {
             w.setBounds(100, 100, 1024, 768);
         } else {
             w.setBounds(win_x, win_y, win_w, win_h);

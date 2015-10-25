@@ -17,7 +17,6 @@
 package ru.apertum.qsystem.client;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +30,6 @@ import java.net.URLClassLoader;
 import java.text.DateFormatSymbols;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Properties;

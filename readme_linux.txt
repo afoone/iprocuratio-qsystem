@@ -166,6 +166,11 @@ default-character-set=utf8
 collation_server=utf8_unicode_ci
 character_set_server=utf8
 
+== Пользователь и права ему.
+mysql -u root -p
+mysql> CREATE USER 'monty'@'%' IDENTIFIED BY 'some_pass';
+mysql> GRANT ALL PRIVILEGES ON *.* TO 'monty'@'%' WITH GRANT OPTION;
+
 **********************************************
 ** LINUX
 **********************************************

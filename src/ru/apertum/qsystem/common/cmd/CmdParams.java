@@ -51,6 +51,12 @@ public class CmdParams {
     @SerializedName("request_back")
     public Boolean requestBack;
     @Expose
+    @SerializedName("drop_tickets_cnt")
+    public Boolean dropTicketsCounter;
+    @Expose
+    @SerializedName("is_only_mine")
+    public Boolean isMine;
+    @Expose
     @SerializedName("coeff")
     public Integer coeff;
     @Expose

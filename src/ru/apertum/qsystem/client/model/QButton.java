@@ -43,6 +43,7 @@ import ru.apertum.qsystem.client.forms.FConfirmationStart2;
 import ru.apertum.qsystem.client.forms.FInputDialog;
 import ru.apertum.qsystem.client.forms.FPreInfoDialog;
 import ru.apertum.qsystem.client.forms.FWelcome;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.cmd.RpcGetServiceState.ServiceState;
@@ -350,7 +351,7 @@ public class QButton extends JButton {
                         } catch (Exception ex) {
                             // гасим жестоко, пользователю незачем видеть ошибки. выставим блокировку
                             QLog.l().logger().error("Гасим жестоко. Невозможно отправить команду на сервер. ", ex);
-                            form.lock(FWelcome.LOCK_MESSAGE);
+                            form.lock(form.LOCK_MESSAGE);
                             return;
                         }
                         // Если приехал текст причины, то покажем ее и не дадим встать в очередь
@@ -446,14 +447,14 @@ public class QButton extends JButton {
                         } catch (Exception ex) {
                             // гасим жестоко, пользователю незачем видеть ошибки. выставим блокировку
                             QLog.l().logger().error("Невозможно отправить команду на сервер. ", ex);
-                            form.lock(FWelcome.LOCK_MESSAGE);
+                            form.lock(form.LOCK_MESSAGE);
                             clock.stop();
                             return;
                         }
                         clock.stop();
                         form.showDelayFormPrint(WelcomeParams.getInstance().patternGetTicket.replace("dialogue_text.take_ticket", FWelcome.getLocaleMessage("qbutton.take_ticket")).
                                 replace("dialogue_text.your_nom", FWelcome.getLocaleMessage("qbutton.your_nom")).
-                                replace("dialogue_text.number", res.getPrefix() + res.getNumber()),
+                                replace("dialogue_text.number", res.getPrefix() + QConfig.cfg().getNumDivider(res.getPrefix()) + res.getNumber()),
                                 WelcomeParams.getInstance().getTicketImg);
 
                         QLog.l().logger().info("Печать этикетки.");

@@ -8,13 +8,14 @@ import java.io.UnsupportedEncodingException;
 import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.NetCommander;
 import ru.apertum.qsystem.common.model.QCustomer;
+import ru.apertum.qsystem.extra.IButtonDeviceFuctory.IButtonDevice;
 import ru.apertum.qsystem.server.model.QUser;
 
 /**
- *
+ * Default buttons
  * @author Evgeniy Egorov
  */
-public class ButtonDevice extends Object {
+public class ButtonDevice extends Object implements IButtonDevice{
 
     public final byte addres;
     public final boolean redirect;
@@ -80,7 +81,8 @@ public class ButtonDevice extends Object {
      *
      * @param b это команда от устройства
      */
-    void doAction(byte b) {
+    @Override
+    public void doAction(byte b) {
         if (b == 0x31) {
             System.out.println("b == 0x31 -- 49");
         } else if (b == 0x32) {
@@ -385,5 +387,20 @@ public class ButtonDevice extends Object {
         mess[2] = 0x30;// – светодиод погашен;
         UBForm.sendToDevice(mess);
                 */
+    }
+
+    @Override
+    public void getFeedback() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void changeAdress() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void check() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

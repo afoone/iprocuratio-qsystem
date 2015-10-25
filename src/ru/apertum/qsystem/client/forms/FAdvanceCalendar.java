@@ -47,6 +47,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetGridOfWeek.GridAndParams;
 import ru.apertum.qsystem.common.model.ATalkingClock;
 import ru.apertum.qsystem.common.model.INetProperty;
 import ru.apertum.qsystem.common.NetCommander;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QService;
 
@@ -96,6 +97,7 @@ public class FAdvanceCalendar extends javax.swing.JDialog {
      * @param advCustomer ID клиента предварительно идентифицированного, например в регистратуре по медполису. -1 если нет авторизации
      * @param inputData введеные клиентом данные перед регистрацией, если это требуется в услуге. null если не вводили.
      * @param comments  комментарии по предварительно записанному клиенту если ставили из админкивведеные клиентом данные перед регистрацией, если это требуется в услуге. null если не вводили.   * @return  если null, то отказались от предварительной записи
+     * @return 
      */
     public static QAdvanceCustomer showCalendar(Frame parent, boolean modal, INetProperty netProperty, QService service, boolean fullscreen, int delay, long advCustomer, String inputData, String comments) {
         FAdvanceCalendar.delay = delay;
@@ -112,9 +114,8 @@ public class FAdvanceCalendar extends javax.swing.JDialog {
         Uses.setLocation(advanceCalendar);
         FAdvanceCalendar.netProperty = netProperty;
         FAdvanceCalendar.service = service;
-        FAdvanceCalendar.siteMark = siteMark;
         if (advanceCalendar.showWeek(new Date())) {
-            if (!(QLog.l().isDebug() || QLog.l().isDemo()) && fullscreen) {
+            if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo()) && fullscreen) {
                 Uses.setFullSize(advanceCalendar);
                 int[] pixels = new int[16 * 16];
                 Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));

@@ -206,6 +206,11 @@
             <file  src="../plugins/Journal.jar" targetdir="$INSTALL_PATH/plugins/"/>
             <!-- Reccursive adding -->
         </pack>
+		<pack id="microsound" name="Microsound" required="no" preselected="no">
+            <description>Microsound</description>
+            <file  src="../plugins/Microsound.jar" targetdir="$INSTALL_PATH/plugins/"/>
+            <!-- Reccursive adding -->
+        </pack>
         <pack id="docs" name="Documentation" required="no">
             <description>Документация</description>
             <fileset os="windows" dir="../docs" includes="*.doc,*.html,*.pdf,*.rtf,*.otd" targetdir="$INSTALL_PATH/docs/"/>

@@ -112,6 +112,7 @@ public class NetCommander {
             try {
                 socket.connect(new InetSocketAddress(netProperty.getAddress(), netProperty.getPort()), 15000);
             } catch (IOException ex) {
+                Uses.closeSplash();
                 throw new QException(Locales.locMes("no_connect_to_server"), ex);
             }
             QLog.l().logger().trace("Создали Socket.");
@@ -420,7 +421,7 @@ public class NetCommander {
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.userId = userId;
-        params.textData = pointId;
+        params.textData = QConfig.cfg().getPointN();
         String res;
         try {
             res = send(netProperty, Uses.TASK_GET_SELF_SERVICES, params);
@@ -444,7 +445,7 @@ public class NetCommander {
      * Подпорочка, нужна для того чтоб настроить маркеровку окна приема на клиенте и переслать на сервер, чтоб заменить значение из БД. Это значение, если есть,
      * передается в строке параметров при старке клиентской проги и засовывается сюда, вот такая мегаинициализация.
      */
-    static public String pointId = null;
+    //static public String pointId = null; -> QConfig.cfg().getPointN();
 
     /**
      * Проверка на то что такой юзер уже залогинен в систему
@@ -458,7 +459,7 @@ public class NetCommander {
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.userId = userId;
-        params.textData = pointId;
+        params.textData = QConfig.cfg().getPointN();
         final String res;
         try {
             res = send(netProperty, Uses.TASK_GET_SELF_SERVICES_CHECK, params);
@@ -533,14 +534,16 @@ public class NetCommander {
      * @param userId
      * @param status просто строка. берется из возможных состояний завершения работы
      * @param postponedPeriod
+     * @param isMine
      */
-    public static void сustomerToPostpone(INetProperty netProperty, long userId, String status, int postponedPeriod) {
+    public static void сustomerToPostpone(INetProperty netProperty, long userId, String status, int postponedPeriod, boolean isMine) {
         QLog.l().logger().info("Перемещение вызванного юзером кастомера в пул отложенных.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.userId = userId;
         params.textData = status;
         params.postponedPeriod = postponedPeriod;
+        params.isMine = isMine;
         try {
             send(netProperty, Uses.TASK_CUSTOMER_TO_POSTPON, params);
         } catch (QException e) {// вывод исключений
@@ -705,14 +708,17 @@ public class NetCommander {
      *
      * @param netProperty параметры соединения с пунктом регистрации
      * @param message что-то вроде названия команды для пункта регистрации
+     * @param dropTicketsCounter сбросить счетчик выданных талонов или нет
      * @return некий ответ от пункта регистрации, вроде прям как строка для вывода
      */
-    public static String getWelcomeState(INetProperty netProperty, String message) {
+    public static String getWelcomeState(INetProperty netProperty, String message, boolean dropTicketsCounter) {
         QLog.l().logger().info("Получение описания состояния пункта регистрации.");
         // загрузим ответ
         String res = null;
+        final CmdParams params = new CmdParams();
+        params.dropTicketsCounter = dropTicketsCounter;
         try {
-            res = send(netProperty, message, null);
+            res = send(netProperty, message, params);
         } catch (QException e) {
             throw new ClientException(Locales.locMes("bad_response") + "\n" + e.toString());
         }

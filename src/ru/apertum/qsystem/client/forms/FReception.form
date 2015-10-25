@@ -1134,6 +1134,8 @@
                   <Group type="102" alignment="1" attributes="0">
                       <EmptySpace max="32767" attributes="0"/>
                       <Component id="buttonRefreshMainData" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <Component id="btnPushToTalk" min="-2" pref="60" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
                   <Component id="jSplitPane5" alignment="1" max="32767" attributes="0"/>
@@ -1146,7 +1148,10 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jSplitPane5" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="buttonRefreshMainData" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Component id="btnPushToTalk" pref="57" max="32767" attributes="0"/>
+                          <Component id="buttonRefreshMainData" max="32767" attributes="0"/>
+                      </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -1222,7 +1227,7 @@
                     </DimensionLayout>
                     <DimensionLayout dim="1">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane11" alignment="0" pref="501" max="32767" attributes="0"/>
+                          <Component id="jScrollPane11" alignment="0" pref="467" max="32767" attributes="0"/>
                       </Group>
                     </DimensionLayout>
                   </Layout>
@@ -1282,7 +1287,7 @@
                     </DimensionLayout>
                     <DimensionLayout dim="1">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane12" alignment="0" pref="501" max="32767" attributes="0"/>
+                          <Component id="jScrollPane12" alignment="0" pref="467" max="32767" attributes="0"/>
                       </Group>
                     </DimensionLayout>
                   </Layout>
@@ -1334,6 +1339,28 @@
                 <Property name="text" type="java.lang.String" resourceKey="buttonRefreshMainData.text"/>
                 <Property name="name" type="java.lang.String" value="buttonRefreshMainData" noResource="true"/>
               </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="btnPushToTalk">
+              <Properties>
+                <Property name="text" type="java.lang.String" resourceKey="btnPushToTalk.text"/>
+                <Property name="toolTipText" type="java.lang.String" resourceKey="btnPushToTalk.toolTipText"/>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.CompoundBorderInfo">
+                    <CompoundBorder>
+                      <Border PropertyName="outside" info="org.netbeans.modules.form.compat2.border.BevelBorderInfo">
+                        <BevelBorder/>
+                      </Border>
+                      <Border PropertyName="inside" info="org.netbeans.modules.form.compat2.border.BevelBorderInfo">
+                        <BevelBorder/>
+                      </Border>
+                    </CompoundBorder>
+                  </Border>
+                </Property>
+                <Property name="name" type="java.lang.String" value="btnPushToTalk" noResource="true"/>
+              </Properties>
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
+              </AuxValues>
             </Component>
           </SubComponents>
         </Container>

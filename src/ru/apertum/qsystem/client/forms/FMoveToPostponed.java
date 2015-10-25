@@ -45,12 +45,19 @@ public class FMoveToPostponed extends javax.swing.JDialog {
         return localeMap.getString(key);
     }
 
-    /** Creates new form FMoveToPostponed */
+    /**
+     * Creates new form FMoveToPostponed
+     *
+     * @param parent
+     * @param modal
+     * @param results
+     */
     public FMoveToPostponed(java.awt.Frame parent, boolean modal, Object[] results) {
         super(parent, modal);
         initComponents();
         comboBoxPeriod.setModel(new javax.swing.DefaultComboBoxModel(getLocaleMessage("conboBox.periods").split(",")));
         comboBoxResults.setModel(new javax.swing.DefaultComboBoxModel(results));
+        cbOnlyMine.setSelected(false);
     }
 
     public int getPeriod() {
@@ -60,8 +67,12 @@ public class FMoveToPostponed extends javax.swing.JDialog {
     public String getResult() {
         return (String) comboBoxResults.getModel().getSelectedItem();
     }
-    
-    public boolean isOK(){
+
+    public boolean isMine() {
+        return cbOnlyMine.isSelected() && comboBoxPeriod.getSelectedIndex() == 0;
+    }
+
+    public boolean isOK() {
         return ok;
     }
 
@@ -74,6 +85,7 @@ public class FMoveToPostponed extends javax.swing.JDialog {
         comboBoxResults = new javax.swing.JComboBox();
         labelPeriod = new javax.swing.JLabel();
         comboBoxPeriod = new javax.swing.JComboBox();
+        cbOnlyMine = new javax.swing.JCheckBox();
         buttonOK = new javax.swing.JButton();
         buttonCancel = new javax.swing.JButton();
 
@@ -97,20 +109,31 @@ public class FMoveToPostponed extends javax.swing.JDialog {
 
         comboBoxPeriod.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Бессрочно", "5 минут", "10 минут", "15 минут", "20 минут", "25 минут", "30 минут" }));
         comboBoxPeriod.setName("comboBoxPeriod"); // NOI18N
+        comboBoxPeriod.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboBoxPeriodActionPerformed(evt);
+            }
+        });
+
+        cbOnlyMine.setText(resourceMap.getString("cbOnlyMine.text")); // NOI18N
+        cbOnlyMine.setName("cbOnlyMine"); // NOI18N
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(labelResult)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(cbOnlyMine))
+                    .addComponent(labelResult, javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
                         .addComponent(labelPeriod)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(comboBoxPeriod, 0, 184, Short.MAX_VALUE))
-                    .addComponent(comboBoxResults, javax.swing.GroupLayout.Alignment.TRAILING, 0, 391, Short.MAX_VALUE))
+                        .addComponent(comboBoxPeriod, 0, 207, Short.MAX_VALUE))
+                    .addComponent(comboBoxResults, 0, 414, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -124,6 +147,8 @@ public class FMoveToPostponed extends javax.swing.JDialog {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelPeriod)
                     .addComponent(comboBoxPeriod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addComponent(cbOnlyMine)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -148,7 +173,7 @@ public class FMoveToPostponed extends javax.swing.JDialog {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(227, Short.MAX_VALUE)
+                .addContainerGap(250, Short.MAX_VALUE)
                 .addComponent(buttonOK)
                 .addGap(18, 18, 18)
                 .addComponent(buttonCancel)
@@ -178,9 +203,15 @@ public class FMoveToPostponed extends javax.swing.JDialog {
         ok = false;
         setVisible(false);
     }//GEN-LAST:event_buttonCancelActionPerformed
+
+    private void comboBoxPeriodActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboBoxPeriodActionPerformed
+        cbOnlyMine.setVisible(comboBoxPeriod.getSelectedIndex() == 0);
+    }//GEN-LAST:event_comboBoxPeriodActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonCancel;
     private javax.swing.JButton buttonOK;
+    private javax.swing.JCheckBox cbOnlyMine;
     private javax.swing.JComboBox comboBoxPeriod;
     private javax.swing.JComboBox comboBoxResults;
     private javax.swing.JPanel jPanel1;

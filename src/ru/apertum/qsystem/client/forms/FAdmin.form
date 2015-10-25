@@ -679,7 +679,7 @@
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="1" attributes="0">
-              <Component id="jPanel1" pref="568" max="32767" attributes="0"/>
+              <Component id="jPanel1" pref="584" max="32767" attributes="0"/>
               <EmptySpace min="-2" pref="0" max="-2" attributes="0"/>
               <Component id="panelPager" min="-2" max="-2" attributes="0"/>
           </Group>
@@ -799,6 +799,9 @@
                                           <Component id="buttonShutDown" alignment="0" max="32767" attributes="1"/>
                                           <Component id="buttonLock" alignment="0" max="32767" attributes="1"/>
                                       </Group>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="cbDropTicketsCnt" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                                   </Group>
                                   <Component id="labelWelcomeState" pref="844" max="32767" attributes="0"/>
                               </Group>
@@ -830,7 +833,10 @@
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="buttonUnlock" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="buttonRestart" min="-2" max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="3" attributes="0">
+                                          <Component id="buttonRestart" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="cbDropTicketsCnt" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      </Group>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="buttonShutDown" min="-2" max="-2" attributes="0"/>
                                   </Group>
@@ -933,6 +939,12 @@
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonShutDownActionPerformed"/>
                       </Events>
                     </Component>
+                    <Component class="javax.swing.JCheckBox" name="cbDropTicketsCnt">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" resourceKey="cbDropTicketsCnt.text"/>
+                        <Property name="name" type="java.lang.String" value="cbDropTicketsCnt" noResource="true"/>
+                      </Properties>
+                    </Component>
                   </SubComponents>
                 </Container>
                 <Container class="javax.swing.JPanel" name="jPanel6">
@@ -1010,13 +1022,13 @@
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="jScrollPane2" pref="243" max="32767" attributes="0"/>
+                                  <Component id="jScrollPane2" pref="259" max="32767" attributes="0"/>
                                   <Group type="102" alignment="1" attributes="0">
-                                      <Component id="jScrollPane20" pref="214" max="32767" attributes="0"/>
+                                      <Component id="jScrollPane20" max="32767" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="buttonRefreshBan" min="-2" max="-2" attributes="0"/>
                                   </Group>
-                                  <Component id="jScrollPane5" alignment="0" pref="243" max="32767" attributes="0"/>
+                                  <Component id="jScrollPane5" alignment="0" pref="259" max="32767" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                           </Group>
@@ -1076,7 +1088,9 @@
                       <Properties>
                         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                           <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                            <TitledBorder title="&#x418;&#x43d;&#x444;&#x43e;&#x440;&#x43c;&#x430;&#x446;&#x438;&#x44f; &#x43e; &#x441;&#x43e;&#x441;&#x442;&#x43e;&#x44f;&#x43d;&#x438;&#x438; &#x441;&#x435;&#x440;&#x432;&#x435;&#x440;&#x430;"/>
+                            <TitledBorder title="&#x418;&#x43d;&#x444;&#x43e;&#x440;&#x43c;&#x430;&#x446;&#x438;&#x44f; &#x43e; &#x441;&#x43e;&#x441;&#x442;&#x43e;&#x44f;&#x43d;&#x438;&#x438; &#x441;&#x435;&#x440;&#x432;&#x435;&#x440;&#x430;">
+                              <Property name="titleX" resourceKey="server_info"/>
+                            </TitledBorder>
                           </Border>
                         </Property>
                         <Property name="name" type="java.lang.String" value="jScrollPane2" noResource="true"/>
@@ -1274,7 +1288,7 @@
                                   <Group type="102" alignment="1" attributes="0">
                                       <Component id="textFieldSearchService" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jScrollPane3" pref="277" max="32767" attributes="1"/>
+                                      <Component id="jScrollPane3" pref="293" max="32767" attributes="1"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="3" attributes="0">
                                           <Component id="jButton5" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -1394,7 +1408,7 @@
                             <DimensionLayout dim="1">
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" alignment="1" attributes="0">
-                                      <Component id="jScrollPane4" pref="322" max="32767" attributes="1"/>
+                                      <Component id="jScrollPane4" pref="338" max="32767" attributes="1"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jButton6" min="-2" max="-2" attributes="0"/>
                                   </Group>
@@ -1469,7 +1483,9 @@
                           <Properties>
                             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                                <TitledBorder title="&#x421;&#x432;&#x43e;&#x439;&#x441;&#x442;&#x432;&#x430; &#x43f;&#x43e;&#x43b;&#x44c;&#x437;&#x43e;&#x432;&#x430;&#x442;&#x435;&#x43b;&#x44f;"/>
+                                <TitledBorder title="&#x421;&#x432;&#x43e;&#x439;&#x441;&#x442;&#x432;&#x430; &#x43f;&#x43e;&#x43b;&#x44c;&#x437;&#x43e;&#x432;&#x430;&#x442;&#x435;&#x43b;&#x44f;">
+                                  <Property name="titleX" resourceKey="jPanel11.border.title"/>
+                                </TitledBorder>
                               </Border>
                             </Property>
                             <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -1554,7 +1570,7 @@
                                       <Component id="jLabel34" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="textFieldExtPoint" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace pref="55" max="32767" attributes="0"/>
+                                      <EmptySpace pref="71" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
                             </DimensionLayout>
@@ -1676,7 +1692,7 @@
                             <DimensionLayout dim="1">
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" alignment="1" attributes="0">
-                                      <Component id="jScrollPane1" pref="322" max="32767" attributes="1"/>
+                                      <Component id="jScrollPane1" pref="338" max="32767" attributes="1"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="3" attributes="0">
                                           <Component id="jButton1" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -1943,7 +1959,7 @@
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="panelSpecSc" max="32767" attributes="0"/>
                               </Group>
-                              <Component id="jScrollPane14" pref="487" max="32767" attributes="0"/>
+                              <Component id="jScrollPane14" pref="503" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
@@ -2134,7 +2150,7 @@
                 <Component class="javax.swing.JSpinner" name="spinCalendarYear">
                   <Properties>
                     <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
-                      <SpinnerModel initial="2014" maximum="2050" minimum="2014" numberType="java.lang.Integer" stepSize="1" type="number"/>
+                      <SpinnerModel initial="2015" maximum="2050" minimum="2014" numberType="java.lang.Integer" stepSize="1" type="number"/>
                     </Property>
                     <Property name="editor" type="javax.swing.JComponent" editor="org.netbeans.modules.form.editors.SpinnerEditorEditor">
                       <SpinnerEditor format="" type="3"/>
@@ -2311,14 +2327,14 @@
                               <Group type="102" attributes="0">
                                   <Group type="103" groupAlignment="0" attributes="0">
                                       <Group type="102" alignment="1" attributes="0">
-                                          <Component id="jScrollPane21" pref="429" max="32767" attributes="0"/>
+                                          <Component id="jScrollPane21" pref="445" max="32767" attributes="0"/>
                                           <EmptySpace max="-2" attributes="0"/>
                                           <Component id="jButton14" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace max="-2" attributes="0"/>
                                           <Component id="jButton20" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                       <Group type="102" alignment="1" attributes="0">
-                                          <Component id="jScrollPane12" pref="429" max="32767" attributes="2"/>
+                                          <Component id="jScrollPane12" pref="445" max="32767" attributes="2"/>
                                           <EmptySpace max="-2" attributes="0"/>
                                           <Component id="buttonScheduleAdd" min="-2" max="-2" attributes="0"/>
                                           <EmptySpace max="-2" attributes="0"/>
@@ -2640,7 +2656,7 @@
                         <DimensionLayout dim="1">
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="0" attributes="0">
-                                  <Component id="jScrollPane8" pref="496" max="32767" attributes="0"/>
+                                  <Component id="jScrollPane8" pref="512" max="32767" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="3" attributes="0">
                                       <Component id="jButton9" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -2729,7 +2745,7 @@
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="textFieldInfoItemName" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jSplitPane5" pref="490" max="32767" attributes="0"/>
+                                  <Component id="jSplitPane5" pref="506" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                         </DimensionLayout>
@@ -3007,7 +3023,7 @@
                         <DimensionLayout dim="1">
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="0" attributes="0">
-                                  <Component id="jScrollPane10" pref="496" max="32767" attributes="2"/>
+                                  <Component id="jScrollPane10" pref="512" max="32767" attributes="2"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="3" attributes="0">
                                       <Component id="jButton8" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -3119,7 +3135,7 @@
                             <DimensionLayout dim="1">
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" alignment="0" attributes="0">
-                                      <Component id="labelRespinse" pref="166" max="32767" attributes="0"/>
+                                      <Component id="labelRespinse" pref="182" max="32767" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                   </Group>
                               </Group>
@@ -3300,7 +3316,7 @@
                                   <EmptySpace max="32767" attributes="0"/>
                               </Group>
                               <Group type="102" attributes="0">
-                                  <Component id="jSplitPane4" pref="455" max="32767" attributes="0"/>
+                                  <Component id="jSplitPane4" pref="471" max="32767" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="3" attributes="0">
                                       <Component id="jButton12" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -3805,7 +3821,7 @@
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="jTabbedPane2" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="237" max="32767" attributes="0"/>
+                          <EmptySpace pref="227" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -3923,26 +3939,30 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
+                          <Group type="102" alignment="1" attributes="0">
+                              <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="jLabel12" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel11" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="spinnerFirstNumber" min="-2" pref="73" max="-2" attributes="1"/>
+                                  <Component id="spinnerLastNumber" min="-2" pref="73" max="-2" attributes="1"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jPanel22" max="32767" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" attributes="0">
-                                      <EmptySpace min="10" pref="10" max="10" attributes="0"/>
-                                      <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="jLabel12" alignment="0" min="-2" max="-2" attributes="0"/>
-                                          <Component id="jLabel11" alignment="0" min="-2" max="-2" attributes="0"/>
-                                      </Group>
-                                      <EmptySpace type="separate" max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                          <Component id="spinnerFirstNumber" max="32767" attributes="1"/>
-                                          <Component id="spinnerLastNumber" alignment="0" pref="73" max="32767" attributes="1"/>
-                                      </Group>
+                                      <Component id="labExtPrior" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jPanel22" min="-2" max="-2" attributes="0"/>
+                                      <Component id="spinExtPrior" min="-2" pref="52" max="-2" attributes="0"/>
                                   </Group>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="chBoxBtnFreeDsn" min="-2" max="-2" attributes="0"/>
-                                  </Group>
+                                  <Component id="chBoxBtnFreeDsn" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="32767" attributes="0"/>
                           </Group>
@@ -3952,22 +3972,27 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="102" attributes="0">
+                                  <Component id="jPanel22" min="-2" max="-2" attributes="1"/>
+                                  <Group type="102" alignment="0" attributes="0">
                                       <EmptySpace min="-2" pref="9" max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="3" attributes="0">
                                           <Component id="jLabel11" alignment="3" min="-2" max="-2" attributes="0"/>
                                           <Component id="spinnerFirstNumber" alignment="3" min="-2" max="-2" attributes="0"/>
                                       </Group>
-                                      <EmptySpace max="-2" attributes="0"/>
+                                      <EmptySpace min="-2" pref="9" max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="3" attributes="0">
                                           <Component id="jLabel12" alignment="3" min="-2" max="-2" attributes="0"/>
                                           <Component id="spinnerLastNumber" alignment="3" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                   </Group>
-                                  <Component id="jPanel22" alignment="0" min="-2" max="-2" attributes="1"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="chBoxBtnFreeDsn" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="spinExtPrior" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labExtPrior" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
                               <EmptySpace max="32767" attributes="0"/>
                           </Group>
                       </Group>
@@ -4062,6 +4087,20 @@
                       <Properties>
                         <Property name="text" type="java.lang.String" resourceKey="chBoxBtnFreeDsn.text"/>
                         <Property name="name" type="java.lang.String" value="chBoxBtnFreeDsn" noResource="true"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labExtPrior">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" resourceKey="labExtPrior.text"/>
+                        <Property name="name" type="java.lang.String" value="labExtPrior" noResource="true"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JSpinner" name="spinExtPrior">
+                      <Properties>
+                        <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
+                          <SpinnerModel initial="0" maximum="99" minimum="0" numberType="java.lang.Integer" stepSize="1" type="number"/>
+                        </Property>
+                        <Property name="name" type="java.lang.String" value="spinExtPrior" noResource="true"/>
                       </Properties>
                     </Component>
                   </SubComponents>
@@ -4296,6 +4335,54 @@
                         </Component>
                       </SubComponents>
                     </Container>
+                  </SubComponents>
+                </Container>
+              </SubComponents>
+            </Container>
+            <Container class="javax.swing.JPanel" name="tabHide">
+              <Properties>
+                <Property name="background" type="java.awt.Color" resourceKey="tabHide.background"/>
+                <Property name="name" type="java.lang.String" value="tabHide" noResource="true"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+                  <JTabbedPaneConstraints tabName="&#x41d;&#x435; &#x441;&#x43c;&#x43e;&#x442;&#x435;&#x442;&#x44c;">
+                    <Property name="tabTitle" type="java.lang.String" resourceKey="tabHide.TabConstraints.tabTitle"/>
+                  </JTabbedPaneConstraints>
+                </Constraint>
+              </Constraints>
+
+              <Layout>
+                <DimensionLayout dim="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="jScrollPane24" alignment="0" pref="1007" max="32767" attributes="0"/>
+                  </Group>
+                </DimensionLayout>
+                <DimensionLayout dim="1">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="jScrollPane24" max="32767" attributes="0"/>
+                  </Group>
+                </DimensionLayout>
+              </Layout>
+              <SubComponents>
+                <Container class="javax.swing.JScrollPane" name="jScrollPane24">
+                  <Properties>
+                    <Property name="background" type="java.awt.Color" resourceKey="jScrollPane24.background"/>
+                    <Property name="name" type="java.lang.String" value="jScrollPane24" noResource="true"/>
+                  </Properties>
+
+                  <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+                  <SubComponents>
+                    <Component class="javax.swing.JLabel" name="labHidePic">
+                      <Properties>
+                        <Property name="background" type="java.awt.Color" resourceKey="labHidePic.background"/>
+                        <Property name="horizontalAlignment" type="int" value="0"/>
+                        <Property name="icon" type="javax.swing.Icon" resourceKey="labHidePic.icon"/>
+                        <Property name="text" type="java.lang.String" resourceKey="labHidePic.text"/>
+                        <Property name="name" type="java.lang.String" value="labHidePic" noResource="true"/>
+                        <Property name="opaque" type="boolean" value="true"/>
+                      </Properties>
+                    </Component>
                   </SubComponents>
                 </Container>
               </SubComponents>

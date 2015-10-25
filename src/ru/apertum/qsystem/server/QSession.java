@@ -16,8 +16,8 @@
  */
 package ru.apertum.qsystem.server;
 
-import java.util.Date;
 import java.util.HashMap;
+import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.server.model.QUser;
 
 /**
@@ -37,12 +37,13 @@ public class QSession {
         this.user = user;
         this.ipAdress = ipAdress;
         this.IP = IP;
-        time = new Date().getTime();
+        time = System.currentTimeMillis();
+        QLog.l().logger().trace("Session for new user '" + user.getName() + "' ip=" + ipAdress);
     }
 
     public QSession(QUser user) {
         this.user = user;
-        time = new Date().getTime();
+        time = System.currentTimeMillis();
     }
 
     public String getIpAdress() {
@@ -78,7 +79,7 @@ public class QSession {
     }
 
     public void update() {
-        setTime(new Date().getTime());
+        setTime(System.currentTimeMillis());
     }
 
     private final HashMap<String, Object> data = new HashMap<>();
@@ -100,7 +101,7 @@ public class QSession {
     }
 
     boolean isValid() {
-        return (new Date().getTime() - time) < LIVE_TIME;
+        return (System.currentTimeMillis() - time) < LIVE_TIME;
     }
 
 }

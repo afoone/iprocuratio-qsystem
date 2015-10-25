@@ -68,8 +68,8 @@ import ru.apertum.qsystem.client.common.ClientNetProperty;
 import ru.apertum.qsystem.client.model.JTreeComboBox;
 import ru.apertum.qsystem.client.model.QTray;
 import ru.apertum.qsystem.common.CustomerState;
-import static ru.apertum.qsystem.common.CustomerState.STATE_DEAD;
 import ru.apertum.qsystem.common.NetCommander;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.cmd.JsonRPC20OK;
@@ -86,6 +86,7 @@ import ru.apertum.qsystem.common.cmd.RpcStandInService;
 import ru.apertum.qsystem.common.exceptions.ClientException;
 import ru.apertum.qsystem.common.exceptions.QException;
 import ru.apertum.qsystem.common.model.IClientNetProperty;
+import ru.apertum.qsystem.common.model.INetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.extra.IStartReception;
 import ru.apertum.qsystem.server.model.ATListModel;
@@ -114,7 +115,11 @@ public class FReception extends javax.swing.JFrame {
         }
         return localeMap.getString(key);
     }
-    final IClientNetProperty netProperty;
+    final private IClientNetProperty netProperty;
+    
+    public INetProperty getNetProperty() {
+        return netProperty;
+    }
     /**
      * Системный трей.
      */
@@ -128,6 +133,7 @@ public class FReception extends javax.swing.JFrame {
     public FReception(IClientNetProperty netProperty) {
         this.netProperty = netProperty;
         initComponents();
+        btnPushToTalk.setVisible(false);
 
         setTitle(getTitle() + " " + Uses.getLocaleMessage("project.name" + FAbout.getCMRC_SUFF())); //NOI18N
 
@@ -589,6 +595,7 @@ public class FReception extends javax.swing.JFrame {
         jScrollPane12 = new javax.swing.JScrollPane();
         tableServicesMon = new javax.swing.JTable();
         buttonRefreshMainData = new javax.swing.JButton();
+        btnPushToTalk = new javax.swing.JButton();
         panelComplexServ = new javax.swing.JPanel();
         MenuBar = new javax.swing.JMenuBar();
         menuFile = new javax.swing.JMenu();
@@ -1208,7 +1215,7 @@ public class FReception extends javax.swing.JFrame {
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane11, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+            .addComponent(jScrollPane11, javax.swing.GroupLayout.DEFAULT_SIZE, 467, Short.MAX_VALUE)
         );
 
         jSplitPane5.setLeftComponent(jPanel3);
@@ -1247,7 +1254,7 @@ public class FReception extends javax.swing.JFrame {
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+            .addComponent(jScrollPane12, javax.swing.GroupLayout.DEFAULT_SIZE, 467, Short.MAX_VALUE)
         );
 
         jSplitPane5.setRightComponent(jPanel5);
@@ -1255,6 +1262,11 @@ public class FReception extends javax.swing.JFrame {
         buttonRefreshMainData.setAction(actionMap.get("refreshMainData")); // NOI18N
         buttonRefreshMainData.setText(resourceMap.getString("buttonRefreshMainData.text")); // NOI18N
         buttonRefreshMainData.setName("buttonRefreshMainData"); // NOI18N
+
+        btnPushToTalk.setText(resourceMap.getString("btnPushToTalk.text")); // NOI18N
+        btnPushToTalk.setToolTipText(resourceMap.getString("btnPushToTalk.toolTipText")); // NOI18N
+        btnPushToTalk.setBorder(javax.swing.BorderFactory.createCompoundBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED), javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED)));
+        btnPushToTalk.setName("btnPushToTalk"); // NOI18N
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -1264,6 +1276,8 @@ public class FReception extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(buttonRefreshMainData)
+                .addGap(18, 18, 18)
+                .addComponent(btnPushToTalk, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
             .addComponent(jSplitPane5, javax.swing.GroupLayout.Alignment.TRAILING)
         );
@@ -1274,7 +1288,9 @@ public class FReception extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSplitPane5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonRefreshMainData)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(btnPushToTalk, javax.swing.GroupLayout.DEFAULT_SIZE, 57, Short.MAX_VALUE)
+                    .addComponent(buttonRefreshMainData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -1359,11 +1375,11 @@ public class FReception extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(tabsPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 1056, Short.MAX_VALUE)
+            .addComponent(tabsPane, javax.swing.GroupLayout.Alignment.TRAILING)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(tabsPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 626, Short.MAX_VALUE)
+            .addComponent(tabsPane, javax.swing.GroupLayout.Alignment.TRAILING)
         );
 
         pack();
@@ -1710,7 +1726,7 @@ public class FReception extends javax.swing.JFrame {
         Locale.setDefault(Locales.getInstance().getLangCurrent());
         Uses.showSplash();
         // Загрузка плагинов из папки plugins
-        if (QLog.l().isPlaginable()) {
+        if (QConfig.cfg().isPlaginable()) {
             Uses.loadPlugins("./plugins/");
         }
 
@@ -2174,6 +2190,7 @@ public class FReception extends javax.swing.JFrame {
     private static FReception fReception;
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuBar MenuBar;
+    public javax.swing.JButton btnPushToTalk;
     private javax.swing.JButton buttonRefreshBlack;
     private javax.swing.JButton buttonRefreshMainData;
     private javax.swing.JButton buttonRefreshPostponed;
