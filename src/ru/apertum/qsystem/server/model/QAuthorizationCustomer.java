@@ -27,9 +27,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+
 /**
- * Класс предварительно записанного кастомера.
- * Должен уметь работать с БД, генерировать XML. И прочая логика.
+ * Класс предварительно записанного кастомера. Должен уметь работать с БД, генерировать XML. И прочая логика.
+ *
  * @author Evgeniy Egorov
  */
 @Entity
@@ -57,6 +58,20 @@ public class QAuthorizationCustomer implements Serializable {
     public void setId(Long id) {
         this.id = id;
     }
+
+    @Column(name = "auth_id")
+    @Expose
+    @SerializedName("auth_id")
+    private String authId;
+
+    public String getAuthId() {
+        return authId;
+    }
+
+    public void setAuthId(String authId) {
+        this.authId = authId;
+    }
+
     @Column(name = "name")
     @Expose
     @SerializedName("name")
@@ -106,4 +121,18 @@ public class QAuthorizationCustomer implements Serializable {
     public void setBirthday(Date birthday) {
         this.birthday = birthday;
     }
+
+    @Column(name = "comments")
+    @Expose
+    @SerializedName("comments")
+    private String comments;
+
+    public String getComments() {
+        return comments;
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments;
+    }
+
 }

@@ -1,4 +1,4 @@
-java -cp dist/QSystem.jar ru.apertum.qsystem.client.forms.FAdmin -ide
+java -cp dist/QSystem.jar ru.apertum.qsystem.client.forms.FAdmin -d
 
 pause
 

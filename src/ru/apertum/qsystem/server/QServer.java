@@ -339,7 +339,7 @@ public class QServer extends Thread {
             } catch (IllegalArgumentException ex) {
                 throw new ServerException("Ошибка декодирования сетевого сообщения: " + ex);
             }
-            QLog.l().logger().trace("Task:\n" + data);
+            QLog.l().logger().trace("Task:\n" + (data.length() > 200 ? (data.substring(0, 200) + "...") : data));
 
             /*
              Если по сетке поймали exit, то это значит что запустили останавливающий батник.
@@ -368,7 +368,7 @@ public class QServer extends Thread {
             }
 
             // выводим данные:
-            QLog.l().logger().trace("Response:\n" + answer);
+            QLog.l().logger().trace("Response:\n" + (answer.length() > 200 ? (answer.substring(0, 200) + "...") : answer));
             try {
                 // Передача данных ответа
                 PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -537,7 +537,7 @@ public class QServer extends Thread {
                         // смотрим к чему привязан кастомер. либо в очереди стоит, либо у юзера обрабатыватся
                         if (user == null) {
                             // сохраненный кастомер стоял в очереди и ждал, но его еще никто не звал
-                            QServiceTree.getInstance().getById(recCustomer.getService().getId()).addCustomer(recCustomer);
+                            QServiceTree.getInstance().getById(recCustomer.getService().getId()).addCustomerForRecoveryOnly(recCustomer);
                             QLog.l().logger().debug("Добавили клиента \"" + recCustomer.getPrefix() + recCustomer.getNumber() + "\" к услуге \"" + recCustomer.getService().getName() + "\"");
                         } else {
                             // сохраненный кастомер обрабатывался юзером с именем userId

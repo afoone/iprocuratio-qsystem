@@ -16,6 +16,7 @@
  */
 package ru.apertum.qsystem.client.common;
 
+import java.awt.Font;
 import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,7 +32,10 @@ import javax.print.attribute.standard.MediaPrintableArea;
 import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.MediaSizeName;
 import javax.print.attribute.standard.OrientationRequested;
+import ru.apertum.qsystem.client.forms.FWelcome;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
+import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ClientException;
 
 /**
@@ -53,6 +57,7 @@ public class WelcomeParams {
      * Константы хранения параметров в файле.
      */
     private static final String POINT = "point";
+    private static final String PAPER_WIDHT = "paper_widht";
     private static final String LEFT_MARGIN = "left_margin";
     private static final String TOP_MARGIN = "top_margin";
     private static final String LINE_HEIGTH = "line_heigth";
@@ -76,6 +81,10 @@ public class WelcomeParams {
     private static final String DELAY_BACK = "delay_back";
     private static final String LOGO_IMG = "logo_img";
     private static final String BACKGROUND_IMG = "background_img";
+    private static final String TXT_FONT_NAME = "ticket_font_name";
+    private static final String TXT_FONT_SIZE = "ticket_font_size";
+    private static final String TXT_FONT_H1_SIZE = "ticket_fontH1_size";
+    private static final String TXT_FONT_H2_SIZE = "ticket_fontH2_size";
     private static final String PROMO_TXT = "promo_text";
     private static final String WAIT_TXT = "wait_text";
     private static final String BOTTOM_TXT = "bottom_text";
@@ -90,10 +99,13 @@ public class WelcomeParams {
     private static final String SPEC_KEYBOARD = "spec_keyboard";// - буквенная клавиатура при вводе юзерской инфы
     private static final String INPUT_FONT_SIZE = "input_font_size";// - размер шрифта вводимого текста клиентом
     private static final String LINES_BUTTON_COUNT = "lines_button_count";// - количество рядов кнопок на киоске, если будет привышение, то начнотся листание страниц
+    private static final String ONE_COLUMN_BUTTON_COUNT = "one_column_buttons_count";// - количество кнопок на киоске в один стобл
+    private static final String TWO_COLUMNS_BUTTON_COUNT = "two_columns_buttons_count";// - количество кнопок на киоске в два столба
     private static final String BUTTON_TYPE = "button_type";// - это внешний вид кнопки. Если его нет или ошибочный, то стандартный вид. Иначе номер вида или картинка в png желательно
     private static final String SERV_BUTTON_TYPE = "serv_button_type";// - вид управляющей кнопки на пункте регистрации. Если его нет или ошибочный, то стандартный вид. Иначе номер вида или картинка в png желательно
     private static final String SERV_VERT_BUTTON_TYPE = "serv_vert_button_type";// - вид вертикальной управляющей кнопки на пункте регистрации. Если его нет или ошибочный, то стандартный вид. Иначе номер вида или картинка в png желательно
     private static final String BUTTON_IMG = "button_img";// - это присутствие пиктограммы услуги или группы на кнопке
+    private static final String RESPONSE_IMG = "response_img";// - это присутствие пиктограммы отзыва или группы отзывов на кнопках отзывов
     private static final String BUTTON_TOSTART_IMG = "button_tostart_img";// - это пиктограмма на кнопке "В начало"
     private static final String BUTTON_GOBACK_IMG = "button_goback_img";// - это пиктограмма на кнопке "Назад"
     private static final String TOP_SIZE = "top_size";// - это ширина верхней панели на п.р. с видом кнопок
@@ -108,6 +120,9 @@ public class WelcomeParams {
     private static final String RESPONSE_BUTTON_HTMLTEXT = "response_button_htmltext";
     private static final String TOP_URL = "top_url";
 
+    private static final String BTN_FONT = "serv_button_font";
+    private static final String BTN_ADV_FONT = "serv_adv_button_font";
+
     //#RU Примерный объем талонов в рулоне
     //#EN Approximate amount of tickets in a roll
     private static final String PAPER_SIZE_ALARM = "paper_size_alarm";
@@ -117,6 +132,7 @@ public class WelcomeParams {
         loadSettings();
     }
     public int point; // указание для какого пункта регистрации услуга, 0-для всех, х-для киоска х.
+    public int paperWidht; // ширина талона в пикселах
     public int leftMargin; // отступ слева
     public int topMargin; // отступ сверху
     public int lineHeigth = 12; // Ширина строки
@@ -139,16 +155,23 @@ public class WelcomeParams {
     public int logoTop = -5; // Отступ печати логотипа сверху
     public String logoImg = "/ru/apertum/qsystem/client/forms/resources/logo_ticket.png"; // логотип сверху
     public String backgroundImg = "/ru/apertum/qsystem/client/forms/resources/fon_welcome.jpg"; // фоновая картинка
+    public String ticketFontName = ""; // Шрифт для текста талона
+    public int ticketFontSize = 0; // Размер шрифта для текста талона
+    public int ticketFontH1Size = 0; // Размер шрифта для текста талона
+    public int ticketFontH2Size = 0; // Размер шрифта для текста талона
     public String promoText = "Aperum projects, e-mail: info@aperum.ru"; // промотекст, печатающийся мелким шрифтом перед штрихкодом.
     public String bottomText = "\u041f\u0440\u0438\u044f\u0442\u043d\u043e\u0433\u043e \u043e\u0436\u0438\u0434\u0430\u043d\u0438\u044f. \u0421\u043f\u0430\u0441\u0438\u0431\u043e."; // произвольный текст, печатающийся в конце квитанции после штрихкода
     public String waitText = ""; // текст, "Ожидайте вызова на табло". Если пусто, то текст по умолчанию.
     public int askLimit = 3; // Критический размер очереди после которого спрашивать клиентов о готовности встать в очередь
     public int pageLinesCount = 30; // Количество строк на странице.
     public int linesButtonCount = 5; // количество рядов кнопок на киоске, если будет привышение, то начнотся листание страниц
+    public int oneColumnButtonCount = 3; // количество кнопок на киоске в одном столбце
+    public int twoColumnButtonCount = 10; // количество кнопок на киоске в двух столбцах
     public String buttonType = ""; // - это внешний вид кнопки. Если его нет или ошибочный, то стандартный вид. Иначе номер вида или картинка в png желательно
     public String servButtonType = ""; // - это внешний вид сервисной кнопки. Если его нет или ошибочный, то стандартный вид. Иначе номер вида или картинка в png желательно
     public String servVertButtonType = ""; // - это внешний вид вертикальной сервисной кнопки. Если его нет или ошибочный, то стандартный вид. Иначе номер вида или картинка в png желательно
     public boolean buttonImg = true; // - это присутствие пиктограммы услуги или группы на кнопке
+    public boolean responseImg = true; // - это присутствие пиктограммы отзыва или группы на кнопке
     public File buttonToStratImg = null; // - это пиктограммы  на кнопке
     public File buttonGoBackImg = null; // - это пиктограммы  на кнопке
     public int topSize = -1; // - это ширина верхней панели на п.р. с видом кнопок
@@ -161,6 +184,9 @@ public class WelcomeParams {
     public String patternConfirmationStart = ""; // - это это шаблон текста для диалога подтверждения стоять в очереди. Встроенный текст dialogue_text.take_ticket dialog.text_before_people [[endRus]]
     public String confirmationStartImg = ""; // - это картинка для диалога подтверждения стоять в очереди. пустое значение - картинка по умолчанию
     public String patternInfoDialog = ""; // шаблон текста для информационных диалогов Встроенный текст dialog.message
+
+    public Font btnFont = null;
+    public Font btnAdvFont = null;
     /**
      * Задержка заставки при печати в мсек.
      */
@@ -203,8 +229,9 @@ public class WelcomeParams {
         }
         paper_size_alarm = settings.getProperty(PAPER_SIZE_ALARM, "").trim().isEmpty() ? 700 : Integer.parseInt(settings.getProperty(PAPER_SIZE_ALARM, "700")); // - размер шрифта при вводе юзерской инфы
         paper_alarm_step = settings.getProperty(PAPER_ALARM_STEP, "").trim().isEmpty() ? 30 : Integer.parseInt(settings.getProperty(PAPER_ALARM_STEP, "30")); // - размер шрифта при вводе юзерской инфы
-        
+
         point = settings.containsKey(POINT) ? Integer.parseInt(settings.getProperty(POINT)) : 1; // указание для какого пункта регистрации услуга, 0-для всех, х-для киоска х.
+        paperWidht = Integer.parseInt(settings.getProperty(PAPER_WIDHT, "250")); // ширина талона в пикселах
         leftMargin = Integer.parseInt(settings.getProperty(LEFT_MARGIN)); // отступ слева
         topMargin = Integer.parseInt(settings.getProperty(TOP_MARGIN)); //  отступ сверху
         lineHeigth = Integer.parseInt(settings.getProperty(LINE_HEIGTH)); // Ширина строки
@@ -223,12 +250,21 @@ public class WelcomeParams {
         if (!new File(backgroundImg).exists()) {
             backgroundImg = "/ru/apertum/qsystem/client/forms/resources/fon_welcome.jpg";
         }
-        promoText = settings.getProperty(PROMO_TXT);
-        bottomText = settings.getProperty(BOTTOM_TXT);
-        waitText = settings.getProperty(WAIT_TXT);
+        ticketFontName = settings.getProperty(TXT_FONT_NAME, "");
+        String tfs = settings.getProperty(TXT_FONT_SIZE, "0");
+        ticketFontSize = Integer.parseInt(tfs.isEmpty() ? "0" : tfs);
+        tfs = settings.getProperty(TXT_FONT_H1_SIZE, "80");
+        ticketFontH1Size = Integer.parseInt(tfs.isEmpty() ? "80" : tfs);
+        tfs = settings.getProperty(TXT_FONT_H2_SIZE, "16");
+        ticketFontH2Size = Integer.parseInt(tfs.isEmpty() ? "16" : tfs);
+        promoText = settings.getProperty(PROMO_TXT, "");
+        bottomText = settings.getProperty(BOTTOM_TXT, "");
+        waitText = settings.getProperty(WAIT_TXT, "");
         askLimit = Integer.parseInt(settings.getProperty(ASK_LIMIT)); // Критический размер очереди после которого спрашивать клиентов о готовности встать в очередь
         pageLinesCount = settings.getProperty(PAGE_LINES_COUNT) == null ? 70 : Integer.parseInt(settings.getProperty(PAGE_LINES_COUNT)); // Количество строк на странице
         linesButtonCount = settings.getProperty(LINES_BUTTON_COUNT) == null ? 5 : Integer.parseInt(settings.getProperty(LINES_BUTTON_COUNT)); // количество рядов кнопок на киоске, если будет привышение, то начнотся листание страниц
+        oneColumnButtonCount = settings.containsKey(ONE_COLUMN_BUTTON_COUNT) ? Integer.parseInt(settings.getProperty(ONE_COLUMN_BUTTON_COUNT)) : 3; // количество рядов кнопок на киоске, если будет привышение, то начнотся листание страниц
+        twoColumnButtonCount = settings.containsKey(TWO_COLUMNS_BUTTON_COUNT) ? Integer.parseInt(settings.getProperty(TWO_COLUMNS_BUTTON_COUNT)) : 10; // количество рядов кнопок на киоске, если будет привышение, то начнотся листание страниц
         buttons_COM = settings.getProperty("buttons_COM");
         buttons_databits = Integer.parseInt(settings.getProperty("buttons_databits"));
         buttons_speed = Integer.parseInt(settings.getProperty("buttons_speed"));
@@ -407,7 +443,8 @@ public class WelcomeParams {
         buttonGoBackImg = buttonGoBackImg.exists() ? buttonGoBackImg : null;
         buttonToStratImg = new File(settings.getProperty(BUTTON_TOSTART_IMG, ""));
         buttonToStratImg = buttonToStratImg.exists() ? buttonToStratImg : null;
-        buttonImg = "1".equals(settings.getProperty(BUTTON_IMG, "1")) || "true".equals(settings.getProperty(BUTTON_IMG, "true")); // кнопка информационной системы на пункте регистрации
+        buttonImg = "1".equals(settings.getProperty(BUTTON_IMG, "1")) || "true".equals(settings.getProperty(BUTTON_IMG, "true")); // кнопка присутствие картинки на кнопках услуг
+        responseImg = "1".equals(settings.getProperty(RESPONSE_IMG, "1")) || "true".equals(settings.getProperty(RESPONSE_IMG, "true")); // кнопка присутствие картинки на кнопках отзывов
         topImg = settings.getProperty(TOP_IMG, "");
         topURL = settings.getProperty(TOP_URL, "");
         topImgSecondary = settings.getProperty(TOP_IMG_SECONDARY, "");
@@ -415,7 +452,9 @@ public class WelcomeParams {
         patternConfirmationStart = settings.getProperty(PATTERN_CONFIRMATION_START, "<HTML><b><p align=center><span style='font-size:60.0pt;color:green'>dialog.text_before</span><br><span style='font-size:100.0pt;color:red'>dialog.count</span><br><span style='font-size:60.0pt;color:red'>dialog.text_before_people[[endRus]]</span></p></b>");
         getTicketImg = settings.getProperty(GET_TICKET_IMG, "/ru/apertum/qsystem/client/forms/resources/getTicket.png");
         if ("".equals(getTicketImg) || !new File(getTicketImg).exists()) {
-            getTicketImg = "/ru/apertum/qsystem/client/forms/resources/getTicket.png";
+            getTicketImg = Uses.firstMonitor.getDefaultConfiguration().getBounds().height < 910 || QConfig.cfg().isDebug() || QConfig.cfg().isDemo()
+                    ? "/ru/apertum/qsystem/client/forms/resources/getTicketSmall.png"
+                    : "/ru/apertum/qsystem/client/forms/resources/getTicket.png";
         }
         confirmationStartImg = settings.getProperty(CONFIRMATION_START_IMG, "/ru/apertum/qsystem/client/forms/resources/vopros.png");
         if ("".equals(confirmationStartImg) || !new File(confirmationStartImg).exists()) {
@@ -554,6 +593,14 @@ public class WelcomeParams {
                 break;
             default:
                 ;
+        }
+        String ptn = settings.getProperty(BTN_FONT, "");
+        if (!ptn.isEmpty() && ptn.split("-").length == 3) {
+            btnFont = Font.decode(ptn);
+        }
+        ptn = settings.getProperty(BTN_ADV_FONT, "");
+        if (!ptn.isEmpty() && ptn.split("-").length == 3) {
+            btnAdvFont = Font.decode(ptn);
         }
     }
 }

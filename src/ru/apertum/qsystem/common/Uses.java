@@ -855,9 +855,9 @@ public final class Uses {
     public static void startSplashClient() {
         if (!QConfig.cfg().isTerminal()) {
             try {
-                stopStartSecond = new ServerSocket(43210);
+                stopStartSecond = new ServerSocket(21210);
             } catch (Exception ex) {
-                System.err.println("QSystem: Application alredy started!!!");
+                System.err.println(".QSystem: Application alredy started!!!");
                 System.exit(15685);
             }
         }

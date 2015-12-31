@@ -161,7 +161,11 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.flexy = flexy;
             this.id = service.getId();
             this.line = new LinkedList<>();
-            service.getClients().forEach(cu -> line.addLast(new StPair(cu.getFullNumber(), cu.getInput_data())));
+            for (QCustomer cu : service.getClients()) {// не переделывать на лямбду.
+                final String fn = cu.getFullNumber();
+                final StPair sp = new StPair(fn, cu.getInput_data());
+                line.addLast(sp);
+            }
         }
         @Expose
         @SerializedName("id")

@@ -76,9 +76,11 @@ public final class QConfig {
     private static final String KEY_USE_EXT_PRIORITY = "use-ext-prority";
 
     private static final String KEY_NUM_DIVIDER = "number-divider";
-    
+
     private static final String ZKEY_BOARD_CFG = "zboard-config";
     private static final String TKEY_BOARD_CFG = "tboard-config";
+
+    private static final String KEY_NO_HIDE_CURSOR = "no-hide-cursor";
 
     private final Configuration config;
 
@@ -112,6 +114,7 @@ public final class QConfig {
         options.addOption("li", KEY_LOG_INFO, false, "Logging mode. Info level only.");
         if (type == -1 || type == 0 || type == 1 || type == 4 || type == 26) {
             options.addOption(KEY_DEMO, false, "Demo mode. You can use mouse and you can see header of forms.");
+            options.addOption("nhc", KEY_NO_HIDE_CURSOR, false, "No-hide-cursor mode. In some linux GUI could be problen with hide cursor.");
         }
 
         options.addOption(KEY_IDE, false, "Do not touch it!");
@@ -258,7 +261,7 @@ public final class QConfig {
 
     /**
      * @param args cmd params
-     * @return 
+     * @return
      */
     public QConfig prepareCLI(String[] args) {
         try {
@@ -296,6 +299,12 @@ public final class QConfig {
         return line.hasOption(KEY_DEMO)
                 ? true
                 : config.getBoolean(KEY_DEMO, false);
+    }
+
+    public boolean isHideCursor() {
+        return line.hasOption(KEY_NO_HIDE_CURSOR)
+                ? false
+                : !config.getBoolean(KEY_NO_HIDE_CURSOR, false);
     }
 
     public boolean isIDE() {
@@ -450,13 +459,13 @@ public final class QConfig {
                         ? line.getOptionValue(KEY_NUM_DIVIDER, "").replaceAll("_", " ")
                         : "");
     }
-    
+
     public String getZoneBoardCfgFile() {
         return line.hasOption(ZKEY_BOARD_CFG)
                 ? line.getOptionValue(ZKEY_BOARD_CFG, "")
                 : config.getString(ZKEY_BOARD_CFG, "");
     }
-    
+
     public String getTabloBoardCfgFile() {
         return line.hasOption(TKEY_BOARD_CFG)
                 ? line.getOptionValue(TKEY_BOARD_CFG, "")

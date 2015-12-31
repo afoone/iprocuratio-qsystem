@@ -89,6 +89,9 @@
       <Properties>
         <Property name="name" type="java.lang.String" value="menuBar" noResource="true"/>
       </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
+      </AuxValues>
       <SubComponents>
         <Menu class="javax.swing.JMenu" name="fileMenu">
           <Properties>
@@ -145,6 +148,20 @@
                 <Property name="text" type="java.lang.String" resourceKey="menuItemFlexPriority.text"/>
                 <Property name="name" type="java.lang.String" value="menuItemFlexPriority" noResource="true"/>
               </Properties>
+            </MenuItem>
+            <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator3">
+              <Properties>
+                <Property name="name" type="java.lang.String" value="jSeparator3" noResource="true"/>
+              </Properties>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="menuItemId">
+              <Properties>
+                <Property name="text" type="java.lang.String" resourceKey="menuItemId.text"/>
+                <Property name="name" type="java.lang.String" value="menuItemId" noResource="true"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="menuItemIdActionPerformed"/>
+              </Events>
             </MenuItem>
           </SubComponents>
         </Menu>
@@ -780,6 +797,9 @@
                                     <Property name="rootVisible" type="boolean" value="false"/>
                                     <Property name="showsRootHandles" type="boolean" value="true"/>
                                   </Properties>
+                                  <AuxValues>
+                                    <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>
+                                  </AuxValues>
                                 </Component>
                               </SubComponents>
                             </Container>

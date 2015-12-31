@@ -13,15 +13,16 @@ import ru.apertum.qsystem.server.model.QUser;
 
 /**
  * Default buttons
+ *
  * @author Evgeniy Egorov
  */
-public class ButtonDevice extends Object implements IButtonDevice{
+public class ButtonDevice extends Object implements IButtonDevice {
 
     public final byte addres;
     public final boolean redirect;
     public final Long redirectServiceId;
     public final Long userId;
-    public QUser user = null;
+    private QUser user;
     public Integer qsize = 0;
 
     public void setQsize(Integer qsize) {
@@ -79,10 +80,11 @@ public class ButtonDevice extends Object implements IButtonDevice{
     /**
      * Тут вся логика работы кнопок и их нажатия
      *
-     * @param b это команда от устройства
+     * @param bb это команда от устройства
      */
     @Override
-    public void doAction(byte b) {
+    public void doAction(byte[] bb) {
+        byte b = bb[2];
         if (b == 0x31) {
             System.out.println("b == 0x31 -- 49");
         } else if (b == 0x32) {
@@ -108,8 +110,7 @@ public class ButtonDevice extends Object implements IButtonDevice{
             }
         }
         // первичный вызов
-        if ((user == null
-                || user.getShadow() == null
+        if ((user.getShadow() == null
                 || user.getShadow().getCustomerState() == null
                 || user.getShadow().getCustomerState() == CustomerState.STATE_BACK
                 || user.getShadow().getCustomerState() == CustomerState.STATE_DEAD
@@ -118,7 +119,7 @@ public class ButtonDevice extends Object implements IButtonDevice{
                 || user.getShadow().getCustomerState() == CustomerState.STATE_REDIRECT)
                 && (b == 0x31)) {
             //команда вызова кастомера
-            System.out.println("Invite Next Customer " + userId);
+            System.out.println("Invite Next Customer by " + user.getName());
             final QCustomer cust = NetCommander.inviteNextCustomer(UBForm.form.netProperty, userId);
             System.out.println("inv ** 0");
             if (cust != null) {
@@ -150,15 +151,15 @@ public class ButtonDevice extends Object implements IButtonDevice{
                 bytes[2] = 0x21;//0x20; // мигание Режим мигания: 0x20 – не мигает; 0x21 – мигает постоянно; 0x22…0x7F – мигает  (N-0x21) раз.
                 UBForm.sendToDevice(bytes);
                 /*
-                try {
-                    Thread.sleep(150);
-                } catch (InterruptedException ex) {
-                }
+                 try {
+                 Thread.sleep(150);
+                 } catch (InterruptedException ex) {
+                 }
 
-                //ответ о результате на кнопку
-                mess[2] = 0x36; // – мигает Зеленый (500 мс);
-                UBForm.sendToDevice(mess);
-                */
+                 //ответ о результате на кнопку
+                 mess[2] = 0x36; // – мигает Зеленый (500 мс);
+                 UBForm.sendToDevice(mess);
+                 */
             } else {
                 System.out.println("inv ** 5");
                 user.getShadow().setCustomerState(CustomerState.STATE_FINISH);
@@ -175,7 +176,7 @@ public class ButtonDevice extends Object implements IButtonDevice{
                 && (user.getShadow().getCustomerState() == CustomerState.STATE_INVITED || user.getShadow().getCustomerState() == CustomerState.STATE_INVITED_SECONDARY)
                 && (b == 0x31)) {
             //команда вызова кастомера
-            System.out.println("Recall " + userId);
+            System.out.println("Recall by " + user.getName());
             final QCustomer cust = NetCommander.inviteNextCustomer(UBForm.form.netProperty, userId);
             System.out.println("--<>\n");
             return;
@@ -186,7 +187,7 @@ public class ButtonDevice extends Object implements IButtonDevice{
                 && (user.getShadow().getCustomerState() == CustomerState.STATE_INVITED || user.getShadow().getCustomerState() == CustomerState.STATE_INVITED_SECONDARY)
                 && (b == 0x32)) {
             //команда вызова кастомера
-            System.out.println("get Start Customer " + userId);
+            System.out.println("get Start Customer by " + user.getName());
             NetCommander.getStartCustomer(UBForm.form.netProperty, userId);
             System.out.println("--1\n");
             user.getShadow().setCustomerState(CustomerState.STATE_WORK);
@@ -208,17 +209,17 @@ public class ButtonDevice extends Object implements IButtonDevice{
             bytes[2] = 0x20;//0x20; // мигание Режим мигания: 0x20 – не мигает; 0x21 – мигает постоянно; 0x22…0x7F – мигает  (N-0x21) раз.
             UBForm.sendToDevice(bytes);
             /*
-            try {
-                Thread.sleep(150);
-            } catch (InterruptedException ex) {
-            }
+             try {
+             Thread.sleep(150);
+             } catch (InterruptedException ex) {
+             }
 
-            //ответ о результате на кнопку
-            mess[2] = 0x32; //– включен Зеленый;
-            System.out.println("--3\n");
-            UBForm.sendToDevice(mess);
-            System.out.println("--4\n");
-            */
+             //ответ о результате на кнопку
+             mess[2] = 0x32; //– включен Зеленый;
+             System.out.println("--3\n");
+             UBForm.sendToDevice(mess);
+             System.out.println("--4\n");
+             */
             return;
         }
 
@@ -227,7 +228,7 @@ public class ButtonDevice extends Object implements IButtonDevice{
                 && (user.getShadow().getCustomerState() == CustomerState.STATE_INVITED || user.getShadow().getCustomerState() == CustomerState.STATE_INVITED_SECONDARY)
                 && (b == 0x34)) {
             //команда вызова кастомера
-            System.out.println("kill Next Customer " + userId);
+            System.out.println("kill Next Customer by " + user.getName());
             NetCommander.killNextCustomer(UBForm.form.netProperty, userId);
             user.getShadow().setCustomerState(CustomerState.STATE_DEAD);
             //ответ о результате на кнопку
@@ -245,7 +246,7 @@ public class ButtonDevice extends Object implements IButtonDevice{
                 && (b == 0x34)) {
             //команда завершения работы
 
-            System.out.println("get Finish Customer" + userId);
+            System.out.println("get Finish Customerby " + user.getName());
             NetCommander.getFinishCustomer(UBForm.form.netProperty, userId, -1L, "");
             user.getShadow().setCustomerState(CustomerState.STATE_FINISH);
             //ответ о результате на кнопку
@@ -262,7 +263,7 @@ public class ButtonDevice extends Object implements IButtonDevice{
                 && (user.getShadow().getCustomerState() == CustomerState.STATE_WORK || user.getShadow().getCustomerState() == CustomerState.STATE_WORK_SECONDARY)
                 && (b == 0x33) && redirect) {
             //команда  редирект
-            System.out.println("redirect Customer" + userId);
+            System.out.println("redirect Customerby " + user.getName());
             NetCommander.redirectCustomer(UBForm.form.netProperty, userId, redirectServiceId, false, "", -1L);
             user.getShadow().setCustomerState(CustomerState.STATE_FINISH);
             //ответ о результате на кнопку
@@ -309,7 +310,7 @@ public class ButtonDevice extends Object implements IButtonDevice{
 
     private void beReady() {
         System.out.println("beReady()");
-        
+
         //добавляем табло на пульте
         byte[] bytes = mess;
         try {
@@ -325,18 +326,16 @@ public class ButtonDevice extends Object implements IButtonDevice{
         //mess[1] = addr.addres; // адрес
         bytes[2] = 0x20;//0x20; // мигание Режим мигания: 0x20 – не мигает; 0x21 – мигает постоянно; 0x22…0x7F – мигает  (N-0x21) раз.
         UBForm.sendToDevice(bytes);
-        
-        
+
         /*
-        mess[2] = 0x34;// – мигает Зеленый (200 мс);
-        UBForm.sendToDevice(mess);
-        */
+         mess[2] = 0x34;// – мигает Зеленый (200 мс);
+         UBForm.sendToDevice(mess);
+         */
     }
 
     private void beReadyBeep() {
         System.out.println("beReadyBeep()");
-        
-        
+
         //добавляем табло на пульте
         byte[] bytes = mess;
         try {
@@ -352,12 +351,11 @@ public class ButtonDevice extends Object implements IButtonDevice{
         //mess[1] = addr.addres; // адрес
         bytes[2] = 0x21;//0x20; // мигание Режим мигания: 0x20 – не мигает; 0x21 – мигает постоянно; 0x22…0x7F – мигает  (N-0x21) раз.
         UBForm.sendToDevice(bytes);
-        
-        
+
         /*
-        mess[2] = 0x3B; // – писк (500 мс) + мигает Зеленый (200 мс);
-        UBForm.sendToDevice(mess);
-        */
+         mess[2] = 0x3B; // – писк (500 мс) + мигает Зеленый (200 мс);
+         UBForm.sendToDevice(mess);
+         */
     }
 
     private void lightDown() {
@@ -379,14 +377,14 @@ public class ButtonDevice extends Object implements IButtonDevice{
         bytes[2] = 0x20;//0x20; // мигание Режим мигания: 0x20 – не мигает; 0x21 – мигает постоянно; 0x22…0x7F – мигает  (N-0x21) раз.
         UBForm.sendToDevice(bytes);
         /*
-        try {
-            Thread.sleep(150);
-        } catch (InterruptedException ex) {
-        }
+         try {
+         Thread.sleep(150);
+         } catch (InterruptedException ex) {
+         }
 
-        mess[2] = 0x30;// – светодиод погашен;
-        UBForm.sendToDevice(mess);
-                */
+         mess[2] = 0x30;// – светодиод погашен;
+         UBForm.sendToDevice(mess);
+         */
     }
 
     @Override
@@ -402,5 +400,22 @@ public class ButtonDevice extends Object implements IButtonDevice{
     @Override
     public void check() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public QUser getUser() {
+        return user;
+    }
+
+    @Override
+    public String getId() {
+        byte[] bb = new byte[1];
+        bb[0] = addres;
+        return new String(bb);
+    }
+
+    @Override
+    public void setUser(QUser user) {
+        this.user = user;
     }
 }

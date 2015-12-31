@@ -46,7 +46,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetGridOfWeek;
 import ru.apertum.qsystem.common.cmd.RpcGetInfoTree;
 import ru.apertum.qsystem.common.cmd.RpcGetInt;
 import ru.apertum.qsystem.common.cmd.RpcGetPostponedPoolInfo;
-import ru.apertum.qsystem.common.cmd.RpcGetRespList;
+import ru.apertum.qsystem.common.cmd.RpcGetRespTree;
 import ru.apertum.qsystem.common.cmd.RpcGetResultsList;
 import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation;
 import ru.apertum.qsystem.common.cmd.RpcGetServerState;
@@ -390,7 +390,7 @@ public class NetCommander {
             res = send(netProperty, Uses.TASK_GET_USERS, null);
         } catch (QException e) {// вывод исключений
             Uses.closeSplash();
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         } finally {
             if (res == null || res.isEmpty()) {
                 System.exit(1);
@@ -407,8 +407,8 @@ public class NetCommander {
         }
         return rpc.getResult();
     }
-
-    /**
+    
+     /**
      * Получение описания очередей для юзера.
      *
      * @param netProperty параметры соединения с сервером
@@ -417,17 +417,31 @@ public class NetCommander {
      * @throws ru.apertum.qsystem.common.exceptions.QException
      */
     public static RpcGetSelfSituation.SelfSituation getSelfServices(INetProperty netProperty, long userId) throws QException {
+        return getSelfServices(netProperty, userId, null);
+    }
+
+    /**
+     * Получение описания очередей для юзера.
+     *
+     * @param netProperty параметры соединения с сервером
+     * @param userId id пользователя для которого идет опрос
+     * @param forced получить ситуацию даже если она не обновлялась за последнее время
+     * @return список обрабатываемых услуг с количеством кастомеров в них стоящих и обрабатываемый кастомер если был
+     * @throws ru.apertum.qsystem.common.exceptions.QException
+     */
+    public static RpcGetSelfSituation.SelfSituation getSelfServices(INetProperty netProperty, long userId, Boolean forced) throws QException {
         QLog.l().logger().info("Получение описания очередей для юзера.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.userId = userId;
         params.textData = QConfig.cfg().getPointN();
+        params.requestBack = forced;
         String res;
         try {
             res = send(netProperty, Uses.TASK_GET_SELF_SERVICES, params);
         } catch (QException e) {// вывод исключений
             Uses.closeSplash();
-            throw new QException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new QException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
         final RpcGetSelfSituation rpc;
@@ -446,7 +460,6 @@ public class NetCommander {
      * передается в строке параметров при старке клиентской проги и засовывается сюда, вот такая мегаинициализация.
      */
     //static public String pointId = null; -> QConfig.cfg().getPointN();
-
     /**
      * Проверка на то что такой юзер уже залогинен в систему
      *
@@ -465,7 +478,7 @@ public class NetCommander {
             res = send(netProperty, Uses.TASK_GET_SELF_SERVICES_CHECK, params);
         } catch (QException e) {// вывод исключений
             Uses.closeSplash();
-            throw new ServerException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ServerException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
         final RpcGetBool rpc;
@@ -495,7 +508,7 @@ public class NetCommander {
         try {
             res = send(netProperty, Uses.TASK_INVITE_NEXT_CUSTOMER, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
         final RpcInviteCustomer rpc;
@@ -523,7 +536,7 @@ public class NetCommander {
         try {
             send(netProperty, Uses.TASK_KILL_NEXT_CUSTOMER, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
     }
 
@@ -547,7 +560,7 @@ public class NetCommander {
         try {
             send(netProperty, Uses.TASK_CUSTOMER_TO_POSTPON, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
     }
 
@@ -567,7 +580,7 @@ public class NetCommander {
         try {
             send(netProperty, Uses.TASK_POSTPON_CHANGE_STATUS, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
     }
 
@@ -585,7 +598,7 @@ public class NetCommander {
         try {
             send(netProperty, Uses.TASK_START_CUSTOMER, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
     }
 
@@ -609,7 +622,7 @@ public class NetCommander {
         try {
             res = send(netProperty, Uses.TASK_FINISH_CUSTOMER, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
         final RpcStandInService rpc;
@@ -645,7 +658,7 @@ public class NetCommander {
         try {
             send(netProperty, Uses.TASK_REDIRECT_CUSTOMER, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
     }
 
@@ -666,7 +679,7 @@ public class NetCommander {
          // загрузим ответ
          return send(netProperty, Uses.TASK_I_AM_LIVE, params);
          } catch (IOException e) {// вывод исключений
-         throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+         throw new ClientException(Locales.locMes("command_error2"), e);
          } catch (DocumentException e) {
          throw new ClientException(Locales.locMes("bad_response") + "\n" + e.toString());
          }
@@ -866,7 +879,7 @@ public class NetCommander {
         try {
             res = send(netProperty, Uses.TASK_GET_GRID_OF_DAY, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
         final RpcGetGridOfDay rpc;
@@ -900,7 +913,7 @@ public class NetCommander {
         try {
             res = send(netProperty, Uses.TASK_GET_GRID_OF_WEEK, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
         final RpcGetGridOfWeek rpc;
@@ -968,7 +981,7 @@ public class NetCommander {
         try {
             res = send(netProperty, Uses.TASK_ADVANCE_CHECK_AND_STAND, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
         final RpcStandInService rpc;
@@ -998,7 +1011,7 @@ public class NetCommander {
         try {
             res = send(netProperty, Uses.TASK_REMOVE_ADVANCE_CUSTOMER, params);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
         final JsonRPC20OK rpc;
@@ -1022,18 +1035,18 @@ public class NetCommander {
         try {
             send(netProperty, Uses.TASK_RESTART, null);
         } catch (QException e) {// вывод исключений
-            throw new ClientException("Невозможно получить ответ от сервера. " + e.toString());
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
     }
 
     /**
-     * Получение списка отзывов
+     * Получение Дерева отзывов
      *
      * @param netProperty параметры соединения с сервером
      * @return XML-ответ
      */
-    public static LinkedList<QRespItem> getResporseList(INetProperty netProperty) {
-        QLog.l().logger().info("Команда на получение списка отзывов.");
+    public static QRespItem getResporseList(INetProperty netProperty) {
+        QLog.l().logger().info("Команда на получение дерева отзывов.");
         String res = null;
         try {
             // загрузим ответ
@@ -1045,9 +1058,9 @@ public class NetCommander {
             return null;
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
-        final RpcGetRespList rpc;
+        final RpcGetRespTree rpc;
         try {
-            rpc = gson.fromJson(res, RpcGetRespList.class);
+            rpc = gson.fromJson(res, RpcGetRespTree.class);
         } catch (JsonSyntaxException ex) {
             throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
         } finally {
@@ -1064,17 +1077,18 @@ public class NetCommander {
      * @param userID оператор, может быть null
      * @param customerID
      * @param clientData номер талона, не null
-     * @param respID идентификатор выбранного отзыва
+     * @param resp выбранн отзыв
      */
-    public static void setResponseAnswer(INetProperty netProperty, Long respID, Long userID, Long serviceID, Long customerID, String clientData) {
+    public static void setResponseAnswer(INetProperty netProperty, QRespItem resp, Long userID, Long serviceID, Long customerID, String clientData) {
         QLog.l().logger().info("Отправка выбранного отзыва.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
-        params.responseId = respID;
+        params.responseId = resp.getId();
         params.serviceId = serviceID;
         params.userId = userID;
         params.customerId = customerID;
         params.textData = clientData;
+        params.comments = resp.data;
         try {
             send(netProperty, Uses.TASK_SET_RESPONSE_ANSWER, params);
         } catch (QException ex) {// вывод исключений

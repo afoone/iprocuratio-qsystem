@@ -45,13 +45,13 @@ public class UserTableModel extends AbstractTableModel {
             case 3:
                 return props.getAddr(userId).qsize;
             case 4:
-                if (props.getAddr(userId).user == null) {
+                if (props.getAddr(userId).getUser() == null) {
                     return "Неизвестно";
                 }
-                if (props.getAddr(userId).user.getShadow() == null || props.getAddr(userId).user.getShadow().getCustomerState() == null) {
+                if (props.getAddr(userId).getUser().getShadow() == null || props.getAddr(userId).getUser().getShadow().getCustomerState() == null) {
                     return "Не работает";
                 } else {
-                    switch (props.getAddr(userId).user.getShadow().getCustomerState()) {
+                    switch (props.getAddr(userId).getUser().getShadow().getCustomerState()) {
                         case STATE_INVITED:
                             return "Вызван";
                         case STATE_INVITED_SECONDARY:

@@ -16,17 +16,25 @@
  */
 package ru.apertum.qsystem.extra;
 
+import java.awt.event.ActionEvent;
 import ru.apertum.qsystem.client.forms.FClient;
+import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation;
+import ru.apertum.qsystem.common.model.INetProperty;
+import ru.apertum.qsystem.server.model.QUser;
 
 /**
  * Интерфейс плагинов, которые просто стартуют при старте программы оператора
+ *
  * @author Evgeniy Egorov
  */
 public interface IStartClient extends IExtra {
 
     /**
      * Метод выполнится после создания формы приложения оператора
+     *
      * @param form форма приложения оператора
      */
     public void start(FClient form);
+
+    public void pressButton(QUser user, INetProperty netProperty, RpcGetSelfSituation.SelfSituation situation, ActionEvent evt, int keyId);
 }

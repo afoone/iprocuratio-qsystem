@@ -173,9 +173,8 @@ public class QLog {
      * @return
      */
     public static QLog initial(String[] args, int type) {
-        QConfig.cfg(type).prepareCLI(args);
-
         loggerType = type;
+        QConfig.cfg(type).prepareCLI(args);
         final QLog log = LogerHolder.INSTANCE;
         About.load();
         QLog.l().logger.info("\"QSystem " + About.ver + "\"!  date: " + About.date);

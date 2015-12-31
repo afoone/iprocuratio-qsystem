@@ -27,7 +27,7 @@ public class AddrProp {
         try (FileInputStream fis = new FileInputStream(addrFile); Scanner s = new Scanner(fis)) {
             while (s.hasNextLine()) {
                 final String line = s.nextLine().trim();
-                if (!line.startsWith("#")) {
+                if (!line.isEmpty() && !line.startsWith("#")) {
                     final String[] ss = line.split("=");
                     final String[] ssl = ss[1].split(" ");
                     addrs.put(Long.valueOf(ss[0]), new ButtonDevice(Long.valueOf(ss[0]), Byte.parseByte(ssl[0]), ssl.length == 1 ? null : Long.parseLong(ssl[1])));

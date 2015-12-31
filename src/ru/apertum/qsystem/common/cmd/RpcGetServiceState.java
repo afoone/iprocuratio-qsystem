@@ -18,7 +18,7 @@ package ru.apertum.qsystem.common.cmd;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingDeque;
 import ru.apertum.qsystem.common.model.QCustomer;
 
 /**
@@ -33,7 +33,7 @@ public class RpcGetServiceState extends JsonRPC20 {
     public RpcGetServiceState(int code, String message) {
         this.result = new ServiceState(code, message);
     }
-    public RpcGetServiceState(LinkedList<QCustomer> line) {
+    public RpcGetServiceState(LinkedBlockingDeque<QCustomer> line) {
         this.result = new ServiceState(line);
     }
     @Expose
@@ -57,7 +57,7 @@ public class RpcGetServiceState extends JsonRPC20 {
             this.code = code;
             this.message = message;
         }
-        public ServiceState(LinkedList<QCustomer> line) {
+        public ServiceState(LinkedBlockingDeque<QCustomer> line) {
             this.code = 1;
             this.message = null;
             this.clients = line;
@@ -87,13 +87,13 @@ public class RpcGetServiceState extends JsonRPC20 {
         
         @Expose
         @SerializedName("clients")
-        private LinkedList<QCustomer> clients;
+        private LinkedBlockingDeque<QCustomer> clients;
 
-        public LinkedList<QCustomer> getClients() {
+        public LinkedBlockingDeque<QCustomer> getClients() {
             return clients;
         }
 
-        public void setClients(LinkedList<QCustomer> clients) {
+        public void setClients(LinkedBlockingDeque<QCustomer> clients) {
             this.clients = clients;
         }
     }

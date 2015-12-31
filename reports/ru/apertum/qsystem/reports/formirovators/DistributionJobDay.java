@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.http.HttpRequest;
 import ru.apertum.qsystem.common.Uses;import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.exceptions.ReportException;
+import ru.apertum.qsystem.reports.common.RepResBundle;
 import ru.apertum.qsystem.reports.common.Response;
 
 /**
@@ -81,7 +82,7 @@ public class DistributionJobDay extends AFormirovator {
     public Response getDialog(String driverClassName, String url, String username, String password, HttpRequest request, String errorMessage) {
         final Response result = getDialog("/ru/apertum/qsystem/reports/web/get_date_distribution.html", request, errorMessage);
         try {
-            result.setData(new String(result.getData(), "UTF-8").replaceFirst("#DATA_FOR_TITLE#", "Распределение нагрузки внутри дня:").getBytes("UTF-8"));
+            result.setData(new String(result.getData(), "UTF-8").replaceFirst("#DATA_FOR_TITLE#", RepResBundle.getInstance().getStringSafe("distribution_job_day")).getBytes("UTF-8"));
         } catch (UnsupportedEncodingException ex) {
         }
         return result;

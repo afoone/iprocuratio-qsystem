@@ -247,27 +247,31 @@ COMMENT = 'Словарь улиц' ;
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `qsystem`.`clients_authorization` ;
 
-CREATE  TABLE IF NOT EXISTS `qsystem`.`clients_authorization` (
-  `id` BIGINT NOT NULL ,
-  `name` VARCHAR(45) NOT NULL DEFAULT '' COMMENT 'Имя' ,
-  `surname` VARCHAR(45) NOT NULL DEFAULT '' COMMENT 'Фамилие' ,
-  `otchestvo` VARCHAR(45) NOT NULL DEFAULT '' COMMENT 'Отчество, иногда может отсутствовать.' ,
-  `birthday` DATE NULL DEFAULT NULL COMMENT 'Дата рождения' ,
-  `streets_id` BIGINT NULL DEFAULT NULL COMMENT 'Связь со словарем улиц. Проживание.' ,
-  `house` VARCHAR(10) NULL DEFAULT '' COMMENT 'Номер дома' ,
-  `korp` VARCHAR(10) NULL DEFAULT '' COMMENT 'Корпус дома' ,
-  `flat` VARCHAR(10) NULL DEFAULT '' COMMENT 'Квартира' ,
-  `validity` INT NOT NULL DEFAULT -1 COMMENT 'Степень валидности авторизованного клиента' ,
-  PRIMARY KEY (`id`) ,
+CREATE TABLE IF NOT EXISTS `qsystem`.`clients_authorization` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '',
+  `auth_id` VARCHAR(128) NULL COMMENT 'Если есть строковый идентификатор, то можно использовать',
+  `name` VARCHAR(45) NOT NULL DEFAULT '' COMMENT 'Имя',
+  `surname` VARCHAR(45) NOT NULL DEFAULT '' COMMENT 'Фамилие',
+  `otchestvo` VARCHAR(45) NOT NULL DEFAULT '' COMMENT 'Отчество, иногда может отсутствовать.',
+  `birthday` DATE NULL DEFAULT NULL COMMENT 'Дата рождения',
+  `streets_id` BIGINT NULL DEFAULT NULL COMMENT 'Связь со словарем улиц. Проживание.',
+  `house` VARCHAR(10) NULL DEFAULT '' COMMENT 'Номер дома',
+  `korp` VARCHAR(10) NULL DEFAULT '' COMMENT 'Корпус дома',
+  `flat` VARCHAR(10) NULL DEFAULT '' COMMENT 'Квартира',
+  `validity` INT NOT NULL DEFAULT -1 COMMENT 'Степень валидности авторизованного клиента',
+  `comments` VARCHAR(512) NULL COMMENT 'Некий необязательный комментарий',
+  PRIMARY KEY (`id`)  COMMENT '',
   CONSTRAINT `fk_clients_authorization_streets`
-    FOREIGN KEY (`streets_id` )
-    REFERENCES `qsystem`.`streets` (`id` )
+    FOREIGN KEY (`streets_id`)
+    REFERENCES `qsystem`.`streets` (`id`)
     ON DELETE SET NULL
     ON UPDATE CASCADE)
-ENGINE = InnoDB, 
-COMMENT = 'Словарь клиентов для авторизации.' ;
+ENGINE = InnoDB
+COMMENT = 'Словарь клиентов для авторизации.';
 
-CREATE INDEX `idx_clients_authorization_streets` ON `qsystem`.`clients_authorization` (`streets_id` ASC) ;
+CREATE INDEX `idx_clients_authorization_streets` ON `qsystem`.`clients_authorization` (`streets_id` ASC)  COMMENT '';
+
+CREATE UNIQUE INDEX `idx_auth_id_UNIQUE` ON `qsystem`.`clients_authorization` (`auth_id` ASC)  COMMENT '';
 
 
 -- -----------------------------------------------------
@@ -522,13 +526,24 @@ CREATE INDEX `idx_information_information` ON `qsystem`.`information` (`parent_i
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `qsystem`.`responses` ;
 
-CREATE  TABLE IF NOT EXISTS `qsystem`.`responses` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT ,
-  `name` VARCHAR(100) NOT NULL DEFAULT '' ,
-  `text` VARCHAR(5000) NOT NULL DEFAULT '' ,
-  PRIMARY KEY (`id`) )
-ENGINE = InnoDB, 
-COMMENT = 'Список отзывов в отратной связи' ;
+CREATE TABLE IF NOT EXISTS `qsystem`.`responses` (
+  `id` BIGINT NOT NULL COMMENT '',
+  `parent_id` BIGINT NULL COMMENT '',
+  `name` VARCHAR(100) NOT NULL DEFAULT '' COMMENT '',
+  `text` VARCHAR(5000) NOT NULL DEFAULT '' COMMENT '',
+  `input_caption` VARCHAR(512) NOT NULL DEFAULT '' COMMENT '',
+  `input_required` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '',
+  `deleted` DATE NULL COMMENT '',
+  PRIMARY KEY (`id`)  COMMENT '',
+  CONSTRAINT `fk_responses_responses`
+    FOREIGN KEY (`parent_id`)
+    REFERENCES `qsystem`.`responses` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB
+COMMENT = 'Список отзывов в отратной связи';
+
+CREATE INDEX `idx_responses_responses` ON `qsystem`.`responses` (`parent_id` ASC)  COMMENT '';
 
 
 -- -----------------------------------------------------
@@ -536,45 +551,46 @@ COMMENT = 'Список отзывов в отратной связи' ;
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `qsystem`.`response_event` ;
 
-CREATE  TABLE IF NOT EXISTS `qsystem`.`response_event` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT ,
-  `resp_date` DATETIME NOT NULL COMMENT 'Дата отклика' ,
-  `response_id` BIGINT NOT NULL ,
-  `services_id` BIGINT NULL ,
-  `users_id` BIGINT NULL ,
-  `clients_id` BIGINT NULL COMMENT 'Клиент оставивший отзыв' ,
-  `client_data` VARCHAR(245) NOT NULL DEFAULT '' ,
-  PRIMARY KEY (`id`) ,
+CREATE TABLE IF NOT EXISTS `qsystem`.`response_event` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '',
+  `resp_date` DATETIME NOT NULL COMMENT 'Дата отклика',
+  `response_id` BIGINT NOT NULL COMMENT '',
+  `services_id` BIGINT NULL COMMENT '',
+  `users_id` BIGINT NULL COMMENT '',
+  `clients_id` BIGINT NULL COMMENT 'Клиент оставивший отзыв',
+  `client_data` VARCHAR(245) NOT NULL DEFAULT '' COMMENT '',
+  `comment` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '',
+  PRIMARY KEY (`id`)  COMMENT '',
   CONSTRAINT `fk_response_date_responses`
-    FOREIGN KEY (`response_id` )
-    REFERENCES `qsystem`.`responses` (`id` )
+    FOREIGN KEY (`response_id`)
+    REFERENCES `qsystem`.`responses` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT `fk_response_event_services`
-    FOREIGN KEY (`services_id` )
-    REFERENCES `qsystem`.`services` (`id` )
+    FOREIGN KEY (`services_id`)
+    REFERENCES `qsystem`.`services` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT `fk_response_event_users`
-    FOREIGN KEY (`users_id` )
-    REFERENCES `qsystem`.`users` (`id` )
+    FOREIGN KEY (`users_id`)
+    REFERENCES `qsystem`.`users` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
   CONSTRAINT `fk_response_event_clients`
-    FOREIGN KEY (`clients_id` )
-    REFERENCES `qsystem`.`clients` (`id` )
+    FOREIGN KEY (`clients_id`)
+    REFERENCES `qsystem`.`clients` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
-ENGINE = InnoDB, 
-COMMENT = 'Даты оставленных отзывов.' ;
+ENGINE = InnoDB
+COMMENT = 'Даты оставленных отзывов.';
 
-CREATE INDEX `idx_response_date_responses` ON `qsystem`.`response_event` (`response_id` ASC) ;
+CREATE INDEX `idx_response_date_responses` ON `qsystem`.`response_event` (`response_id` ASC)  COMMENT '';
 
-CREATE INDEX `idx_response_event_services` ON `qsystem`.`response_event` (`services_id` ASC) ;
+CREATE INDEX `idx_response_event_services` ON `qsystem`.`response_event` (`services_id` ASC)  COMMENT '';
 
-CREATE INDEX `idx_response_event_users` ON `qsystem`.`response_event` (`users_id` ASC) ;
+CREATE INDEX `idx_response_event_users` ON `qsystem`.`response_event` (`users_id` ASC)  COMMENT '';
 
-CREATE INDEX `idx_response_event_clients` ON `qsystem`.`response_event` (`clients_id` ASC) ;
+CREATE INDEX `idx_response_event_clients` ON `qsystem`.`response_event` (`clients_id` ASC)  COMMENT '';
 
 
 -- -----------------------------------------------------
@@ -782,7 +798,7 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `qsystem`;
-INSERT INTO `qsystem`.`net` (`id`, `server_port`, `web_server_port`, `client_port`, `finish_time`, `start_time`, `version`, `first_number`, `last_number`, `numering`, `point`, `sound`, `branch_id`, `sky_server_url`, `zone_board_serv_addr`, `zone_board_serv_port`, `voice`, `black_time`, `limit_recall`, `button_free_design`) VALUES (1, 3128, 8088, 3129, '18:00:00', '08:45:00', '2.7', 1, 999, 0, 0, 1, 113, 'http://localhost:8080/qskyapi/customer_events?wsdl', '127.0.0.1', 27007, 0, 0, 0, 0, 0);
+INSERT INTO `qsystem`.`net` (`id`, `server_port`, `web_server_port`, `client_port`, `finish_time`, `start_time`, `version`, `first_number`, `last_number`, `numering`, `point`, `sound`, `branch_id`, `sky_server_url`, `zone_board_serv_addr`, `zone_board_serv_port`, `voice`, `black_time`, `limit_recall`, `button_free_design`, `ext_priority`) VALUES (1, 3128, 8088, 3129, '18:00:00', '08:45:00', '2.8', 1, 999, 0, 0, 1, 113, 'http://localhost:8080/qskyapi/customer_events?wsdl', '127.0.0.1', 27007, 0, 0, 0, 0, 0);
 
 COMMIT;
 
@@ -810,7 +826,7 @@ INSERT INTO `qsystem`.`reports` (`id`, `name`, `className`, `template`, `href`) 
 INSERT INTO `qsystem`.`reports` (`id`, `name`, `className`, `template`, `href`) VALUES (8, 'Распределение среднего времени ожидания внутри дня для услуги', 'ru.apertum.qsystem.reports.formirovators.DistributionWaitDayServices', '/ru/apertum/qsystem/reports/templates/DistributionWaitDayServices.jasper', 'distribution_wait_services');
 INSERT INTO `qsystem`.`reports` (`id`, `name`, `className`, `template`, `href`) VALUES (9, 'Распределение среднего времени ожидания внутри дня для пользователя', 'ru.apertum.qsystem.reports.formirovators.DistributionWaitDayUsers', '/ru/apertum/qsystem/reports/templates/DistributionWaitDayUsers.jasper', 'distribution_wait_users');
 INSERT INTO `qsystem`.`reports` (`id`, `name`, `className`, `template`, `href`) VALUES (10, 'Статистический отчет по отзывам клиентов за период', 'ru.apertum.qsystem.reports.formirovators.ResponsesReport', '/ru/apertum/qsystem/reports/templates/responsesReport.jasper', 'statistic_period_responses');
-INSERT INTO `qsystem`.`reports` (`id`, `name`, `className`, `template`, `href`) VALUES (11, 'Статистический отчет распределения активности клиентов за период', 'ru.apertum.qsystem.reports.formirovators.ResponsesDateReport', '/ru/apertum/qsystem/reports/templates/responsesDateReport.jasper', 'statistic_period_date_responses');
+INSERT INTO `qsystem`.`reports` (`id`, `name`, `className`, `template`, `href`) VALUES (11, 'Полный отчет по отзывам клиентов за период', 'ru.apertum.qsystem.reports.formirovators.ResponsesDateReport', '/ru/apertum/qsystem/reports/templates/responsesDateReport.jasper', 'statistic_period_date_responses');
 INSERT INTO `qsystem`.`reports` (`id`, `name`, `className`, `template`, `href`) VALUES (12, 'Отчет предварительно зарегистрированных клиентов по услуге на дату', 'ru.apertum.qsystem.reports.formirovators.DistributionMedDayServices', '/ru/apertum/qsystem/reports/templates/DistributionMedDayServices.jasper', 'distribution_med_services');
 INSERT INTO `qsystem`.`reports` (`id`, `name`, `className`, `template`, `href`) VALUES (13, 'Отчет по авторизованным персонам за период для пользователя', 'ru.apertum.qsystem.reports.formirovators.AuthorizedClientsPeriodUsers', '/ru/apertum/qsystem/reports/templates/AuthorizedClientsPeriodUsers.jasper', 'authorized_clients_period_users');
 INSERT INTO `qsystem`.`reports` (`id`, `name`, `className`, `template`, `href`) VALUES (14, 'Отчет по авторизованным персонам за период для услуги', 'ru.apertum.qsystem.reports.formirovators.AuthorizedClientsPeriodServices', '/ru/apertum/qsystem/reports/templates/AuthorizedClientsPeriodServices.jasper', 'authorized_clients_period_services');
@@ -832,11 +848,12 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `qsystem`;
-INSERT INTO `qsystem`.`responses` (`id`, `name`, `text`) VALUES (1, 'Excellent', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>Excellent</span></b>');
-INSERT INTO `qsystem`.`responses` (`id`, `name`, `text`) VALUES (2, 'Good', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>Good</span></b>');
-INSERT INTO `qsystem`.`responses` (`id`, `name`, `text`) VALUES (3, 'So, so...', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>So, so...</span></b>');
-INSERT INTO `qsystem`.`responses` (`id`, `name`, `text`) VALUES (4, 'Bad', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>Bad</span></b>');
-INSERT INTO `qsystem`.`responses` (`id`, `name`, `text`) VALUES (5, 'Disgusting', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>Disgusting</span></b>');
+INSERT INTO `qsystem`.`responses` (`id`, `parent_id`, `name`, `text`, `input_caption`, `input_required`, `deleted`) VALUES (0, NULL, 'Responses', '<html><p  style=\'text-align: center;\'><font size=\'10\' color=\'#ffff4d\'>Help us to improve our work.</font><br><font  size=\'4\' color=\'#ffff4d\'>Each of your feedback is very important to us.</font></p>', DEFAULT, DEFAULT, NULL);
+INSERT INTO `qsystem`.`responses` (`id`, `parent_id`, `name`, `text`, `input_caption`, `input_required`, `deleted`) VALUES (1, 0, 'Excellent', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>Excellent</span></b>', DEFAULT, DEFAULT, NULL);
+INSERT INTO `qsystem`.`responses` (`id`, `parent_id`, `name`, `text`, `input_caption`, `input_required`, `deleted`) VALUES (2, 0, 'Good', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>Good</span></b>', DEFAULT, DEFAULT, NULL);
+INSERT INTO `qsystem`.`responses` (`id`, `parent_id`, `name`, `text`, `input_caption`, `input_required`, `deleted`) VALUES (3, 0, 'So, so...', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>So, so...</span></b>', DEFAULT, DEFAULT, NULL);
+INSERT INTO `qsystem`.`responses` (`id`, `parent_id`, `name`, `text`, `input_caption`, `input_required`, `deleted`) VALUES (4, 0, 'Bad', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>Bad</span></b>', DEFAULT, DEFAULT, NULL);
+INSERT INTO `qsystem`.`responses` (`id`, `parent_id`, `name`, `text`, `input_caption`, `input_required`, `deleted`) VALUES (5, 0, 'Disgusting', '<html><b><p align=center><span style=\'font-size:20.0pt;color:green\'>Disgusting</span></b>', DEFAULT, DEFAULT, NULL);
 
 COMMIT;
 

@@ -41,11 +41,11 @@ public class ActionTransmit implements Runnable {
 
         if (devFuctory != null || (bytes.length == 4 && bytes[0] == 0x01 && bytes[3] == 0x07)) {
             // должно быть 4 байта, иначе коллизия
-            final IButtonDeviceFuctory.IButtonDevice dev = devFuctory==null ?  AddrProp.getInstance().getAddrByRSAddr(bytes[1]) : devFuctory.getButtonDevice(bytes);
+            final IButtonDeviceFuctory.IButtonDevice dev = devFuctory == null ? AddrProp.getInstance().getAddrByRSAddr(bytes[1]) : devFuctory.getButtonDevice(bytes, UBForm.users);
             if (dev == null) {
-                throw new RuntimeException("Anknown address from user device.");
+                throw new RuntimeException("Anknown address from user device. " + (devFuctory == null ? "Hohlov device." : (devFuctory.toString() + " key=" + new String(bytes))));
             }
-            dev.doAction(bytes[2]);
+            dev.doAction(bytes);
         } else {
             System.err.println("Collision! Package lenght is not 4 bytes.");
         }

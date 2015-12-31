@@ -113,6 +113,7 @@ public class QButton extends JButton {
         isVisible = true;
         isForPrereg = false;
 
+        setFocusPainted(false);
         // Нарисуем картинку на кнопке если надо. Загрузить можно из файла или ресурса
         if ("".equals(resourceName)) {
             background = null;
@@ -236,6 +237,14 @@ public class QButton extends JButton {
 
         addActionListener((ActionEvent e) -> {
             QLog.l().logger().info("Pressed button \"" + service.getName() + "\" ID=" + service.getId());
+            for (final IWelcome event : ServiceLoader.load(IWelcome.class)) {
+                QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+                try {
+                    event.buttonPressed(service);
+                } catch (Throwable tr) {
+                    QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
+                }
+            }
             try {
                 // "Услуги" и "Группа" это одно и тоже.
                 if (!service.isLeaf()) {
@@ -276,6 +285,15 @@ public class QButton extends JButton {
                             // приложим введенное клиентом чтобы потом напечатать.
                             if (service.getInput_required()) {
                                 res.setAuthorizationCustomer(new QAuthorizationCustomer(inputData));
+                            }
+
+                            for (final IWelcome event : ServiceLoader.load(IWelcome.class)) {
+                                QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+                                try {
+                                    event.readyNewAdvCustomer(res, service);
+                                } catch (Throwable tr) {
+                                    QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
+                                }
                             }
 
                             //вешаем заставку
@@ -401,17 +419,21 @@ public class QButton extends JButton {
                             // поддержка расширяемости плагинами
                             // запросим ввода данных
                             String flag = null;
+                            int cntIn = 0;
                             for (final IWelcome event : ServiceLoader.load(IWelcome.class)) {
                                 QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
                                 String f = null;
                                 try {
-                                    f = event.showInputDialog(form, true, FWelcome.netProperty, false, WelcomeParams.getInstance().delayBack, service.getTextToLocale(QService.Field.INPUT_CAPTION));
+                                    f = event.showInputDialog(form, true, FWelcome.netProperty, false, WelcomeParams.getInstance().delayBack, service.getTextToLocale(QService.Field.INPUT_CAPTION), service);
+                                    cntIn++;
                                 } catch (Throwable tr) {
                                     QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
                                 }
                                 flag = (f == null ? flag : (flag == null ? f : (flag + " " + f)));
                             }
-
+                            if (cntIn != 0 && flag == null) {
+                                return;
+                            }
                             inputData = (flag == null ? FInputDialog.showInputDialog(form, true, FWelcome.netProperty, false, WelcomeParams.getInstance().delayBack, service.getTextToLocale(QService.Field.INPUT_CAPTION))
                                     : flag);
                             if (inputData == null) {
@@ -450,6 +472,14 @@ public class QButton extends JButton {
                             form.lock(form.LOCK_MESSAGE);
                             clock.stop();
                             return;
+                        }
+                        for (final IWelcome event : ServiceLoader.load(IWelcome.class)) {
+                            QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+                            try {
+                                event.readyNewCustomer(res, service);
+                            } catch (Throwable tr) {
+                                QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
+                            }
                         }
                         clock.stop();
                         form.showDelayFormPrint(WelcomeParams.getInstance().patternGetTicket.replace("dialogue_text.take_ticket", FWelcome.getLocaleMessage("qbutton.take_ticket")).

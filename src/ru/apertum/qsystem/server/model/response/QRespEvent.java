@@ -126,4 +126,19 @@ public class QRespEvent implements Serializable {
     public void setClientData(String clientData) {
         this.clientData = clientData;
     }
+    
+    /**
+     * Комментарии кастомера, который отзыв оставил и его попросили их оставить в настройках отзыва
+     */
+    @Column(name = "comment")
+    private String comment = "";
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+    
 }
