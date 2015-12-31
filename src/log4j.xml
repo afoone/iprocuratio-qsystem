@@ -52,8 +52,8 @@
         <param name="encoding" value="cp1251" />
         <param name="file" value="logs/server.log" />
         <!--Зададим максимальный размер лога файла, по умолчанию 10MB -->
-        <param name="MaxFileSize" value="5MB" />
-        <param name="MaxBackupIndex" value="5" />
+        <param name="MaxFileSize" value="20MB" />
+        <param name="MaxBackupIndex" value="20" />
         <!--Зададим максимальное количество создаваемых архивных файлов логирования, по умолчанию 1 -->
         <!--param name="MaxBackupIndex" value="5" /-->
         <layout class="org.apache.log4j.PatternLayout">
@@ -115,7 +115,7 @@
         <param name="encoding" value="cp1251" />
         <param name="file" value="logs/welcome.log" />
         <param name="MaxFileSize" value="5MB" />
-        <param name="MaxBackupIndex" value="5" />
+        <param name="MaxBackupIndex" value="10" />
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d{ISO8601} [%5p] %m at {%l}%n" />
         </layout>

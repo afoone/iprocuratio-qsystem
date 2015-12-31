@@ -16,7 +16,12 @@
  */
 package ru.apertum.qsystem.client.forms;
 
+import java.awt.Cursor;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.image.MemoryImageSource;
 import java.io.File;
 import java.util.Locale;
 import javax.swing.ImageIcon;
@@ -26,6 +31,7 @@ import org.jdesktop.application.ResourceMap;
 import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.common.WelcomeParams;
 import ru.apertum.qsystem.client.model.QPanel;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.model.ATalkingClock;
@@ -78,6 +84,10 @@ public class FConfirmationStart2 extends javax.swing.JDialog {
             ok = false;
             setVisible(false);
         });
+        if (WelcomeParams.getInstance().btnFont != null) {
+            buttonOk.setFont(WelcomeParams.getInstance().btnFont);
+            buttonCancel.setFont(WelcomeParams.getInstance().btnFont);
+        }
     }
     private static ResourceMap localeMap = null;
 
@@ -98,7 +108,21 @@ public class FConfirmationStart2 extends javax.swing.JDialog {
         //confirmationForm.labelInfo.setText("<HTML><b><p align=center><span style='font-size:60.0pt;color:green'>" + getLocaleMessage("dialod.text_before") + "</span><br>"
         //        + "<span style='font-size:100.0pt;color:red'>" + count + "</span><br><span style='font-size:60.0pt;color:red'>" + getLocaleMessage("dialod.text_before_people")
         //        + (((!Locale.getDefault().getLanguage().startsWith("en")) && ((count % 10) >= 2) && ((count % 10) <= 4)) ? "a" : "") + "</span></p></b>");
-        confirmationForm.setBounds(owner.getLocation().x, owner.getLocation().y, owner.getWidth(), owner.getHeight());
+        //confirmationForm.setBounds(owner.getLocation().x, owner.getLocation().y, owner.getWidth(), owner.getHeight());
+        Uses.setLocation(confirmationForm);
+        if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo())) {
+            Uses.setFullSize(confirmationForm);
+            if (QConfig.cfg().isHideCursor()) {
+                int[] pixels = new int[16 * 16];
+                Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
+                Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
+                confirmationForm.setCursor(transparentCursor);
+            }
+
+        } else {
+            confirmationForm.setSize(1280, 768);
+            Uses.setLocation(confirmationForm);
+        }
         // если кастомер провафлил и ушел, то надо закрыть диалог
         clock.start();
         confirmationForm.setVisible(true);
@@ -119,6 +143,7 @@ public class FConfirmationStart2 extends javax.swing.JDialog {
         labelInfo = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setUndecorated(true);
 
         buttonCancel.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
         buttonCancel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ru/apertum/qsystem/client/forms/resources/stop.png"))); // NOI18N

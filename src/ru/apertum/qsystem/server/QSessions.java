@@ -49,7 +49,7 @@ public class QSessions {
 
     private int i = 0;
 
-    public void update(Long userId, String ipAdress, byte[] IP) {
+    public synchronized void update(Long userId, String ipAdress, byte[] IP) {
         if (++i > 1000) {
             final LinkedList<QSession> forDel = new LinkedList();
             sessions.stream().filter((session) -> (!session.isValid())).forEach((session) -> {
@@ -67,7 +67,7 @@ public class QSessions {
         }
     }
 
-    public boolean check(Long userId, String ipAdress, byte[] IP) {
+    public synchronized boolean check(Long userId, String ipAdress, byte[] IP) {
         for (QSession session : sessions) {
             if ((session.isValid())
                     && ((!QConfig.cfg().isTerminal() && (ipAdress.equals(session.getIpAdress()) || Arrays.equals(IP, session.getIP())))
@@ -92,7 +92,7 @@ public class QSessions {
         return sessions.add(new QSession(QUserList.getInstance().getById(userId), ipAdress, IP));
     }
 
-    public void remove(Long userId) {
+    public synchronized void remove(Long userId) {
         for (QSession session : sessions) {
             if (userId.equals(session.getUser().getId())) {
                 sessions.remove(session);

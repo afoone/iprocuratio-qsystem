@@ -8,15 +8,16 @@ CREATE SCHEMA IF NOT EXISTS `qsystem` ;
 3. Удалить все упоминания использования БД.
 USE `qsystem` ;
 4. Удалить все упоминания о движке ДБ
-ENGINE = InnoDB, 
+ENGINE = InnoDB,
 ENGINE = InnoDB
-ENGINE = InnoDB;
 5. Удалить все упоминания старта транзакций
 START TRANSACTION;
 6. Удалить ссылку на принадлежность к БД
 `qsystem`.
 7. Разобраться одинарными ковычками в html в значениях полей. Заменим на двойные.
 \'->"
+7.1 Удалить пцстые комменты
+COMMENT ''
 7. Триггеры удалить и вместо них создать триггеры с сылкой на Java-класс реализацию триггеров для Н2.
 CREATE TRIGGER insert_to_statistic 
     AFTER INSERT ON clients

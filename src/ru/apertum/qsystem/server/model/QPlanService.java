@@ -30,6 +30,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import ru.apertum.qsystem.common.Uses;
+import ru.apertum.qsystem.server.ServerProps;
 
 /**
  * Это класс для загрузки набора сервисов обслуживаемых юзером. Ничего хитрого, связь многие-ко-многим + коэффициент участия. Так сделано потому что у сервисов
@@ -80,7 +81,7 @@ public class QPlanService implements Serializable {
     public void setCoefficient(Integer coefficient) {
         // выставим корректные параметры приоритета обслуживаемой услуге
         // по умолчанию "норма"
-        if (coefficient >= Uses.SERVICE_REMAINS && coefficient <= Uses.get_COEFF_WORD().size()) {
+        if (coefficient >= Uses.SERVICE_REMAINS && coefficient <= Uses.get_COEFF_WORD().size() + ServerProps.getInstance().getProps().getExtPriorNumber()) {
             this.coefficient = coefficient;
         } else {
             this.coefficient = 1;

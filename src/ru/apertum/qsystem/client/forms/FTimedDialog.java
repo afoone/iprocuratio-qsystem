@@ -45,7 +45,11 @@ public class FTimedDialog extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
         buttonClose.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ru/apertum/qsystem/client/forms/resources/stop.png"))); // NOI18N
-        buttonClose.setFont(Font.decode("Tahoma-Plain-36"));
+        if (WelcomeParams.getInstance().btnFont != null) {
+            buttonClose.setFont(WelcomeParams.getInstance().btnFont);
+        } else {
+            buttonClose.setFont(Font.decode("Tahoma-Plain-36"));
+        }
     }
     private static ResourceMap localeMap = null;
 

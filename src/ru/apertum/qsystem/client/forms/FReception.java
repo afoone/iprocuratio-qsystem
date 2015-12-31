@@ -116,7 +116,7 @@ public class FReception extends javax.swing.JFrame {
         return localeMap.getString(key);
     }
     final private IClientNetProperty netProperty;
-    
+
     public INetProperty getNetProperty() {
         return netProperty;
     }
@@ -1445,7 +1445,7 @@ public class FReception extends javax.swing.JFrame {
             labelUser.setText(user.getName() + " " + user.getPoint());
             final SelfSituation plan;
             try {
-                plan = NetCommander.getSelfServices(netProperty, user.getId());
+                plan = NetCommander.getSelfServices(netProperty, user.getId(), true);
             } catch (QException ex) {
                 throw new ClientException(ex);
             }
@@ -1522,7 +1522,7 @@ public class FReception extends javax.swing.JFrame {
                 } else {
                     s = "<br>" + s + "<br>" + customer.getInput_data(); //NOI18N
                 }
-                tempAll = tempAll + "<br>" + getLocaleMessage("working.with.client") + textCust + " " + min + getLocaleMessage("mints") + "<br><b><span style='color:#000000'> " + getLocaleMessage("messages.service") + ": " + customer.getService().getName() + "<br>" + getLocaleMessage("messages.priority") + ": " + priority + s + "</span></b>";
+                tempAll = tempAll + "<br>" + getLocaleMessage("working.with.client") + " " + textCust + " " + min + " " + getLocaleMessage("mints") + "<br><b><span style='color:#000000'> " + getLocaleMessage("messages.service") + ": " + customer.getService().getName() + "<br>" + getLocaleMessage("messages.priority") + ": " + priority + s + "</span></b>";
                 //     labelNextCustomerInfo.setText("<html><b><span style='color:#000000'> " + getLocaleMessage("messages.service") + ": " + customer.getService().getName() + "<br>" + getLocaleMessage("messages.priority") + ": " + priority + s + "</span></b>");
                 //     textAreaComments.setText(customer.getTempComments());
                 //     textAreaComments.setCaretPosition(0);

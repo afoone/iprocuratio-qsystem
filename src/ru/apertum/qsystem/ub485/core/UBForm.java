@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
@@ -25,6 +26,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.table.AbstractTableModel;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
 import ru.apertum.qsystem.QSystem;
@@ -33,8 +35,10 @@ import ru.apertum.qsystem.client.model.QTray;
 import ru.apertum.qsystem.common.NetCommander;
 import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
+import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.cmd.RpcGetServerState.ServiceInfo;
 import ru.apertum.qsystem.common.model.INetProperty;
+import ru.apertum.qsystem.extra.IButtonDeviceFuctory;
 import ru.apertum.qsystem.server.model.QPlanService;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.evgenic.rxtx.serialPort.IReceiveListener;
@@ -65,7 +69,14 @@ public class UBForm extends JFrame {
      */
     public UBForm() {
         initComponents();
-        table.setModel(new UserTableModel(AddrProp.getInstance()));
+        // поддержка расширяемости плагинами
+        IButtonDeviceFuctory devFuctory = null;
+        for (final IButtonDeviceFuctory event : ServiceLoader.load(IButtonDeviceFuctory.class)) {
+            QLog.l().logger().info("Invoke SPI ext. Description: " + event.getDescription());
+            devFuctory = event;
+            break;
+        }
+        table.setModel(devFuctory == null ? new UserTableModel(AddrProp.getInstance()) : devFuctory.getDeviceTable());
 
         // Фича. По нажатию Escape закрываем форму
         // свернем по esc
@@ -583,7 +594,7 @@ public class UBForm extends JFrame {
                 final LinkedList<ServiceInfo> servs = NetCommander.getServerState(netProperty);
                 for (ButtonDevice adr : AddrProp.getInstance().getAddrs().values().toArray(new ButtonDevice[0])) {
                     int l = 0;
-                    for (QPlanService pser : adr.user.getPlanServices()) {
+                    for (QPlanService pser : adr.getUser().getPlanServices()) {
                         for (ServiceInfo serviceInfo : servs) {
                             if (serviceInfo.getId().equals(pser.getService().getId())) {
                                 l = l + serviceInfo.getCountWait();
@@ -592,7 +603,7 @@ public class UBForm extends JFrame {
                     }
                     adr.setQsize(l);
                 }
-                ((UserTableModel) table.getModel()).fireTableDataChanged();
+                ((AbstractTableModel) table.getModel()).fireTableDataChanged();
             }
         });
         apdater.start();
@@ -645,6 +656,9 @@ public class UBForm extends JFrame {
         };
     }
 
+    public static LinkedList<QUser> users = new LinkedList<>();
+    public static LinkedList<ServiceInfo> servs = new LinkedList<>();
+
     private void initQsys() {
         if (propFile == null) {
             initProps();
@@ -665,13 +679,13 @@ public class UBForm extends JFrame {
                 }
             }
         };
-        LinkedList<QUser> users = NetCommander.getUsers(netProperty);
+        users = NetCommander.getUsers(netProperty);
         users.stream().forEach((qUser) -> {
             qUser.getPlanServices().stream().forEach((pser) -> {
                 System.out.println("User: " + qUser.getName() + " => " + pser.getService().getId() + "-" + pser.getService().getName());
             });
         });
-        LinkedList<ServiceInfo> servs = NetCommander.getServerState(netProperty);
+        servs = NetCommander.getServerState(netProperty);
         servs.stream().forEach((serviceInfo) -> {
             System.out.println("Servece: " + serviceInfo.getId() + "-" + serviceInfo.getServiceName() + "-" + serviceInfo.getCountWait());
         });
@@ -679,7 +693,7 @@ public class UBForm extends JFrame {
         for (ButtonDevice adr : AddrProp.getInstance().getAddrs().values().toArray(new ButtonDevice[0])) {
             for (QUser qUser : users) {
                 if (adr.userId.equals(qUser.getId())) {
-                    adr.user = qUser;
+                    adr.setUser(qUser);
                     int l = 0;
                     for (QPlanService pser : qUser.getPlanServices()) {
                         for (ServiceInfo serviceInfo : servs) {
@@ -699,7 +713,15 @@ public class UBForm extends JFrame {
                 }
             }
         }
-        table.setModel(new UserTableModel(AddrProp.getInstance()));
+        // поддержка расширяемости плагинами
+        IButtonDeviceFuctory devFuctory = null;
+        for (final IButtonDeviceFuctory event : ServiceLoader.load(IButtonDeviceFuctory.class)) {
+            QLog.l().logger().info("Invoke SPI ext. Description: " + event.getDescription());
+            devFuctory = event;
+            devFuctory.refreshDeviceTable(users, servs);
+            break;
+        }
+        table.setModel(devFuctory == null ? new UserTableModel(AddrProp.getInstance()) : devFuctory.getDeviceTable());
     }
 
     private void initCOM(boolean isTest) throws Exception {
@@ -983,12 +1005,12 @@ public class UBForm extends JFrame {
                     });
                     try {
                         /*
-                        if (i == 60) {
-                        mess = new byte[2];
-                        mess[0] = 5;
-                        mess[mess.length - 1] = 7;
-                        }
-                        */
+                         if (i == 60) {
+                         mess = new byte[2];
+                         mess[0] = 5;
+                         mess[mess.length - 1] = 7;
+                         }
+                         */
                         port.send(mess);
                     } catch (Exception ex) {
                         System.err.println(ex);
@@ -1066,6 +1088,10 @@ public class UBForm extends JFrame {
     public static void main(String args[]) {
         QLog.initial(args, 5);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
+        // Загрузка плагинов из папки plugins
+        if (QConfig.cfg().isPlaginable()) {
+            Uses.loadPlugins("./plugins/");
+        }
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.

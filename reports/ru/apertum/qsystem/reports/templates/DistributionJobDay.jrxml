@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DistributionJobDay" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e0305b6f-345d-406c-b3e0-619c936bbe8e">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DistributionJobDay" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="ru/apertum/qsystem/reports/templates/i3-label-rep" uuid="e0305b6f-345d-406c-b3e0-619c936bbe8e">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
@@ -49,19 +49,19 @@
 			<line>
 				<reportElement uuid="3767651a-3827-42b9-a067-79eb464e4bc7" positionType="FixRelativeToBottom" x="0" y="59" width="555" height="1"/>
 			</line>
-			<staticText>
-				<reportElement uuid="bcc5f13f-5cc4-4111-bfce-90f7792cc694" x="1" y="9" width="551" height="24"/>
-				<textElement textAlignment="Center">
+			<textField>
+				<reportElement uuid="047833c9-59e5-4b33-bafb-80a2221a2828" x="1" y="9" width="551" height="24"/>
+				<textElement textAlignment="Center" markup="none">
 					<font fontName="SansSerif" size="18" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="KOI8-R" isPdfEmbedded="true"/>
 				</textElement>
-				<text><![CDATA[Распределение нагрузки внутри дня]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$R{distribution_job_day}]]></textFieldExpression>
+			</textField>
 			<textField pattern="">
 				<reportElement uuid="67925d6e-ad50-442a-b054-52f1add85c8b" x="1" y="34" width="551" height="24"/>
 				<textElement textAlignment="Center">
 					<font fontName="SansSerif" size="18" isBold="true" isUnderline="false" pdfFontName="tahoma.ttf" pdfEncoding="KOI8-R" isPdfEmbedded="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["на дату " + (new java.text.SimpleDateFormat("dd.MM.yyyy")).format($P{date})]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$R{on_date} + " " + (new java.text.SimpleDateFormat("dd.MM.yyyy")).format($P{date})]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -69,10 +69,10 @@
 		<band/>
 	</pageHeader>
 	<columnHeader>
-		<band height="385">
+		<band height="487">
 			<barChart>
 				<chart isShowLegend="false" evaluationTime="Report">
-					<reportElement uuid="4c411b09-4026-4215-b825-d47c12eb0c37" x="0" y="0" width="555" height="340"/>
+					<reportElement uuid="4c411b09-4026-4215-b825-d47c12eb0c37" x="0" y="0" width="555" height="454"/>
 					<chartTitle/>
 					<chartSubtitle>
 						<font fontName="SansSerif" size="14" isBold="false" pdfFontName="tahoma.ttf" pdfEncoding="KOI8-R" isPdfEmbedded="true"/>
@@ -90,22 +90,22 @@
 				<barPlot isShowTickMarks="false">
 					<plot/>
 					<itemLabel/>
-					<categoryAxisLabelExpression><![CDATA["часы"]]></categoryAxisLabelExpression>
+					<categoryAxisLabelExpression><![CDATA[$R{hours}]]></categoryAxisLabelExpression>
 					<categoryAxisFormat>
 						<axisFormat/>
 					</categoryAxisFormat>
-					<valueAxisLabelExpression><![CDATA["количество посетителей"]]></valueAxisLabelExpression>
+					<valueAxisLabelExpression><![CDATA[$R{amount_of_clients}]]></valueAxisLabelExpression>
 					<valueAxisFormat>
 						<axisFormat/>
 					</valueAxisFormat>
 				</barPlot>
 			</barChart>
 			<textField evaluationTime="Report">
-				<reportElement uuid="720d5c5a-5046-4dad-a99d-20c60f51be8b" x="1" y="340" width="554" height="20"/>
+				<reportElement uuid="720d5c5a-5046-4dad-a99d-20c60f51be8b" x="1" y="454" width="554" height="20"/>
 				<textElement textAlignment="Center">
 					<font size="12" isBold="true" pdfFontName="tahoma.ttf" pdfEncoding="KOI8-R" isPdfEmbedded="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Количество посетителей за день: " + $V{amount}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$R{clients_total_day}+": " + $V{amount}]]></textFieldExpression>
 			</textField>
 		</band>
 	</columnHeader>
@@ -125,7 +125,7 @@
 				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
 			</textField>
 			<textField pattern="" isBlankWhenNull="false">
-				<reportElement uuid="9eb0d818-b566-4195-a86b-6f927b9ffb28" key="textField" x="296" y="2" width="216" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<reportElement uuid="9eb0d818-b566-4195-a86b-6f927b9ffb28" key="textField" x="203" y="2" width="309" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -135,10 +135,10 @@
 				<textElement textAlignment="Right">
 					<font fontName="SansSerif" size="10" pdfFontName="tahoma.ttf" pdfEncoding="KOI8-R" isPdfEmbedded="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Страница " + $V{PAGE_NUMBER} + " из "]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$R{page}+" " + $V{PAGE_NUMBER} + " "+$R{from}+" "]]></textFieldExpression>
 			</textField>
 			<textField pattern="" isBlankWhenNull="false">
-				<reportElement uuid="05eb839b-d585-42b6-83ad-46dda2713aba" key="textField" x="1" y="2" width="209" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
+				<reportElement uuid="05eb839b-d585-42b6-83ad-46dda2713aba" key="textField" x="1" y="2" width="136" height="19" forecolor="#000000" backcolor="#FFFFFF"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>

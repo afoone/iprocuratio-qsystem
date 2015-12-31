@@ -43,16 +43,15 @@ import ru.apertum.qsystem.common.model.ATalkingClock;
 import ru.apertum.qsystem.common.model.INetProperty;
 
 /**
- * Created on 18.09.2009, 11:33:46
- * Диалог постановки в очередь по коду предварительной регистрации
- * Имеет метод для осуществления всех действий. Вся логика инкапсулирована в этом классе.
- * Должен уметь работать с комовским сканером.
+ * Created on 18.09.2009, 11:33:46 Диалог постановки в очередь по коду предварительной регистрации Имеет метод для осуществления всех действий. Вся логика
+ * инкапсулирована в этом классе. Должен уметь работать с комовским сканером.
+ *
  * @author Evgeniy Egorov
  */
 public class FInputDialog extends javax.swing.JDialog {
-    
+
     private static ResourceMap localeMap = null;
-    
+
     private static String getLocaleMessage(String key) {
         if (localeMap == null) {
             localeMap = Application.getInstance(QSystem.class).getContext().getResourceMap(FInputDialog.class);
@@ -61,7 +60,9 @@ public class FInputDialog extends javax.swing.JDialog {
     }
     private static FInputDialog inputDialog;
 
-    /** Creates new form FStandAdvance
+    /**
+     * Creates new form FStandAdvance
+     *
      * @param parent
      * @param modal
      */
@@ -80,14 +81,14 @@ public class FInputDialog extends javax.swing.JDialog {
         panelSpaseLeft.setVisible(WelcomeParams.getInstance().alphabetic_keyboard);
         panelSpaseRight.setVisible(WelcomeParams.getInstance().alphabetic_keyboard);
         labelKod.setFont(new Font("arial", 0, WelcomeParams.getInstance().input_font_size));
-        
+
         panelSpecButtons.setVisible(!"".equals(WelcomeParams.getInstance().spec_keyboard));
         if (!"".equals(WelcomeParams.getInstance().spec_keyboard)) {
             final String[] ss = WelcomeParams.getInstance().spec_keyboard.split(";");
             final GridLayout gl = new GridLayout(1, ss.length);
             gl.setHgap(20);
             panelSpecButtons.setLayout(gl);
-            
+
             for (final String s : ss) {
                 final JButton b = new JButton(s.trim());
                 b.setFont(new Font("Tahoma", 0, 36));
@@ -99,9 +100,9 @@ public class FInputDialog extends javax.swing.JDialog {
                 b.setBorder(new CompoundBorder(new BevelBorder(0), new BevelBorder(0)));
                 panelSpecButtons.add(b);
             }
-            
+
         }
-        
+
         char ascending = 'A';
         char descending = 'z';
         while (ascending <= 'Z') {
@@ -147,18 +148,18 @@ public class FInputDialog extends javax.swing.JDialog {
         getRootPane().getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Run ENTER"); // 10
         getRootPane().getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Run ESC"); // 
         getRootPane().getActionMap().put("Run and move", new AbstractAction() {
-            
+
             private static final long serialVersionUID = 8491492566619071329L;
-            
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 //System.out.println("Hi! " + e.getActionCommand() + " " + (int) e.getActionCommand().charAt(0));
-                
+
                 if ((int) e.getActionCommand().charAt(0) == 8) {
                     buttonClickNumeric(new ActionEvent(jButton1, 0, ""));
                     return;
                 }
-                
+
                 e.setSource(" ".equals(e.getActionCommand()) ? buttonSpaceV : jButton1);
                 buttonClickNumeric(e);
                 if (" ".equals(e.getActionCommand())) {
@@ -166,26 +167,31 @@ public class FInputDialog extends javax.swing.JDialog {
                 }
             }
         });
-        
+
         getRootPane().getActionMap().put("Run ESC", new AbstractAction() {
-            
+
             private static final long serialVersionUID = 8349567394546546759L;
-            
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 jButton2ActionPerformed(e);
             }
         });
         getRootPane().getActionMap().put("Run ENTER", new AbstractAction() {
-            
+
             private static final long serialVersionUID = 348567345689347559L;
-            
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 jButton1ActionPerformed(e);
             }
         });
-        
+
+        if (WelcomeParams.getInstance().btnFont != null) {
+            jButton1.setFont(WelcomeParams.getInstance().btnFont);
+            jButton2.setFont(WelcomeParams.getInstance().btnFont);
+        }
+
     }
     private static INetProperty netProperty;
     private static String serviceName;
@@ -195,12 +201,13 @@ public class FInputDialog extends javax.swing.JDialog {
 
     /**
      * Статический метод который показывает модально диалог ввода строки.
+     *
      * @param parent фрейм относительно которого будет модальность
      * @param modal модальный диалог или нет
      * @param netProperty свойства работы с сервером
      * @param fullscreen растягивать форму на весь экран и прятать мышку или нет
      * @param delay задержка перед скрытием диалога. если 0, то нет автозакрытия диалога
-     * @param caption 
+     * @param caption
      * @return XML-описание результата предварительной записи, по сути это номерок. если null, то отказались от предварительной записи
      */
     public static String showInputDialog(Frame parent, boolean modal, INetProperty netProperty, boolean fullscreen, int delay, String caption) {
@@ -211,18 +218,20 @@ public class FInputDialog extends javax.swing.JDialog {
             inputDialog.setTitle("Ввод клиентской информации");
         }
         result = "";
-        inputDialog.setSize(1280, 1024);
+        inputDialog.setSize(1280, 768);
         Uses.setLocation(inputDialog);
         FInputDialog.netProperty = netProperty;
         inputDialog.jLabel2.setText(caption);
         inputDialog.changeTextToLocale();
         if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo() && !fullscreen)) {
             Uses.setFullSize(inputDialog);
-            int[] pixels = new int[16 * 16];
-            Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
-            Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
-            inputDialog.setCursor(transparentCursor);
-            
+            if (QConfig.cfg().isHideCursor()) {
+                int[] pixels = new int[16 * 16];
+                Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
+                Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
+                inputDialog.setCursor(transparentCursor);
+            }
+
         }
         inputDialog.labelKod.setText(inputDialog.resourceMap.getString("labelKod.text"));
         if (inputDialog.clockBack.isActive()) {
@@ -236,7 +245,7 @@ public class FInputDialog extends javax.swing.JDialog {
      * Таймер, по которому будем выходить в корень меню.
      */
     public ATalkingClock clockBack = new ATalkingClock(delay, 1) {
-        
+
         @Override
         public void run() {
             result = null;
@@ -244,10 +253,9 @@ public class FInputDialog extends javax.swing.JDialog {
         }
     };
 
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+    /**
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -1235,7 +1243,7 @@ public class FInputDialog extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
     final private org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(ru.apertum.qsystem.QSystem.class).getContext().getResourceMap(FInputDialog.class);
-    
+
     private void changeTextToLocale() {
         jButton1.setText(resourceMap.getString("jButton1.text")); // NOI18N
         jButton2.setText(resourceMap.getString("jButton2.text")); // NOI18N
@@ -1283,7 +1291,7 @@ public class FInputDialog extends javax.swing.JDialog {
         }
         setVisible(false);
     }//GEN-LAST:event_jButton2ActionPerformed
-    
+
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // послать запрос на регистрацию предварительного
         // в ответ должен вернуться номерок в XML виде
@@ -1297,16 +1305,16 @@ public class FInputDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_jButton1ActionPerformed
     private boolean egnor = false; // чтоб по нажатию пробела на клаве не печаталась еще буква от виртуальной кнопки, что сработает по пробелу
     private void buttonClickNumeric(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonClickNumeric
-        
+
         if (clockBack.isActive()) {
             clockBack.stop();
         }
-        
+
         if (egnor) {
             egnor = false;
             return;
         }
-        
+
         clockBack.start();
         if ("".equals(evt.getActionCommand())) {
             // удаление
@@ -1319,7 +1327,7 @@ public class FInputDialog extends javax.swing.JDialog {
                 }
                 labelKod.setText(s);
             }
-            
+
         } else {
             // добавление цифры
             if (resourceMap.getString("labelKod.text").equals(labelKod.getText())) {

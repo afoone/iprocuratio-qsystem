@@ -73,11 +73,22 @@ public class Utf8AndAscii {
             System.out.println();
             return;
         }
+        System.out.println("Total files: " + process(convert, new File(folderIn), regex));
 
+    }
+
+    private static int process(int convert, File fold, String regex) throws IOException {
         if (convert == 2) {
-            File fold = new File(folderIn);
+            int cnt = 0;
             File[] files = fold.listFiles((File pathname) -> pathname.getName().matches(regex));
             for (File file : files) {
+
+                if (file.isDirectory()) {
+                    System.out.println("Directory \"" + file.getAbsolutePath() + "\"");
+                    cnt += process(convert, file, regex);
+                    cnt--;
+                    continue;
+                }
                 System.out.println("---> " + file.getAbsolutePath());
                 if (convert != 0) {
                     Properties prop = new Properties();
@@ -92,12 +103,19 @@ public class Utf8AndAscii {
                     prop2.store(new OutputStreamWriter(new FileOutputStream(file.getAbsolutePath()), "UTF-8"), "Utf8AndAncii");
                 }
             }
-            System.out.println(" count=" + files.length);
+            return files.length + cnt;
 
         } else {
-            File fold = new File(folderIn);
             File[] files = fold.listFiles((File pathname) -> pathname.getName().matches(regex));
+            int cnt = 0;
             for (File file : files) {
+
+                if (file.isDirectory()) {
+                    System.out.println("Directory \"" + file.getAbsolutePath() + "\"");
+                    cnt += process(convert, file, regex);
+                    cnt--;
+                    continue;
+                }
                 System.out.println("---> " + file.getAbsolutePath());
                 if (convert != 0) {
                     Properties prop = new Properties();
@@ -112,9 +130,8 @@ public class Utf8AndAscii {
                     prop2.store(new FileOutputStream(file), "Utf8AndAncii");
                 }
             }
-            System.out.println(" count=" + files.length);
+            return files.length + cnt;
         }
-
     }
 
 }

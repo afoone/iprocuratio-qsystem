@@ -65,7 +65,7 @@ public abstract class ATreeModel<T extends ITreeIdGetter> extends DefaultTreeMod
             bildTree(node, nodes);
         });
     }
-
+    
     public LinkedList<T> getNodes() {
         final LinkedList<T> nodes = new LinkedList<>();
         sailToStorm(root, (TreeNode service) -> {

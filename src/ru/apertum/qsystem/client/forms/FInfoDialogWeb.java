@@ -80,6 +80,12 @@ public class FInfoDialogWeb extends javax.swing.JDialog {
             //bro.load(WelcomeParams.getInstance().infoURL);
             javafxPanel.setScene(scene);
         });
+        if (WelcomeParams.getInstance().btnFont != null) {
+            btnBack.setFont(WelcomeParams.getInstance().btnFont);
+            btnClose.setFont(WelcomeParams.getInstance().btnFont);
+            btnForward.setFont(WelcomeParams.getInstance().btnFont);
+            btnHome.setFont(WelcomeParams.getInstance().btnFont);
+        }
     }
     private static Browser bro;
     private static Long result = null;
@@ -128,13 +134,15 @@ public class FInfoDialogWeb extends javax.swing.JDialog {
         Uses.setLocation(infoDialog);
         if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo() && !fullscreen)) {
             Uses.setFullSize(infoDialog);
-            int[] pixels = new int[16 * 16];
-            Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
-            Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
-            infoDialog.setCursor(transparentCursor);
+            if (QConfig.cfg().isHideCursor()) {
+                int[] pixels = new int[16 * 16];
+                Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
+                Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
+                infoDialog.setCursor(transparentCursor);
+            }
 
         } else {
-            infoDialog.setSize(1280, 1024);
+            infoDialog.setSize(1280, 768);
             Uses.setLocation(infoDialog);
         }
 

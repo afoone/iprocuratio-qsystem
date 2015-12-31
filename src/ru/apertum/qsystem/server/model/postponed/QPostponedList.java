@@ -72,7 +72,7 @@ public class QPostponedList extends DefaultListModel {
                     try {
                         final ArrayList<QCustomer> forDel = new ArrayList<>();
                         for (QCustomer customer : getPostponedCustomers()) {
-                            if (customer.getPostponPeriod() > 0 && customer.getFinishPontpone() < new Date().getTime()) {
+                            if (customer.getPostponPeriod() > 0 && customer.getFinishPontpone() < System.currentTimeMillis()) {
                                 QLog.l().logger().debug("Перемещение по таймеру из отложенных кастомера №" + customer.getPrefix() + customer.getNumber() + " в услугу \"" + customer.getService().getName() + "\"");
                                 // время сидения вышло, пора отправляться в очередь.
                                 forDel.add(customer);

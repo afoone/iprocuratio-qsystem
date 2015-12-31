@@ -17,6 +17,7 @@
 package ru.apertum.qsystem.common.exceptions;
 
 import javax.swing.JOptionPane;
+import ru.apertum.qsystem.client.Locales;
 
 /**
  * Этот класс исключения использовать для програмной генерации исклюсений.
@@ -29,16 +30,16 @@ public class ClientException extends ServerException {
 
     public ClientException(String textException) {
         super(textException);
-        JOptionPane.showMessageDialog(null, textException, "Выполнение остановлено", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, textException, Locales.locMes("client_exception"), JOptionPane.ERROR_MESSAGE);
     }
 
     public ClientException(String textException, Exception ex) {
         super(textException, ex);
-        JOptionPane.showMessageDialog(null, textException + ex, "Выполнение остановлено", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, textException + ex, Locales.locMes("client_exception"), JOptionPane.ERROR_MESSAGE);
     }
 
     public ClientException(Exception ex) {
         super(ex);
-        JOptionPane.showMessageDialog(null, ex, "Выполнение остановлено", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, ex, Locales.locMes("client_exception"), JOptionPane.ERROR_MESSAGE);
     }
 }

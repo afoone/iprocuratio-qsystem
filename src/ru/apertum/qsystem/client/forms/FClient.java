@@ -21,6 +21,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.HeadlessException;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -73,6 +75,7 @@ import ru.apertum.qsystem.client.model.QTray.MessageType;
 import ru.apertum.qsystem.common.AUDPServer;
 import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.QConfig;
+import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation;
 import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation.SelfService;
 import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation.SelfSituation;
 import ru.apertum.qsystem.common.exceptions.ClientException;
@@ -334,7 +337,7 @@ public final class FClient extends javax.swing.JFrame {
             //Если кастомер встал в очередь, обрабатываемую этим юзером, то апдейтим состояние очередей.
             if (my || user.getId().toString().equals(data)) {
                 //Получаем состояние очередей для юзера
-                refreshClient();
+                refreshSituation();
                 return;
             }
             if (Uses.TASK_REFRESH_POSTPONED_POOL.equals(data)) {
@@ -386,9 +389,14 @@ public final class FClient extends javax.swing.JFrame {
      * see setSituation(Element plan)
      */
     private SelfSituation userPlan;
+
+    public SelfSituation getUserPlan() {
+        return userPlan;
+    }
+
     private static ResourceMap localeMap = null;
 
-    private static String getLocaleMessage(String key) {
+    public static String getLocaleMessage(String key) {
         if (localeMap == null) {
             localeMap = Application.getInstance(QSystem.class).getContext().getResourceMap(FClient.class);
         }
@@ -476,7 +484,7 @@ public final class FClient extends javax.swing.JFrame {
         });
         labelUser.setText(user.getName() + " - " + (QConfig.cfg().getPointN() != null ? QConfig.cfg().getPointN() : user.getPoint()));
         ch.setSelected(user.isPause());
-        refreshClient();
+        refreshSituation();
 
         int ii = 1;
         final ButtonGroup bg = new ButtonGroup();
@@ -521,6 +529,7 @@ public final class FClient extends javax.swing.JFrame {
         final Timer t = new Timer(1000, new TimerMotiv());
         t.start();
 
+        menuItemId.setText("ID=" + user.getId());
     }
     private final JLabel labelMotiv = new JLabel();
     private final JCheckBox ch = new JCheckBox(getLocaleMessage("client.pause"));
@@ -577,7 +586,7 @@ public final class FClient extends javax.swing.JFrame {
             // ок-ок. раз в 55 скеунд, ок, хрен с вами, в 25 секунд. Это обновление будет еще сессию обновлять, такая так сказать долбилка для сессии.
             if (System.currentTimeMillis() - refreshTime > 1 * 25 * 1000) {
                 refreshTime = System.currentTimeMillis();
-                refreshClient();
+                refreshSituation();
             }
         }
     }
@@ -631,9 +640,9 @@ public final class FClient extends javax.swing.JFrame {
      *
      * @param plan - ситуация в XML
      */
-    protected void setSituation(SelfSituation plan) {
+    public void setSituation(SelfSituation plan) {
         QLog.l().logger().trace("Обновляем видимую ситуацию.");
-        refreshTime = new Date().getTime();
+        refreshTime = System.currentTimeMillis();
         if (plan.getSelfservices() == null) {
             return;
         }
@@ -750,6 +759,10 @@ public final class FClient extends javax.swing.JFrame {
     public static final String KEYS_STARTED = "000111";
     private String keys_current = KEYS_OFF;
 
+    public String getKeys_current() {
+        return keys_current;
+    }
+
     /**
      * Механизм включения/отключения кнопок
      *
@@ -788,26 +801,45 @@ public final class FClient extends javax.swing.JFrame {
         QLog.l().logger().trace("Действие завершено. Затрачено времени: " + ((double) (System.currentTimeMillis() - start)) / 1000 + " сек.\n");
     }
 
+    private void extPluginIStartClientPressButton(QUser user, INetProperty netProperty, RpcGetSelfSituation.SelfSituation situation, ActionEvent evt, int keyId) {
+        // поддержка расширяемости плагинами
+        for (final IStartClient event : ServiceLoader.load(IStartClient.class)) {
+            QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+            try {
+                new Thread(() -> {
+                    event.pressButton(user, netProperty, plan, evt, keyId);
+                }).start();
+            } catch (Throwable tr) {
+                QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
+            }
+        }
+    }
+
     /**
      * Действие по нажатию кнопки "Вызов"
      *
      * @param evt
-     * @throws ru.apertum.qsystem.common.exceptions.QException
      */
     @Action
-    public void inviteNextCustomer(ActionEvent evt) throws QException {
-        final long start = go();
-        // Вызываем кастомера
-        final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId());
-        if (cust != null && cust.getPostponPeriod() > 0) {
-            JOptionPane.showMessageDialog(this,
-                    getLocaleMessage("invite.posponed.mess.1") + " " + cust.getPostponPeriod() + " " + getLocaleMessage("invite.posponed.mess.2") + " \"" + cust.getPostponedStatus() + "\".",
-                    getLocaleMessage("invite.posponed.title"),
-                    JOptionPane.INFORMATION_MESSAGE);
+    public void inviteNextCustomer(ActionEvent evt) {
+        try {
+            final long start = go();
+            // Вызываем кастомера
+            final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId());
+            if (cust != null && cust.getPostponPeriod() > 0) {
+                JOptionPane.showMessageDialog(this,
+                        getLocaleMessage("invite.posponed.mess.1") + " " + cust.getPostponPeriod() + " " + getLocaleMessage("invite.posponed.mess.2") + " \"" + cust.getPostponedStatus() + "\".",
+                        getLocaleMessage("invite.posponed.title"),
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+            // Показываем обстановку
+            setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            // поддержка расширяемости плагинами
+            extPluginIStartClientPressButton(user, netProperty, plan, evt, 1);
+            end(start);
+        } catch (Throwable th) {
+            throw new ClientException(new Exception(th));
         }
-        // Показываем обстановку
-        setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-        end(start);
     }
     private boolean fkill = false;
 
@@ -815,99 +847,114 @@ public final class FClient extends javax.swing.JFrame {
      * Действие по нажатию кнопки "Отклонить"
      *
      * @param evt
-     * @throws ru.apertum.qsystem.common.exceptions.QException
      */
     @Action
-    public void killCustomer(ActionEvent evt) throws QException {
-        if (customer.getService().getExpectation() != 0 && (new Date().getTime() - customer.getStandTime().getTime()) / 1000 / 60 < customer.getService().getExpectation()) {
-            if (fkill) {
-                if (JOptionPane.showConfirmDialog(this,
-                        getLocaleMessage("messages.expectationl.ask") + " " + customer.getService().getExpectation() + " " + getLocaleMessage("fclient.min")
-                        + ".\n\n                                                   " + getLocaleMessage("message.expectation.chance"),
-                        getLocaleMessage("messages.expectationl.caption"),
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.INFORMATION_MESSAGE) == 0) {
+    public void killCustomer(ActionEvent evt) {
+        try {
+            if (customer.getService().getExpectation() != 0 && (new Date().getTime() - customer.getStandTime().getTime()) / 1000 / 60 < customer.getService().getExpectation()) {
+                if (fkill) {
+                    if (JOptionPane.showConfirmDialog(this,
+                            getLocaleMessage("messages.expectationl.ask") + " " + customer.getService().getExpectation() + " " + getLocaleMessage("fclient.min")
+                            + ".\n\n                                                   " + getLocaleMessage("message.expectation.chance"),
+                            getLocaleMessage("messages.expectationl.caption"),
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE) == 0) {
+                        return;
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            getLocaleMessage("messages.expectationl.ask") + " " + customer.getService().getExpectation() + " " + getLocaleMessage("fclient.min"),
+                            getLocaleMessage("messages.expectationl.caption"),
+                            JOptionPane.INFORMATION_MESSAGE);
+                    fkill = true;
                     return;
                 }
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        getLocaleMessage("messages.expectationl.ask") + " " + customer.getService().getExpectation() + " " + getLocaleMessage("fclient.min"),
-                        getLocaleMessage("messages.expectationl.caption"),
-                        JOptionPane.INFORMATION_MESSAGE);
-                fkill = true;
+
+            }
+            fkill = false;
+            final long start = go();
+            // Уточним намерения
+            if (JOptionPane.showConfirmDialog(this,
+                    getLocaleMessage("messages.kill.ask"),
+                    getLocaleMessage("messages.kill.caption"),
+                    JOptionPane.YES_NO_OPTION) == 1) {
                 return;
             }
-
+            // Убиваем пользователя
+            NetCommander.killNextCustomer(netProperty, user.getId());
+            // Получаем новую обстановку
+            //Получаем состояние очередей для юзера
+            setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            // поддержка расширяемости плагинами
+            extPluginIStartClientPressButton(user, netProperty, plan, evt, 2);
+            end(start);
+        } catch (Throwable th) {
+            throw new ClientException(new Exception(th));
         }
-        fkill = false;
-        final long start = go();
-        // Уточним намерения
-        if (JOptionPane.showConfirmDialog(this,
-                getLocaleMessage("messages.kill.ask"),
-                getLocaleMessage("messages.kill.caption"),
-                JOptionPane.YES_NO_OPTION) == 1) {
-            return;
-        }
-        // Убиваем пользователя
-        NetCommander.killNextCustomer(netProperty, user.getId());
-        // Получаем новую обстановку
-        //Получаем состояние очередей для юзера
-        setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-        end(start);
     }
 
     /**
      * Действие по нажатию кнопки "Начать прием"
      *
      * @param evt
-     * @throws ru.apertum.qsystem.common.exceptions.QException
      */
     @Action
-    public void getStartCustomer(ActionEvent evt) throws QException {
-        final long start = go();
-        // Переводим кастомера в разряд обрабатываемых
-        NetCommander.getStartCustomer(netProperty, user.getId());
-        // Получаем новую обстановку
-        //Получаем состояние очередей для юзера
-        setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-        end(start);
+    public void getStartCustomer(ActionEvent evt) {
+        try {
+            final long start = go();
+            // Переводим кастомера в разряд обрабатываемых
+            NetCommander.getStartCustomer(netProperty, user.getId());
+            // Получаем новую обстановку
+            //Получаем состояние очередей для юзера
+            setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            // поддержка расширяемости плагинами
+            extPluginIStartClientPressButton(user, netProperty, plan, evt, 3);
+            end(start);
+        } catch (Throwable th) {
+            throw new ClientException(new Exception(th));
+        }
     }
 
     /**
      * Действие по нажатию кнопки "Завершить прием"
      *
      * @param evt
-     * @throws ru.apertum.qsystem.common.exceptions.QException
      */
     @Action
-    public void getStopCustomer(ActionEvent evt) throws QException {
-        //Обозначим результат если требуется
-        final long start = go();
-        // Переводим кастомера в разряд обрабатанных
-        // это должно выкинуть кастомера нафиг, но как обработанного
-        final Long res = setResult();
-        if (res == null) {
-            return;
-        }
-
-        String resComments = user.getName() + ": \n_______________________\n" + customer.getTempComments();
-        if (customer.needBack()) {
-            //Диалог ввода коментария по кастомеру если он редиректенный и нужно его вернуть
-            final FRedirect dlg = FRedirect.getService(netProperty, this, customer.getTempComments(), true);
-            if (dlg != null) {
-                //Если не выбрали, то выходим
-                resComments = user.getName() + ": " + dlg.getTempComments();
+    public void getStopCustomer(ActionEvent evt) {
+        try {
+            //Обозначим результат если требуется
+            final long start = go();
+            // Переводим кастомера в разряд обрабатанных
+            // это должно выкинуть кастомера нафиг, но как обработанного
+            final Long res = setResult();
+            if (res == null) {
+                return;
             }
+
+            String resComments = user.getName() + ": \n_______________________\n" + customer.getTempComments();
+            if (customer.needBack()) {
+                //Диалог ввода коментария по кастомеру если он редиректенный и нужно его вернуть
+                final FRedirect dlg = FRedirect.getService(netProperty, this, customer.getTempComments(), true);
+                if (dlg != null) {
+                    //Если не выбрали, то выходим
+                    resComments = user.getName() + ": " + dlg.getTempComments();
+                }
+            }
+            // вернется кастомер и возможно он еще не домой а по списку услуг. Список определяется при старте кастомера в обработку специяльным юзером в регистратуре
+            final QCustomer cust = NetCommander.getFinishCustomer(netProperty, user.getId(), res, resComments);
+            if (cust != null && cust.getService() != null && cust.getState() == CustomerState.STATE_WAIT_COMPLEX_SERVICE) {
+                JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + cust.getPrefix() + cust.getNumber() + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
+            }
+            // Получаем новую обстановку
+            //Получаем состояние очередей для юзера
+            setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            // поддержка расширяемости плагинами
+            extPluginIStartClientPressButton(user, netProperty, plan, evt, 6);
+            end(start);
+        } catch (Throwable th) {
+            throw new ClientException(new Exception(th));
         }
-        // вернется кастомер и возможно он еще не домой а по списку услуг. Список определяется при старте кастомера в обработку специяльным юзером в регистратуре
-        final QCustomer cust = NetCommander.getFinishCustomer(netProperty, user.getId(), res, resComments);
-        if (cust != null && cust.getService() != null && cust.getState() == CustomerState.STATE_WAIT_COMPLEX_SERVICE) {
-            JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + cust.getPrefix() + cust.getNumber() + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
-        }
-        // Получаем новую обстановку
-        //Получаем состояние очередей для юзера
-        setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-        end(start);
     }
     protected FRedirect servicesForm = null;
 
@@ -915,30 +962,35 @@ public final class FClient extends javax.swing.JFrame {
      * Действие по нажатию кнопки "Перенаправить"
      *
      * @param evt
-     * @throws ru.apertum.qsystem.common.exceptions.QException
      */
     @Action
-    public void redirectCustomer(ActionEvent evt) throws QException {
-        final long start = go();
-        // Обозначим результат если надо
-        final Long res = setResult();
-        if (res == null) {
-            return;
-        }
-        // Переводим кастомера в другую услугу
-        // это должно выкинуть кастомера в другую очередь с приоритетом "переведенный"
-        //Диалог выбора очереди для редиректа
-        final FRedirect dlg = FRedirect.getService(netProperty, this, customer.getTempComments(), false);
-        if (dlg == null) {
-            //Если не выбрали, то выходим
-            return;
-        }
+    public void redirectCustomer(ActionEvent evt) {
+        try {
+            final long start = go();
+            // Обозначим результат если надо
+            final Long res = setResult();
+            if (res == null) {
+                return;
+            }
+            // Переводим кастомера в другую услугу
+            // это должно выкинуть кастомера в другую очередь с приоритетом "переведенный"
+            //Диалог выбора очереди для редиректа
+            final FRedirect dlg = FRedirect.getService(netProperty, this, customer.getTempComments(), false);
+            if (dlg == null) {
+                //Если не выбрали, то выходим
+                return;
+            }
 
-        NetCommander.redirectCustomer(netProperty, user.getId(), dlg.getSelectedService().getId(), dlg.getRequestBack(), user.getName() + ": " + dlg.getTempComments(), res);
-        // Получаем новую обстановку
-        //Получаем состояние очередей для юзера
-        setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-        end(start);
+            NetCommander.redirectCustomer(netProperty, user.getId(), dlg.getSelectedService().getId(), dlg.getRequestBack(), user.getName() + ": " + dlg.getTempComments(), res);
+            // Получаем новую обстановку
+            //Получаем состояние очередей для юзера
+            setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            // поддержка расширяемости плагинами
+            extPluginIStartClientPressButton(user, netProperty, plan, evt, 4);
+            end(start);
+        } catch (Throwable th) {
+            throw new ClientException(new Exception(th));
+        }
     }
 
     //*******************************    Конец обработчиков кнопок    ***************************************************
@@ -1008,6 +1060,8 @@ public final class FClient extends javax.swing.JFrame {
         exitMenuItem = new javax.swing.JMenuItem();
         optionsMenu = new javax.swing.JMenu();
         menuItemFlexPriority = new javax.swing.JMenuItem();
+        jSeparator3 = new javax.swing.JPopupMenu.Separator();
+        menuItemId = new javax.swing.JMenuItem();
         editMenu = new javax.swing.JMenu();
         menuItemInvite = new javax.swing.JMenuItem();
         menuItemKill = new javax.swing.JMenuItem();
@@ -1451,6 +1505,18 @@ public final class FClient extends javax.swing.JFrame {
         menuItemFlexPriority.setName("menuItemFlexPriority"); // NOI18N
         optionsMenu.add(menuItemFlexPriority);
 
+        jSeparator3.setName("jSeparator3"); // NOI18N
+        optionsMenu.add(jSeparator3);
+
+        menuItemId.setText(resourceMap.getString("menuItemId.text")); // NOI18N
+        menuItemId.setName("menuItemId"); // NOI18N
+        menuItemId.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemIdActionPerformed(evt);
+            }
+        });
+        optionsMenu.add(menuItemId);
+
         menuBar.add(optionsMenu);
 
         editMenu.setText(resourceMap.getString("editMenu.text")); // NOI18N
@@ -1516,6 +1582,14 @@ public final class FClient extends javax.swing.JFrame {
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
         System.exit(0);
     }//GEN-LAST:event_exitMenuItemActionPerformed
+
+    private void menuItemIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemIdActionPerformed
+        if (JOptionPane.showInputDialog(this, "User ID from database:", "ID", 1, null, null, user.getId().toString()) != null) {
+            final StringSelection stringSelection = new StringSelection(user.getId().toString());
+            final Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clpbrd.setContents(stringSelection, null);
+        }
+    }//GEN-LAST:event_menuItemIdActionPerformed
     /**
      * Табло вывода кастомера.
      */
@@ -1624,13 +1698,25 @@ public final class FClient extends javax.swing.JFrame {
         //  });
     }
     private static FClient fClient;
-    private static int panelBottomHeight;
+
+    public static FClient getForm() {
+        return fClient;
+    }
 
     @Action
     public void refreshClient() {
         //Получаем состояние очередей для юзера
+        refreshSituation(true);
+    }
+
+    public void refreshSituation() {
+        refreshSituation(null);
+    }
+
+    public void refreshSituation(Boolean forced) {
+        //Получаем состояние очередей для юзера
         try {
-            setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            setSituation(NetCommander.getSelfServices(netProperty, user.getId(), forced));
             spd = -1;
         } catch (Throwable th) {
             spd++;
@@ -1656,28 +1742,27 @@ public final class FClient extends javax.swing.JFrame {
     }
 
     @Action
-    public void moveToPOstponed() throws QException {
-        final long start = go();
+    public void moveToPOstponed() {
+        try {
+            final long start = go();
 
-        /*
-         String status = (String) JOptionPane.showInputDialog(this, getLocaleMessage("resultwork.dialog.caption"), getLocaleMessage("resultwork.dialog.title"), JOptionPane.QUESTION_MESSAGE, null, getResults(), null);
-         if (status == null) {
-         return;
-         }
-         * 
-         */
-        if (moveToPostponed == null) {
-            moveToPostponed = new FMoveToPostponed(fClient, true, getResults());
+            if (moveToPostponed == null) {
+                moveToPostponed = new FMoveToPostponed(fClient, true, getResults());
+            }
+            Uses.setLocation(moveToPostponed);
+            moveToPostponed.setVisible(true);
+            if (!moveToPostponed.isOK()) {
+                return;
+            }
+            NetCommander.сustomerToPostpone(netProperty, user.getId(), moveToPostponed.getResult(), moveToPostponed.getPeriod(), moveToPostponed.isMine());
+            // Показываем обстановку
+            setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            // поддержка расширяемости плагинами
+            extPluginIStartClientPressButton(user, netProperty, plan, new ActionEvent(buttonMoveToPostponed, 13, buttonMoveToPostponed.getActionCommand(), System.currentTimeMillis(), 1), 5);
+            end(start);
+        } catch (Throwable th) {
+            throw new ClientException(new Exception(th));
         }
-        Uses.setLocation(moveToPostponed);
-        moveToPostponed.setVisible(true);
-        if (!moveToPostponed.isOK()) {
-            return;
-        }
-        NetCommander.сustomerToPostpone(netProperty, user.getId(), moveToPostponed.getResult(), moveToPostponed.getPeriod(), moveToPostponed.isMine());
-        // Показываем обстановку
-        setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-        end(start);
     }
     private FMoveToPostponed moveToPostponed;
 
@@ -1756,6 +1841,7 @@ public final class FClient extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel labelMessage;
@@ -1765,11 +1851,12 @@ public final class FClient extends javax.swing.JFrame {
     private javax.swing.JLabel labelSituationAll;
     private javax.swing.JLabel labelUser;
     private javax.swing.JList listPostponed;
-    private javax.swing.JMenuBar menuBar;
+    public javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem menuItemChangeStatusPostponed;
     private javax.swing.JMenuItem menuItemFinish;
     private javax.swing.JMenuItem menuItemFlexPriority;
     private javax.swing.JMenuItem menuItemHelp;
+    private javax.swing.JMenuItem menuItemId;
     private javax.swing.JMenuItem menuItemInvite;
     private javax.swing.JMenuItem menuItemInvitePostponed;
     private javax.swing.JMenuItem menuItemKill;
@@ -1784,6 +1871,6 @@ public final class FClient extends javax.swing.JFrame {
     private javax.swing.JPopupMenu popupMenuPostpone;
     private javax.swing.JPopupMenu popupMenuTray;
     private javax.swing.JTextArea textAreaComments;
-    private javax.swing.JTree treeSituation;
+    public javax.swing.JTree treeSituation;
     // End of variables declaration//GEN-END:variables
 }

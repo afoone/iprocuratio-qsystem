@@ -460,6 +460,7 @@ public class QUser implements IidGetter, Serializable {
             this.oldService = oldCostomer.getService();
             this.oldNom = oldCostomer.getNumber();
             this.oldPref = oldCostomer.getPrefix();
+            this.inputData = oldCostomer.getInput_data();
             this.finTime = new Date();
             this.startTime = new Date();
             if (oldCostomer.getState() == null) {
@@ -488,6 +489,17 @@ public class QUser implements IidGetter, Serializable {
         @Expose
         @SerializedName("old_start_time")
         private Date startTime;
+        @Expose
+        @SerializedName("inp_data")
+        private String inputData;
+
+        public String getInputData() {
+            return inputData;
+        }
+
+        public void setInputData(String inputData) {
+            this.inputData = inputData;
+        }
 
         public Date getStartTime() {
             return startTime;
@@ -527,14 +539,6 @@ public class QUser implements IidGetter, Serializable {
 
         public void setFinTime(Date finTime) {
             this.finTime = finTime;
-        }
-
-        public QCustomer getOldCostomer() {
-            return oldCustomer;
-        }
-
-        public void setOldCostomer(QCustomer oldCostomer) {
-            this.oldCustomer = oldCostomer;
         }
 
         public int getOldNom() {

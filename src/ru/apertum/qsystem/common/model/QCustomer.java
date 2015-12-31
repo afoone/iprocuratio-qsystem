@@ -46,6 +46,7 @@ import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.extra.IChangeCustomerStateEvent;
 import ru.apertum.qsystem.server.Spring;
 import ru.apertum.qsystem.server.model.IidGetter;
+import ru.apertum.qsystem.server.model.response.QRespEvent;
 
 /**
  * @author Evgeniy Egorov Реализация клиета Наипростейший "очередник". Используется для организации простой очереди. Если используется СУБД, то сохранение
@@ -217,6 +218,13 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         }
     }
 
+    @Transient
+    private final LinkedList<QRespEvent> resps = new LinkedList<>();
+
+    public void addNewRespEvent(QRespEvent event) {
+        resps.add(event);
+    }
+
     private void saveToSelfDB() {
         // сохраним кастомера в базе
         final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
@@ -228,6 +236,11 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
                 input_data = "";
             }
             Spring.getInstance().getHt().saveOrUpdate(this);
+            // костыль. Если кастомер оставил отзывы прежде чем попал в БД, т.е. во время работы еще с ним.
+            if (resps.size() > 0) {
+                Spring.getInstance().getHt().saveAll(resps);
+                resps.clear();
+            }
         } catch (Exception ex) {
             Spring.getInstance().getTxManager().rollback(status);
             throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
@@ -306,7 +319,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         if (getPrefix() == null) {
             setPrefix(service.getPrefix());
         }
-        QLog.l().logger().debug("Клиента \"" + getPrefix() + getNumber() + "\" поставили к услуге \"" + service.getName() + "\"");
+        QLog.l().logger().debug("Клиента \"" + getFullNumber() + "\" поставили к услуге \"" + service.getName() + "\"");
     }
     /**
      * Результат работы с пользователем

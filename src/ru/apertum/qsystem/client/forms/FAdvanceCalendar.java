@@ -52,9 +52,9 @@ import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QService;
 
 /**
- * Created on 27.08.2009, 10:15:34
- * Сетка-календарь для предварительной записи.
- * Имеет метод для осуществления всех действий. Вся логика инкапсулирована в этом классе.
+ * Created on 27.08.2009, 10:15:34 Сетка-календарь для предварительной записи. Имеет метод для осуществления всех действий. Вся логика инкапсулирована в этом
+ * классе.
+ *
  * @author Evgeniy Egorov
  */
 public class FAdvanceCalendar extends javax.swing.JDialog {
@@ -69,9 +69,11 @@ public class FAdvanceCalendar extends javax.swing.JDialog {
     }
     private static FAdvanceCalendar advanceCalendar;
 
-    /** Creates new form FAdvanceCalendar
+    /**
+     * Creates new form FAdvanceCalendar
+     *
      * @param parent
-     * @param modal 
+     * @param modal
      */
     public FAdvanceCalendar(Frame parent, boolean modal) {
         super(parent, modal);
@@ -88,16 +90,18 @@ public class FAdvanceCalendar extends javax.swing.JDialog {
 
     /**
      * Статический метод который показывает модально диалог выбора времени для предварительной записи клиентов.
+     *
      * @param parent фрейм относительно которого будет модальность
      * @param modal модальный диалог или нет
      * @param netProperty свойства работы с сервером
-     * @param service  услугa, в которую происходит предварительная запись
+     * @param service услугa, в которую происходит предварительная запись
      * @param fullscreen растягивать форму на весь экран и прятать мышку или нет
      * @param delay задержка перед скрытием диалога. если 0, то нет автозакрытия диалога
      * @param advCustomer ID клиента предварительно идентифицированного, например в регистратуре по медполису. -1 если нет авторизации
      * @param inputData введеные клиентом данные перед регистрацией, если это требуется в услуге. null если не вводили.
-     * @param comments  комментарии по предварительно записанному клиенту если ставили из админкивведеные клиентом данные перед регистрацией, если это требуется в услуге. null если не вводили.   * @return  если null, то отказались от предварительной записи
-     * @return 
+     * @param comments комментарии по предварительно записанному клиенту если ставили из админкивведеные клиентом данные перед регистрацией, если это требуется
+     * в услуге. null если не вводили. * @return если null, то отказались от предварительной записи
+     * @return
      */
     public static QAdvanceCustomer showCalendar(Frame parent, boolean modal, INetProperty netProperty, QService service, boolean fullscreen, int delay, long advCustomer, String inputData, String comments) {
         FAdvanceCalendar.delay = delay;
@@ -117,13 +121,15 @@ public class FAdvanceCalendar extends javax.swing.JDialog {
         if (advanceCalendar.showWeek(new Date())) {
             if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo()) && fullscreen) {
                 Uses.setFullSize(advanceCalendar);
-                int[] pixels = new int[16 * 16];
-                Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
-                Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
-                advanceCalendar.setCursor(transparentCursor);
+                if (QConfig.cfg().isHideCursor()) {
+                    int[] pixels = new int[16 * 16];
+                    Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
+                    Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
+                    advanceCalendar.setCursor(transparentCursor);
+                }
                 advanceCalendar.setVisible(true);
             } else {
-                advanceCalendar.setSize(1280, 1024);
+                advanceCalendar.setSize(1280, 768);
                 Uses.setLocation(advanceCalendar);
                 advanceCalendar.setVisible(true);
             }
@@ -674,6 +680,7 @@ public class FAdvanceCalendar extends javax.swing.JDialog {
 
     /**
      * Показать недельную сетку для выбора предварительной записи
+     *
      * @param firstWeekDay первый день недели
      * @return получилось отобразить или нет
      */
@@ -699,6 +706,7 @@ public class FAdvanceCalendar extends javax.swing.JDialog {
 
     /**
      * Конкретное рисование
+     *
      * @param res структура допустимых часов
      * @param gc первый день недели
      */

@@ -32,7 +32,7 @@ public class RepResBundle {
     final private ResourceBundle bundle;
 
     private RepResBundle() {
-        bundle = ResourceBundle.getBundle("ru/apertum/qsystem/reports/web/rep-langs", Locales.getInstance().getLangCurrent());
+        bundle = ResourceBundle.getBundle("ru/apertum/qsystem/reports/templates/i3-label-rep", Locales.getInstance().getLangCurrent());
     }
 
     public static RepResBundle getInstance() {

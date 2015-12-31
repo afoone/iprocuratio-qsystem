@@ -30,6 +30,8 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -112,12 +114,14 @@ import ru.apertum.qsystem.common.model.IClientNetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.extra.IBytesButtensAdapter;
 import ru.apertum.qsystem.extra.IPrintTicket;
+import ru.apertum.qsystem.extra.IWelcome;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QAuthorizationCustomer;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.infosystem.QInfoItem;
 import ru.apertum.qsystem.server.model.response.QRespItem;
+import ru.apertum.qsystem.server.model.response.QResponseTree;
 import ru.evgenic.rxtx.serialPort.IReceiveListener;
 import ru.evgenic.rxtx.serialPort.ISerialPort;
 import ru.evgenic.rxtx.serialPort.RxtxSerialPort;
@@ -148,11 +152,12 @@ public class FWelcome extends javax.swing.JFrame {
     /**
      * XML-список отзывов. перврначально null, грузится при первом обращении. Использовать через геттер.
      */
-    private static LinkedList<QRespItem> response = null;
+    private static QRespItem response = null;
 
-    public static LinkedList<QRespItem> getResponse() {
+    public static QRespItem getResponse() {
         if (response == null) {
             response = NetCommander.getResporseList(netProperty);
+            QResponseTree.formTree(response);
         }
         return response;
     }
@@ -396,6 +401,15 @@ public class FWelcome extends javax.swing.JFrame {
         FWelcome.finishTime = servs.getFinishTime();
         FWelcome.btnFreeDesign = servs.getButtonFreeDesign();
 
+        for (final IWelcome event : ServiceLoader.load(IWelcome.class)) {
+            QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+            try {
+                event.start(netProperty, servs);
+            } catch (Throwable tr) {
+                QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
+            }
+        }
+
         //touch,info,med,btn,kbd
         switch (QConfig.cfg().getWelcomeMode()) {
             case KEY_WELCOME_KBD: {
@@ -433,10 +447,12 @@ public class FWelcome extends javax.swing.JFrame {
                 final JFrame fr = new JFrame("Keyboard input");
 
                 // спрячем курсор мыши
-                final int[] pixels = new int[16 * 16];
-                final Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
-                Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
-                fr.setCursor(transparentCursor);
+                if (QConfig.cfg().isHideCursor()) {
+                    final int[] pixels = new int[16 * 16];
+                    final Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
+                    Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
+                    fr.setCursor(transparentCursor);
+                }
 
                 fr.setUndecorated(true);
                 fr.setVisible(true);
@@ -720,10 +736,12 @@ public class FWelcome extends javax.swing.JFrame {
                 //setResizable(false);
 
                 // спрячем курсор мыши
-                final int[] pixels = new int[16 * 16];
-                final Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
-                Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
-                setCursor(transparentCursor);
+                if (QConfig.cfg().isHideCursor()) {
+                    final int[] pixels = new int[16 * 16];
+                    final Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
+                    Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
+                    setCursor(transparentCursor);
+                }
             }
             addWindowListener(new WindowAdapter() {
 
@@ -756,6 +774,7 @@ public class FWelcome extends javax.swing.JFrame {
                 buttonToBegin.setIcon(new ImageIcon(WelcomeParams.getInstance().buttonToStratImg.toURI().toURL()));
             }
         } catch (MalformedURLException ex) {
+            System.err.println("Button icons! " + ex);
         }
         //На верхней панели пункта регистрации, там где заголовок и картинка в углу, можно вывести вэб-контент по URL. Оставьте пустым если не требуется
         if (!WelcomeParams.getInstance().topURL.isEmpty()) {
@@ -772,7 +791,7 @@ public class FWelcome extends javax.swing.JFrame {
             System.err.println(ex);
         }
         if (QConfig.cfg().isDebug()) {
-            setSize(1280, 1024);
+            setSize(1280, 768);
         }
         FWelcome.root = root;
         FWelcome.current = root;
@@ -787,6 +806,17 @@ public class FWelcome extends javax.swing.JFrame {
         server.start();
         if (!(Uses.format_HH_mm.format(finishTime).equals(Uses.format_HH_mm.format(startTime)))) {
             lockWelcome.start();
+        }
+
+        if (WelcomeParams.getInstance().btnAdvFont != null) {
+            buttonStandAdvance.setFont(WelcomeParams.getInstance().btnAdvFont);
+            buttonAdvance.setFont(WelcomeParams.getInstance().btnAdvFont);
+            buttonBackPage.setFont(WelcomeParams.getInstance().btnAdvFont);
+            buttonForwardPage.setFont(WelcomeParams.getInstance().btnAdvFont);
+        }
+        if (WelcomeParams.getInstance().btnFont != null) {
+            buttonBack.setFont(WelcomeParams.getInstance().btnFont);
+            buttonToBegin.setFont(WelcomeParams.getInstance().btnFont);
         }
         /*
          * Кнопки открываются по настройке
@@ -932,6 +962,9 @@ public class FWelcome extends javax.swing.JFrame {
             case 1024:
                 delta = 30;
                 break;
+            case 1366:
+                delta = 25;
+                break;
             case 1280:
                 delta = 40;
                 break;
@@ -942,6 +975,9 @@ public class FWelcome extends javax.swing.JFrame {
                 delta = 60;
                 break;
         }
+        if (QConfig.cfg().isDebug() || QConfig.cfg().isDemo()) {
+            delta = 25;
+        }
         int cols = 3;
         int rows = 5;
 
@@ -950,15 +986,15 @@ public class FWelcome extends javax.swing.JFrame {
         int childCount = 0;
         childCount = current.getChildren().stream().filter((service) -> (!(isAdvanceRegim() && service.getAdvanceLimit() == 0) && service.getStatus() != -1 && (WelcomeParams.getInstance().point == 0 || (service.getPoint() == 0 || service.getPoint() == WelcomeParams.getInstance().point)))).map((_item) -> 1).reduce(childCount, Integer::sum);
 
-        if (childCount < 4) {
+        if (childCount <= WelcomeParams.getInstance().oneColumnButtonCount) {
             cols = 1;
-            rows = 3;
+            rows = childCount < 3 ? 3 : childCount;
         }
-        if (childCount > 3 && childCount < 11) {
+        if (childCount > WelcomeParams.getInstance().oneColumnButtonCount && childCount <= WelcomeParams.getInstance().twoColumnButtonCount) {
             cols = 2;
             rows = Math.round((float) childCount / 2f);
         }
-        if (childCount > 10) {
+        if (childCount > WelcomeParams.getInstance().twoColumnButtonCount) {
             cols = 3;
             rows = Math.round(0.3f + (float) childCount / 3);
         }
@@ -1054,6 +1090,111 @@ public class FWelcome extends javax.swing.JFrame {
         return i;
     }
 
+    private static int write(Graphics2D g2, String text, int line, int x, double kx, double ky, int initY) {
+        g2.scale(kx, ky);
+        final int y = (int) Math.round((initY + line * WelcomeParams.getInstance().lineHeigth) / ky);
+        g2.drawString(text, x, y);
+        g2.scale(1 / kx, 1 / ky);
+        return y;
+    }
+
+    /**
+     *
+     * @param str text for positioning
+     * @param alignment -1 left, 0 center, 1 right
+     * @return coordinate X
+     */
+    private static int getHAlignment(Graphics2D g2, String str, int alignment, double kx) {
+        if (alignment < 0) {
+            return WelcomeParams.getInstance().leftMargin;
+        }
+        final int sw = (int) (CMP.getFontMetrics(g2.getFont()).stringWidth(str) * kx);
+        int pos = alignment == 0 ? (WelcomeParams.getInstance().paperWidht - sw) / 2 : (WelcomeParams.getInstance().paperWidht - sw);
+
+        return (int) Math.round(pos / kx);
+    }
+
+    private static int getAlign(String str, int alignmentDef) {
+        if (str.toLowerCase().startsWith("[c")) {
+            return 0;
+        }
+        if (str.toLowerCase().startsWith("[r")) {
+            return 1;
+        }
+        if (str.toLowerCase().startsWith("[l")) {
+            return -1;
+        }
+        return alignmentDef == -1 || alignmentDef == 0 || alignmentDef == 1 ? alignmentDef : -1;
+    }
+
+    private static String getTrim(String str) {
+        return str.trim().replaceFirst("^\\[.+?\\]", "");
+    }
+    private final static JLabel CMP = new JLabel();
+
+    /**
+     *
+     * @param text
+     * @param g2
+     * @param alignment
+     * @param kx
+     * @param ky
+     * @return new initY
+     */
+    private static int ptintLines(Graphics2D g2, String text, int alignment, double kx, double ky, int initY, int line) {
+        final FontMetrics fm = CMP.getFontMetrics(g2.getFont());
+        String capt = text;
+        while (capt.length() != 0) {
+            String prn;
+            int leC = fm.stringWidth(capt);
+            if (capt.length() > WelcomeParams.getInstance().lineLenght || leC > WelcomeParams.getInstance().paperWidht) {
+                int fl = 0;
+
+                int br = capt.toLowerCase().indexOf("<br>");
+                if (br > 0 && br < WelcomeParams.getInstance().lineLenght) {
+                    fl = br;
+                }
+                if (fl > 0) {
+                    prn = capt.substring(0, fl).replaceFirst("<br>", "");
+                    int le = fm.stringWidth(prn);
+                    if (le > WelcomeParams.getInstance().paperWidht) {
+                        fl = 0;
+                    }
+                }
+
+                for (int i = Math.min(WelcomeParams.getInstance().lineLenght, capt.length()); i > 0 && fl == 0; i--) {
+
+                    if (" ".equals(capt.substring(i - 1, i))) {
+                        fl = i;
+                        prn = capt.substring(0, fl);
+                        int le = fm.stringWidth(prn);
+                        if (le > WelcomeParams.getInstance().paperWidht) {
+                            fl = 0;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                int pos = fl == 0 ? WelcomeParams.getInstance().lineLenght : fl;
+                prn = capt.substring(0, pos).trim();
+                capt = capt.substring(pos).trim();
+                if (capt.toLowerCase().startsWith("<br>")) {
+                    capt = capt.replaceFirst("<br>", "");
+                }
+            } else {
+                prn = capt.trim();
+                capt = "";
+            }
+            write(g2, getTrim(prn), line, (int) getHAlignment(g2, getTrim(prn), getAlign(prn, alignment), kx), kx, ky, initY);
+            //System.out.println("-->" + prn + " / " + capt);
+            int h = CMP.getFontMetrics(g2.getFont()).getHeight();
+            if (!capt.isEmpty()) {
+                initY = initY + Math.round(new Float(h * (h > 30 ? (h > 60 ? 0.65 : 0.7) : (h > 10 ? 0.83 : 1))));
+            }
+        }
+        return initY;
+    }
+
     public static void printTicket(QCustomer customer, String caption) {
         FWelcome.caption = caption;
         printTicket(customer);
@@ -1078,21 +1219,50 @@ public class FWelcome extends javax.swing.JFrame {
 
         final Printable canvas = new Printable() {
 
+            private int initY = WelcomeParams.getInstance().topMargin;
+
             private int write(String text, int line, int x, double kx, double ky) {
                 g2.scale(kx, ky);
-                final int y = (int) Math.round((WelcomeParams.getInstance().topMargin + line * WelcomeParams.getInstance().lineHeigth) / ky);
+                final int y = (int) Math.round((initY + line * WelcomeParams.getInstance().lineHeigth) / ky);
                 g2.drawString(text, x, y);
                 g2.scale(1 / kx, 1 / ky);
                 return y;
             }
+
+            /**
+             *
+             * @param str text for positioning
+             * @param alignment -1 left, 0 center, 1 right
+             * @return coordinate X
+             */
+            private int getHAlignment(String str, int alignment, double kx) {
+                if (alignment < 0) {
+                    return WelcomeParams.getInstance().leftMargin;
+                }
+                final int sw = (int) (comp.getFontMetrics(g2.getFont()).stringWidth(str) * kx);
+                int pos = alignment == 0 ? (WelcomeParams.getInstance().paperWidht - sw) / 2 : (WelcomeParams.getInstance().paperWidht - sw);
+
+                return (int) Math.round(pos / kx);
+            }
+
+            private final JLabel comp = new JLabel();
             Graphics2D g2;
 
             @Override
             public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+                initY = WelcomeParams.getInstance().topMargin;
                 if (pageIndex >= 1) {
                     return Printable.NO_SUCH_PAGE;
                 }
                 g2 = (Graphics2D) graphics;
+                final Font f_standard;
+                if (WelcomeParams.getInstance().ticketFontName != null && !WelcomeParams.getInstance().ticketFontName.isEmpty()) {
+                    f_standard = (new Font(WelcomeParams.getInstance().ticketFontName, g2.getFont().getStyle(), WelcomeParams.getInstance().ticketFontSize > 2 ? WelcomeParams.getInstance().ticketFontSize : g2.getFont().getSize()));
+                } else {
+                    f_standard = g2.getFont();
+                }
+                g2.setFont(f_standard);
+                g2.drawLine(WelcomeParams.getInstance().paperWidht + 20, 0, WelcomeParams.getInstance().paperWidht + 20, 20);
                 if (WelcomeParams.getInstance().logo) {
                     g2.drawImage(Uses.loadImage(this, WelcomeParams.getInstance().logoImg, "/ru/apertum/qsystem/client/forms/resources/logo_ticket_a.png"), WelcomeParams.getInstance().logoLeft, WelcomeParams.getInstance().logoTop, null);
                 }
@@ -1101,71 +1271,42 @@ public class FWelcome extends javax.swing.JFrame {
                 g2.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
 
                 int line = 1;
-                write(caption, line, WelcomeParams.getInstance().leftMargin, 1.5, 1.5);
-                line++;
-                write(getLocaleMessage("ticket.your_number"), ++line, 80, 1, 1);
 
-                int x;
+                g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), WelcomeParams.getInstance().ticketFontH2Size));
+
+                initY = ptintLines(g2, caption, 0, 1, 1, initY, line);
+
+                initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
+                g2.setFont(f_standard);
+                write(getLocaleMessage("ticket.your_number"), ++line, getHAlignment(getLocaleMessage("ticket.your_number"), 0, 1), 1, 1);
+
+                g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), WelcomeParams.getInstance().ticketFontH1Size));
+                int h = comp.getFontMetrics(g2.getFont()).getHeight();
+                initY = initY + Math.round(new Float(h * (h > 30 ? (h > 60 ? 0.65 : 0.7) : 1)));
                 final String num = customer.getPrefix() + QConfig.cfg().getNumDivider(customer.getPrefix()) + customer.getNumber();
-                switch (num.length()) {
-                    case 1:
-                        x = 21 - 5;
-                        break;
-                    case 2:
-                        x = 18 - 6;
-                        break;
-                    case 3:
-                        x = 15 - 3;
-                        break;
-                    case 4:
-                        x = 12 - 2;
-                        break;
-                    case 5:
-                        x = 9 - 2;
-                        break;
-                    case 6:
-                        x = 6 - 2;
-                        break;
-                    case 7:
-                        x = 3 - 3;
-                        break;
-                    default: {
-                        x = 0;
-                    }
-                }
-                write(num, ++line + 2, x, 6, 3);
+                write(num, line, getHAlignment(num, 0, 1), 1, 1);
+                initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
+                g2.setFont(f_standard);
 
-                line = line + 3;
-
-                write(getLocaleMessage("ticket.service"), ++line, WelcomeParams.getInstance().leftMargin, 1.5, 1);
+                g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, g2.getFont().getSize()));
+                write(getLocaleMessage("ticket.service"), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
+                g2.setFont(f_standard);
                 String name = customer.getService().getTextToLocale(QService.Field.NAME);
-                while (name.length() != 0) {
-                    String prn;
-                    if (name.length() > WelcomeParams.getInstance().lineLenght) {
-                        int fl = 0;
-                        for (int i = WelcomeParams.getInstance().lineLenght; i > 0; i--) {
+                initY = ptintLines(g2, name, -1, 1, 1, initY, ++line);
 
-                            if (" ".equals(name.substring(i - 1, i))) {
-                                fl = i;
-                                break;
-                            }
-                        }
-                        int pos = fl == 0 ? WelcomeParams.getInstance().lineLenght : fl;
-                        prn = name.substring(0, pos);
-                        name = name.substring(pos, name.length());
-                    } else {
-                        prn = name;
-                        name = "";
-                    }
-                    write(prn, ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
-                }
+                initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
 
-                write(getLocaleMessage("ticket.time"), ++line, WelcomeParams.getInstance().leftMargin, 1.5, 1);
+                g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, g2.getFont().getSize()));
+                write(getLocaleMessage("ticket.time"), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
+                g2.setFont(f_standard);
 
                 write(Locales.getInstance().isRuss ? Uses.getRusDate(customer.getStandTime(), "dd MMMM HH:mm") : (Locales.getInstance().isUkr ? Uses.getUkrDate(customer.getStandTime(), "dd MMMM HH:mm") : Uses.format_for_label.format(customer.getStandTime())), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
                 // если клиент что-то ввел, то напечатаем это на его талоне
                 if (customer.getService().getInput_required()) {
+                    initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
+                    g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, g2.getFont().getSize()));
                     write(customer.getService().getTextToLocale(QService.Field.INPUT_CAPTION).replaceAll("<.*?>", ""), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
+                    g2.setFont(f_standard);
                     write(customer.getInput_data(), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
                     // если требуется, то введеное напечатаем как qr-код для быстрого считывания сканером
                     if (WelcomeParams.getInstance().input_data_qrcode) {
@@ -1192,30 +1333,19 @@ public class FWelcome extends javax.swing.JFrame {
                 }
                 // если в услуге есть что напечатать на талоне, то напечатаем это на его талоне
                 if (customer.getService().getTextToLocale(QService.Field.TICKET_TEXT) != null && !customer.getService().getTextToLocale(QService.Field.TICKET_TEXT).isEmpty()) {
+                    initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
                     String tt = customer.getService().getTextToLocale(QService.Field.TICKET_TEXT);
-                    while (tt.length() != 0) {
-                        String prn;
-                        if (tt.length() > WelcomeParams.getInstance().lineLenght) {
-                            int fl = 0;
-                            for (int i = WelcomeParams.getInstance().lineLenght; i > 0; i--) {
-
-                                if (" ".equals(tt.substring(i - 1, i))) {
-                                    fl = i;
-                                    break;
-                                }
-                            }
-                            int pos = fl == 0 ? WelcomeParams.getInstance().lineLenght : fl;
-                            prn = tt.substring(0, pos);
-                            tt = tt.substring(pos, tt.length());
-                        } else {
-                            prn = tt;
-                            tt = "";
-                        }
-                        write(prn, ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
-                    }
+                    initY = ptintLines(g2, tt, -1, 1, 1, initY, ++line);
                 }
-                write(WelcomeParams.getInstance().waitText == null || WelcomeParams.getInstance().waitText.isEmpty() ? getLocaleMessage("ticket.wait") : WelcomeParams.getInstance().waitText, ++line, WelcomeParams.getInstance().leftMargin, 1.8, 1);
-                write(WelcomeParams.getInstance().promoText, ++line, WelcomeParams.getInstance().leftMargin, 0.7, 0.4);
+                initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
+                String wText = WelcomeParams.getInstance().waitText == null || WelcomeParams.getInstance().waitText.isEmpty() ? ("[c]" + getLocaleMessage("ticket.wait")) : WelcomeParams.getInstance().waitText;
+                if (wText != null && !wText.trim().isEmpty() && !".".equals(wText)) {
+                    write(getTrim(wText), ++line, getHAlignment(getTrim(wText), getAlign(wText, -1), 1.45), 1.45, 1);
+                }
+                wText = WelcomeParams.getInstance().promoText;
+                if (wText != null && !wText.isEmpty()) {
+                    write(getTrim(wText), ++line, getHAlignment(getTrim(wText), getAlign(wText, -1), 0.7), 0.7, 0.4);
+                }
                 int y = write("", ++line, 0, 1, 1);
                 if (WelcomeParams.getInstance().barcode != 0) {
 
@@ -1246,7 +1376,7 @@ public class FWelcome extends javax.swing.JFrame {
                             barcode.setBarWidth(1);
                             barcode.setDrawingText(false);
                             barcode.setDrawingQuietSection(false);
-                            barcode.draw(g2, WelcomeParams.getInstance().leftMargin * 2, y - 7);
+                            barcode.draw(g2, (WelcomeParams.getInstance().paperWidht - barcode.getSize().width) / 2, y - 7);
                             line = line + 2;
                         } catch (BarcodeException | OutputException ex) {
                             QLog.l().logger().error("Ошибка вывода штрихкода 128B. " + ex);
@@ -1256,26 +1386,10 @@ public class FWelcome extends javax.swing.JFrame {
 
                 //Напечатаем текст внизу билета
                 name = WelcomeParams.getInstance().bottomText;
-                while (name.length() != 0) {
-                    String prn;
-                    if (name.length() > WelcomeParams.getInstance().lineLenght) {
-                        int fl = 0;
-                        for (int i = WelcomeParams.getInstance().lineLenght; i > 0; i--) {
+                int al = getAlign(name, -1);
+                name = getTrim(name);
+                initY = ptintLines(g2, name, al, 1, 1, initY, ++line);
 
-                            if (" ".equals(name.substring(i - 1, i))) {
-                                fl = i;
-                                break;
-                            }
-                        }
-                        int pos = fl == 0 ? WelcomeParams.getInstance().lineLenght : fl;
-                        prn = name.substring(0, pos);
-                        name = name.substring(pos, name.length());
-                    } else {
-                        prn = name;
-                        name = "";
-                    }
-                    write(prn, ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
-                }
                 write(".", ++line + 2, 0, 1, 1);
 
                 return Printable.PAGE_EXISTS;
@@ -1321,22 +1435,51 @@ public class FWelcome extends javax.swing.JFrame {
         }
 
         final Printable canvas = new Printable() {
+            private int initY = WelcomeParams.getInstance().topMargin;
 
             private int write(String text, int line, int x, double kx, double ky) {
                 g2.scale(kx, ky);
-                final int y = (int) Math.round((WelcomeParams.getInstance().topMargin + line * WelcomeParams.getInstance().lineHeigth) / ky);
+                final int y = (int) Math.round((initY + line * WelcomeParams.getInstance().lineHeigth) / ky);
                 g2.drawString(text, x, y);
                 g2.scale(1 / kx, 1 / ky);
                 return y;
             }
+
+            /**
+             *
+             * @param str text for positioning
+             * @param alignment -1 left, 0 center, 1 right
+             * @return coordinate X
+             */
+            private int getHAlignment(String str, int alignment, double kx) {
+                if (alignment < 0) {
+                    return WelcomeParams.getInstance().leftMargin;
+                }
+                final int sw = (int) (comp.getFontMetrics(g2.getFont()).stringWidth(str) * kx);
+                int pos = alignment == 0 ? (WelcomeParams.getInstance().paperWidht - sw) / 2 : (WelcomeParams.getInstance().paperWidht - sw);
+
+                return (int) Math.round(pos / kx);
+            }
+
+            private final JLabel comp = new JLabel();
             Graphics2D g2;
 
             @Override
             public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+                initY = WelcomeParams.getInstance().topMargin;
                 if (pageIndex >= 1) {
                     return Printable.NO_SUCH_PAGE;
                 }
                 g2 = (Graphics2D) graphics;
+                final Font f_standard;
+                if (WelcomeParams.getInstance().ticketFontName != null && !WelcomeParams.getInstance().ticketFontName.isEmpty()) {
+                    f_standard = (new Font(WelcomeParams.getInstance().ticketFontName, g2.getFont().getStyle(), WelcomeParams.getInstance().ticketFontSize > 2 ? WelcomeParams.getInstance().ticketFontSize : g2.getFont().getSize()));
+                } else {
+                    f_standard = g2.getFont();
+                }
+                g2.setFont(f_standard);
+                g2.drawLine(WelcomeParams.getInstance().paperWidht + 20, 0, WelcomeParams.getInstance().paperWidht + 20, 20);
+
                 if (WelcomeParams.getInstance().logo) {
                     g2.drawImage(Uses.loadImage(this, WelcomeParams.getInstance().logoImg, "/ru/apertum/qsystem/client/forms/resources/logo_ticket_a.png"), WelcomeParams.getInstance().logoLeft, WelcomeParams.getInstance().logoTop, null);
                 }
@@ -1345,9 +1488,11 @@ public class FWelcome extends javax.swing.JFrame {
                 g2.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
 
                 int line = 1;
-                write(caption, line, WelcomeParams.getInstance().leftMargin, 1.5, 1.5);
-                line++;
-                write(getLocaleMessage("ticket.adv_purpose"), ++line, 20, 1, 1);
+                g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), WelcomeParams.getInstance().ticketFontH2Size));
+                initY = ptintLines(g2, caption, 0, 1, 1, initY, line);
+                initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
+                g2.setFont(f_standard);
+                write(getLocaleMessage("ticket.adv_purpose"), ++line, getHAlignment(getLocaleMessage("ticket.adv_purpose"), 0, 1), 1, 1);
 
                 final GregorianCalendar gc_time = new GregorianCalendar();
                 gc_time.setTime(advCustomer.getAdvanceTime());
@@ -1357,42 +1502,34 @@ public class FWelcome extends javax.swing.JFrame {
                     t = 24;
                     gc_time.add(GregorianCalendar.HOUR_OF_DAY, -1);
                 }
-                write(Locales.getInstance().isRuss ? Uses.getRusDate(gc_time.getTime(), Uses.DATE_FORMAT_FULL) : Uses.format_dd_MMMM_yyyy.format(gc_time.getTime()), ++line + 1, WelcomeParams.getInstance().leftMargin, 2, 1);
+                g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, g2.getFont().getSize()));
+                String tx = Locales.getInstance().isRuss ? Uses.getRusDate(gc_time.getTime(), Uses.DATE_FORMAT_FULL) : Uses.format_dd_MMMM_yyyy.format(gc_time.getTime());
+                write(tx, ++line, getHAlignment(tx, 0, 1), 1, 1);
                 //write(FWelcome.getLocaleMessage("qbutton.take_adv_ticket_from") + " " + (t) + ":00 " + FWelcome.getLocaleMessage("qbutton.take_adv_ticket_to") + " " + (t + 1) + ":00", ++line + 1, WelcomeParams.getInstance().leftMargin, 2, 1);
-                write(FWelcome.getLocaleMessage("qbutton.take_adv_ticket_come_to") + " " + (t) + ":" + t_m, ++line + 1, WelcomeParams.getInstance().leftMargin, 2, 1);
+                tx = FWelcome.getLocaleMessage("qbutton.take_adv_ticket_come_to") + " " + (t) + ":" + t_m;
+                write(tx, ++line, getHAlignment(tx, 0, 1), 1, 1);
+                g2.setFont(f_standard);
+                initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
 
-                line = line + 2;
-
-                write(getLocaleMessage("ticket.service"), ++line, WelcomeParams.getInstance().leftMargin, 1.5, 1);
+                g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, g2.getFont().getSize()));
+                write(getLocaleMessage("ticket.service"), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
+                g2.setFont(f_standard);
                 String name = advCustomer.getService().getTextToLocale(QService.Field.NAME);
-                while (name.length() != 0) {
-                    String prn;
-                    if (name.length() > WelcomeParams.getInstance().lineLenght) {
-                        int fl = 0;
-                        for (int i = WelcomeParams.getInstance().lineLenght; i > 0; i--) {
+                initY = ptintLines(g2, name, -1, 1, 1, initY, ++line);
 
-                            if (" ".equals(name.substring(i - 1, i))) {
-                                fl = i;
-                                break;
-                            }
-                        }
-                        int pos = fl == 0 ? WelcomeParams.getInstance().lineLenght : fl;
-                        prn = name.substring(0, pos);
-                        name = name.substring(pos, name.length());
-                    } else {
-                        prn = name;
-                        name = "";
-                    }
-                    write(prn, ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
-                }
-
-                write(getLocaleMessage("ticket.reg_time"), ++line, WelcomeParams.getInstance().leftMargin, 1.5, 1);
+                initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
+                g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, g2.getFont().getSize()));
+                write(getLocaleMessage("ticket.reg_time"), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
+                g2.setFont(f_standard);
 
                 write(Locales.getInstance().isRuss ? Uses.getRusDate(new Date(), "dd MMMM HH:mm") : Uses.format_for_label.format(new Date()), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
 
                 // если клиент что-то ввел, то напечатаем это на его талоне
                 if (advCustomer.getService().getInput_required()) {
+                    initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
+                    g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, g2.getFont().getSize()));
                     write(advCustomer.getService().getTextToLocale(QService.Field.INPUT_CAPTION).replaceAll("<.*?>", ""), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
+                    g2.setFont(f_standard);
                     write(advCustomer.getInputData(), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
                     // если требуется, то введеное напечатаем как qr-код для быстрого считывания сканером
                     if (WelcomeParams.getInstance().input_data_qrcode) {
@@ -1420,30 +1557,12 @@ public class FWelcome extends javax.swing.JFrame {
 
                 // если в услуге есть что напечатать на талоне, то напечатаем это на его талоне
                 if (advCustomer.getService().getTextToLocale(QService.Field.TICKET_TEXT) != null && !advCustomer.getService().getTextToLocale(QService.Field.TICKET_TEXT).isEmpty()) {
+                    initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
                     String tt = advCustomer.getService().getTextToLocale(QService.Field.TICKET_TEXT);
-                    while (tt.length() != 0) {
-                        String prn;
-                        if (tt.length() > WelcomeParams.getInstance().lineLenght) {
-                            int fl = 0;
-                            for (int i = WelcomeParams.getInstance().lineLenght; i > 0; i--) {
-
-                                if (" ".equals(tt.substring(i - 1, i))) {
-                                    fl = i;
-                                    break;
-                                }
-                            }
-                            int pos = fl == 0 ? WelcomeParams.getInstance().lineLenght : fl;
-                            prn = tt.substring(0, pos);
-                            tt = tt.substring(pos, tt.length());
-                        } else {
-                            prn = tt;
-                            tt = "";
-                        }
-                        write(prn, ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
-                    }
+                    initY = ptintLines(g2, tt, -1, 1, 1, initY, ++line);
                 }
 
-                write(getLocaleMessage("ticket.adv_code"), ++line, WelcomeParams.getInstance().leftMargin, 1.3, 1);
+                write(getLocaleMessage("ticket.adv_code"), ++line, getHAlignment(getLocaleMessage("ticket.adv_code"), 0, 1), 1, 1);
                 int y = write("", ++line, 0, 1, 1);
                 if (WelcomeParams.getInstance().barcode != 0) {
 
@@ -1462,7 +1581,7 @@ public class FWelcome extends javax.swing.JFrame {
                                 }
                             }
                             line = line + 6;
-                            write(advCustomer.getId().toString(), ++line, WelcomeParams.getInstance().leftMargin, 2.0, 1.7);
+                            write(advCustomer.getId().toString(), ++line, getHAlignment(advCustomer.getId().toString(), 0, 2), 2.0, 1.7);
                         } catch (WriterException ex) {
                             QLog.l().logger().error("Ошибка вывода штрихкода QR. " + ex);
                         }
@@ -1475,7 +1594,7 @@ public class FWelcome extends javax.swing.JFrame {
                             barcode.setBarWidth(1);
                             barcode.setDrawingText(true);
                             barcode.setDrawingQuietSection(true);
-                            barcode.draw(g2, WelcomeParams.getInstance().leftMargin * 2, y - 7);
+                            barcode.draw(g2, (WelcomeParams.getInstance().paperWidht - barcode.getSize().width) / 2, y - 7);
                             line = line + 3;
                         } catch (BarcodeException | OutputException ex) {
                             QLog.l().logger().error("Ошибка вывода штрихкода 128B. " + ex);
@@ -1485,30 +1604,16 @@ public class FWelcome extends javax.swing.JFrame {
                     write(advCustomer.getId().toString(), ++line, WelcomeParams.getInstance().leftMargin, 2.0, 1.7);
                 }
 
-                write(WelcomeParams.getInstance().promoText, ++line, WelcomeParams.getInstance().leftMargin, 0.7, 0.4);
+                String wText = WelcomeParams.getInstance().promoText;
+                if (wText != null && !wText.isEmpty()) {
+                    write(getTrim(wText), ++line, getHAlignment(getTrim(wText), getAlign(wText, -1), 0.7), 0.7, 0.4);
+                }
                 //Напечатаем текст внизу билета
 
                 name = WelcomeParams.getInstance().bottomText;
-                while (name.length() != 0) {
-                    String prn;
-                    if (name.length() > WelcomeParams.getInstance().lineLenght) {
-                        int fl = 0;
-                        for (int i = WelcomeParams.getInstance().lineLenght; i > 0; i--) {
-
-                            if (" ".equals(name.substring(i - 1, i))) {
-                                fl = i;
-                                break;
-                            }
-                        }
-                        int pos = fl == 0 ? WelcomeParams.getInstance().lineLenght : fl;
-                        prn = name.substring(0, pos);
-                        name = name.substring(pos, name.length());
-                    } else {
-                        prn = name;
-                        name = "";
-                    }
-                    write(prn, ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
-                }
+                int al = getAlign(name, -1);
+                name = getTrim(name);
+                initY = ptintLines(g2, name, al, 1, 1, initY, ++line);
                 write(".", ++line + 2, 0, 1, 1);
 
                 return Printable.PAGE_EXISTS;
@@ -1547,6 +1652,24 @@ public class FWelcome extends javax.swing.JFrame {
                 g2.scale(1 / kx, 1 / ky);
                 return y;
             }
+
+            /**
+             *
+             * @param str text for positioning
+             * @param alignment -1 left, 0 center, 1 right
+             * @return coordinate X
+             */
+            private int getHAlignment(String str, int alignment, double kx) {
+                if (alignment < 0) {
+                    return WelcomeParams.getInstance().leftMargin;
+                }
+                final int sw = (int) (comp.getFontMetrics(g2.getFont()).stringWidth(str) * kx);
+                int pos = alignment == 0 ? (WelcomeParams.getInstance().paperWidht - sw) / 2 : (WelcomeParams.getInstance().paperWidht - sw);
+
+                return (int) Math.round(pos / kx);
+            }
+
+            private final JLabel comp = new JLabel();
             Graphics2D g2;
 
             private LinkedList<String> splitText(String text) {
@@ -1601,14 +1724,18 @@ public class FWelcome extends javax.swing.JFrame {
                     write(string, ++line, WelcomeParams.getInstance().leftMargin, 1, 1, pageIndex);
                 }
 
-                write(WelcomeParams.getInstance().promoText, ++line, WelcomeParams.getInstance().leftMargin, 0.7, 0.4, pageIndex);
+                String wText = WelcomeParams.getInstance().promoText;
+                if (wText != null && !wText.isEmpty()) {
+                    write(getTrim(wText), ++line, getHAlignment(getTrim(wText), getAlign(wText, -1), 0.7), 0.7, 0.4, pageIndex);
+                }
                 //Напечатаем текст внизу билета
 
                 //line = writeText(WelcomeParams.getInstance().bottomText, line, WelcomeParams.getInstance().leftMargin, 1, 1, pageIndex);
                 strings.clear();
-                strings.addAll(splitText(WelcomeParams.getInstance().bottomText));
+                strings.addAll(splitText(getTrim(WelcomeParams.getInstance().bottomText)));
+                int al = getAlign(WelcomeParams.getInstance().bottomText, -1);
                 for (String string : strings) {
-                    write(string, ++line, WelcomeParams.getInstance().leftMargin, 1, 1, pageIndex);
+                    write(string, ++line, getHAlignment(string, al, 1), 1, 1, pageIndex);
                 }
 
                 write(".", line + 2, 0, 1, 1, pageIndex);
@@ -1832,7 +1959,7 @@ public class FWelcome extends javax.swing.JFrame {
         panelCaption.setLayout(panelCaptionLayout);
         panelCaptionLayout.setHorizontalGroup(
             panelCaptionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(labelCaption, javax.swing.GroupLayout.DEFAULT_SIZE, 1148, Short.MAX_VALUE)
+            .addComponent(labelCaption, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         panelCaptionLayout.setVerticalGroup(
             panelCaptionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1914,11 +2041,11 @@ public class FWelcome extends javax.swing.JFrame {
         panelMain.setLayout(panelMainLayout);
         panelMainLayout.setHorizontalGroup(
             panelMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1043, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
         panelMainLayout.setVerticalGroup(
             panelMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 448, Short.MAX_VALUE)
+            .addGap(0, 451, Short.MAX_VALUE)
         );
 
         panelLock.setBorder(new javax.swing.border.MatteBorder(null));
@@ -1935,14 +2062,14 @@ public class FWelcome extends javax.swing.JFrame {
             panelLockLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelLockLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(labelLock, javax.swing.GroupLayout.DEFAULT_SIZE, 1043, Short.MAX_VALUE)
+                .addComponent(labelLock, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
         panelLockLayout.setVerticalGroup(
             panelLockLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelLockLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(labelLock, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(labelLock, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1979,7 +2106,7 @@ public class FWelcome extends javax.swing.JFrame {
         panelLngs.setLayout(panelLngsLayout);
         panelLngsLayout.setHorizontalGroup(
             panelLngsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1063, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
         panelLngsLayout.setVerticalGroup(
             panelLngsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2011,7 +2138,7 @@ public class FWelcome extends javax.swing.JFrame {
                 .addComponent(buttonResponse, javax.swing.GroupLayout.DEFAULT_SIZE, 267, Short.MAX_VALUE))
             .addGroup(panelCentreLayout.createSequentialGroup()
                 .addComponent(panelLngs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(panelMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGap(18, 18, 18)
                 .addComponent(panelLock, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -2061,13 +2188,13 @@ public class FWelcome extends javax.swing.JFrame {
             panelForPagingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelForPagingLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(labelBackPage, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE)
+                .addComponent(labelBackPage)
                 .addGap(18, 18, 18)
                 .addComponent(buttonBackPage, javax.swing.GroupLayout.PREFERRED_SIZE, 213, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(buttonForwardPage, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(labelForwardPage, javax.swing.GroupLayout.DEFAULT_SIZE, 307, Short.MAX_VALUE)
+                .addComponent(labelForwardPage)
                 .addContainerGap())
         );
         panelForPagingLayout.setVerticalGroup(
@@ -2086,10 +2213,10 @@ public class FWelcome extends javax.swing.JFrame {
         panelBackground.setLayout(panelBackgroundLayout);
         panelBackgroundLayout.setHorizontalGroup(
             panelBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panelCaption, javax.swing.GroupLayout.DEFAULT_SIZE, 1150, Short.MAX_VALUE)
+            .addComponent(panelCaption, javax.swing.GroupLayout.DEFAULT_SIZE, 1140, Short.MAX_VALUE)
             .addGroup(panelBackgroundLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(panelButtons, javax.swing.GroupLayout.DEFAULT_SIZE, 1130, Short.MAX_VALUE)
+                .addComponent(panelButtons, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
             .addComponent(panelForPaging, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(panelCentre, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -2246,7 +2373,7 @@ private void buttonStandAdvanceActionPerformed(java.awt.event.ActionEvent evt) {
             showDelayFormPrint("<HTML><b><p align=center><span style='font-size:50.0pt;color:green'>" + getLocaleMessage("ticket.get_caption") + "<br></span>"
                     + "<span style='font-size:60.0pt;color:blue'>" + getLocaleMessage("ticket.get_caption_number") + "<br></span>"
                     + "<span style='font-size:100.0pt;color:blue'>" + res.getResult().getPrefix() + res.getResult().getNumber() + "</span></p>",
-                    "/ru/apertum/qsystem/client/forms/resources/getTicket.png");
+                    Uses.firstMonitor.getDefaultConfiguration().getBounds().height > 900 || this.getHeight() > 900 ? "/ru/apertum/qsystem/client/forms/resources/getTicket.png" : "/ru/apertum/qsystem/client/forms/resources/getTicketSmall.png");
 
             QLog.l().logger().info("Печать этикетки.");
 
@@ -2265,7 +2392,7 @@ private void buttonResponseActionPerformed(java.awt.event.ActionEvent evt) {//GE
     if (WelcomeParams.getInstance().responseURL != null) {
         FInfoDialogWeb.showInfoDialogWeb(this, true, true, WelcomeParams.getInstance().delayBack * 4, WelcomeParams.getInstance().responseURL);
     } else {
-        final Long res = FResponseDialog.showResponseDialog(this, getResponse(), true, true, WelcomeParams.getInstance().delayBack * 2);
+        final QRespItem res = FResponseDialog.showResponseDialog(this, getResponse(), true, true, WelcomeParams.getInstance().delayBack * 2);
         if (res != null) {
             NetCommander.setResponseAnswer(netProperty, res, null, null, null, "");
         }

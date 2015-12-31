@@ -28,7 +28,6 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.MemoryImageSource;
 import java.io.DataInputStream;
@@ -49,6 +48,7 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.common.WelcomeParams;
 import ru.apertum.qsystem.client.model.QButton;
 import ru.apertum.qsystem.client.model.QPanel;
+import ru.apertum.qsystem.common.BrowserFX;
 import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
@@ -75,6 +75,22 @@ public class FInfoDialog extends javax.swing.JDialog {
         super(parent, modal);
         infoDialog = this;
         initComponents();
+        if (WelcomeParams.getInstance().btnFont != null) {
+            buttonBack.setFont(WelcomeParams.getInstance().btnFont);
+            buttonInRoot.setFont(WelcomeParams.getInstance().btnFont);
+            buttonPrint.setFont(WelcomeParams.getInstance().btnFont);
+            jButton2.setFont(WelcomeParams.getInstance().btnFont);
+        }
+
+        //На верхней панели пункта регистрации, там где заголовок и картинка в углу, можно вывести вэб-контент по URL. Оставьте пустым если не требуется
+        if (!WelcomeParams.getInstance().topURL.isEmpty()) {
+            panelUp.removeAll();
+            final BrowserFX bro = new BrowserFX();
+            final GridLayout gl = new GridLayout(1, 1);
+            panelUp.setLayout(gl);
+            panelUp.add(bro);
+            bro.load(Uses.prepareAbsolutPathForImg(WelcomeParams.getInstance().topURL));
+        }
     }
 
     public static void setRoot(QInfoItem rootEl) {
@@ -128,13 +144,15 @@ public class FInfoDialog extends javax.swing.JDialog {
         Uses.setLocation(infoDialog);
         if (!(QConfig.cfg().isDebug() || QConfig.cfg().isDemo() && !fullscreen)) {
             Uses.setFullSize(infoDialog);
-            int[] pixels = new int[16 * 16];
-            Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
-            Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
-            infoDialog.setCursor(transparentCursor);
+            if (QConfig.cfg().isHideCursor()) {
+                int[] pixels = new int[16 * 16];
+                Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
+                Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisibleCursor");
+                infoDialog.setCursor(transparentCursor);
+            }
 
         } else {
-            infoDialog.setSize(1280, 1024);
+            infoDialog.setSize(1280, 768);
             Uses.setLocation(infoDialog);
         }
         infoDialog.LabelCaption2.setText(respList.getHTMLText());
@@ -242,13 +260,9 @@ public class FInfoDialog extends javax.swing.JDialog {
             this.el = el;
             setText(Uses.prepareAbsolutPathForImg(el.getHTMLText()));
             setBorder(new LineBorder(Color.GRAY, 10));
-            addActionListener(new ActionListener() {
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (!el.isLeaf() || (el.isLeaf() && el.getTextPrint() != null && !"".equals(el.getTextPrint()))) {
-                        infoDialog.showLevel(el);
-                    }
+            addActionListener((ActionEvent e) -> {
+                if (!el.isLeaf() || (el.isLeaf() && el.getTextPrint() != null && !"".equals(el.getTextPrint()))) {
+                    infoDialog.showLevel(el);
                 }
             });
 

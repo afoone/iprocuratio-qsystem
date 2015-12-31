@@ -16,15 +16,17 @@
  */
 package ru.apertum.qsystem.extra;
 
-import ru.apertum.qsystem.ub485.core.AddrProp;
+import java.util.LinkedList;
+import java.util.List;
+import javax.swing.table.AbstractTableModel;
+import ru.apertum.qsystem.common.cmd.RpcGetServerState;
+import ru.apertum.qsystem.server.model.QUser;
 
 /**
  *
  * @author Evgeniy Egorov
  */
 public abstract interface IButtonDeviceFuctory extends IExtra {
-
-    public final AddrProp addrProp = AddrProp.getInstance();
 
     public static interface IButtonDevice {
 
@@ -33,7 +35,7 @@ public abstract interface IButtonDeviceFuctory extends IExtra {
          *
          * @param b
          */
-        public void doAction(byte b);
+        public void doAction(byte[] b);
 
         /**
          * Опросить устройство
@@ -50,14 +52,27 @@ public abstract interface IButtonDeviceFuctory extends IExtra {
          */
         public void check();
 
+        public QUser getUser();
+
+        public void setUser(QUser user);
+
+        public String getId();
+
     }
 
     /**
      * Message from device turn into ID from qub.adr
      *
      * @param bytes data from hardware device for pressing a button
+     * @param users
      * @return Some class which ready to do something after receive data from device with ID - look out to qub.adr
      */
-    public IButtonDevice getButtonDevice(byte[] bytes);
+    public IButtonDevice getButtonDevice(byte[] bytes, List<QUser> users);
+
+    public LinkedList<IButtonDevice> getButtonDevices(List<QUser> users);
+
+    public AbstractTableModel getDeviceTable();
+
+    public void refreshDeviceTable(LinkedList<QUser> users, LinkedList<RpcGetServerState.ServiceInfo> servs);
 
 }
