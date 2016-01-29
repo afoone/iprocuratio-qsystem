@@ -20,8 +20,9 @@ package ru.apertum.qsystem;
 import org.jdesktop.application.SingleFrameApplication;
 
 /**
- * Класс приложения. Требуется для работы с ресурсами.
+ * Aplicaciones de clase. Se requiere para trabajar con los recursos.
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda
  */
 public class QSystem extends SingleFrameApplication {
 
