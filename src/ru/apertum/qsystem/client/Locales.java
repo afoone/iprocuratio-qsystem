@@ -40,8 +40,8 @@ import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 
 /**
- *
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda (atienda@iprocuratio.com)
  */
 public final class Locales {
 
@@ -53,7 +53,7 @@ public final class Locales {
 
     private Locales() {
 
-        // Загрузка плагинов из папки plugins
+        // Descargar plugins desde la carpeta de pluggins
         QLog.l().logger().info("Languages are loading...");
         final File[] list = new File("languages").listFiles((File dir, String name) -> name.matches(".._..\\.(jar|JAR)"));
         if (list != null && list.length != 0) {
@@ -61,7 +61,6 @@ public final class Locales {
             final Class sysclass = URLClassLoader.class;
             final Class[] parameters = new Class[]{URL.class};
             for (File file : list) {
-                //QLog.l().logger().debug("Langusge " + file.getName().split("\\.")[0]);
                 try {
                     final Method method = sysclass.getDeclaredMethod("addURL", parameters);
                     method.setAccessible(true);
@@ -257,7 +256,7 @@ public final class Locales {
 
     /**
      *
-     * @param name English к примеру eng
+     * @param name English eng, por ejemplo
      */
     public void setLangCurrent(String name) {
         config.setProperty(LANG_CURRENT, lngs.get(name));
