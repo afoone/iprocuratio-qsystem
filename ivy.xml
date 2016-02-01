@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0">
-    <info module="QSystem" organisation="Apertum" revision="1.0">
+    <info module="QSystem" organisation="Apertum iProcuratio" revision="1.0">
         <license name="GNU GPL3" url="http://www.gnu.org/licenses/gpl.html"/>
-        <ivyauthor name="Evgeniy Egorov" url="http://webby.ru/egorov-ev"/>
+        <ivyauthor name="Evgeniy Egorov - Alfonso Tienda" url="http://iprocuratio.com"/>
     </info>
     <configurations>
         <conf name="compile"/>

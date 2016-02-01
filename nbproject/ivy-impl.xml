@@ -21,7 +21,7 @@
         <echo level="debug" message="ivy.home : ${ivy.home}"/>
         <taskdef resource="fr/jayasoft/ivy/ant/antlib.xml" uri="antlib:fr.jayasoft.ivy.ant">
             <classpath>
-                <fileset dir="${ivy.home}">
+                <fileset dir="/Users/afoone/Library/Application Support/NetBeans/8.1/modules/ext/">
                     <include name="*.jar"/>
                 </fileset>
             </classpath>
@@ -31,7 +31,7 @@
         <echo level="debug" message="ant-contrib.lib: ${ant-contrib.lib}"/>
         <taskdef resource="net/sf/antcontrib/antcontrib.properties">
             <classpath>
-                <pathelement location="${ant-contrib.lib}"/>
+                <pathelement location="/usr/local/Cellar/ant-contrib/1.0b3"/>
             </classpath>
         </taskdef>
     </target>
