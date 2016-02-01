@@ -1,6 +1,6 @@
 /*
- *  Copyright (C) 2010 {Apertum}Projects. web: www.apertum.ru email: info@apertum.ru
- *
+ *  2010 {Apertum}Projects. web: www.apertum.ru email: info@apertum.ru
+ *  2016 iProcuratio Consultores. web: iprocuratio.com email: qsystem@iprocuratio.com
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
@@ -159,9 +159,10 @@ import ru.apertum.qsystem.server.model.schedule.QScheduleList;
 import ru.apertum.qsystem.server.model.schedule.QSpecSchedule;
 
 /**
- * Created on 1 Декабрь 2008 г., 18:51
+ * Created on 1 December 2008 г., 18:51
  *
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda
  */
 public class FAdmin extends javax.swing.JFrame {
 
@@ -174,7 +175,7 @@ public class FAdmin extends javax.swing.JFrame {
         return localeMap.getString(key);
     }
     /**
-     * Константы хранения параметров в файле.
+     * Constant settings are stored in the file.
      */
     private static final String SERVER_ADRESS = "server_adress";
     private static final String SERVER_PORT = "server_port";
@@ -185,10 +186,10 @@ public class FAdmin extends javax.swing.JFrame {
     private final QTray tray;
     //******************************************************************************************************************
     //******************************************************************************************************************
-    //***************************************** таймер автоматического запроса******************************************
+    //***************************************** sleep timer query******************************************
     private static final int DELAY_BLINK = 30000;
     /**
-     * Таймер опроса компонент системы.
+     * Timer component of the survey.
      */
     private final StartTimer timer = new StartTimer(DELAY_BLINK, new TimerPrinter());
 
@@ -210,12 +211,12 @@ public class FAdmin extends javax.swing.JFrame {
     }
 
     /**
-     * Собыите автосканирования сервера и пункта регистрации на таймер.
+     * Event Auto Scan server and point to the timer register.
      */
     private class TimerPrinter implements ActionListener {
 
         /**
-         * Обеспечение автоматизации запроса.
+         * Providing automation request.
          *
          * @param e
          */
@@ -231,7 +232,7 @@ public class FAdmin extends javax.swing.JFrame {
     };
 
     /**
-     * Этим методом запускаем таймер автоматического опроса
+     * This method starts the timer of the survey automatically 
      */
     private void startTimer() {
         if (checkBoxServerAuto.isSelected() || checkBoxClientAuto.isSelected()) {
@@ -242,7 +243,7 @@ public class FAdmin extends javax.swing.JFrame {
             timer.stop();
         }
     }
-    //***************************************** таймер автоматического запроса  *************************************************
+    //***************************************** sleep timer query *************************************************
 
     /**
      * Creates new form FAdmin
@@ -320,7 +321,7 @@ public class FAdmin extends javax.swing.JFrame {
             menuLangs.add(item);
         }
 
-        // Определим события выбора итемов в списках.
+        // Define the selection event an item in the list.
         listUsers.addListSelectionListener((ListSelectionEvent e) -> {
             userListChange();
         });
@@ -1326,6 +1327,9 @@ public class FAdmin extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Borra el usuario
+     */
     @Action
     public void deleteUser() {
         if (listUsers.getSelectedIndex() != -1) {
@@ -1335,7 +1339,7 @@ public class FAdmin extends javax.swing.JFrame {
                     JOptionPane.YES_NO_OPTION) == 1) {
                 return;
             }
-            QLog.l().logger().debug("Удаляем пользователя \"" + ((QUser) listUsers.getSelectedValue()).getName() + "\"");
+            QLog.l().logger().debug("Remove user \"" + ((QUser) listUsers.getSelectedValue()).getName() + "\"");
 
             final int del = listUsers.getSelectedIndex();
             final QUserList m = (QUserList) listUsers.getModel();
@@ -1369,7 +1373,7 @@ public class FAdmin extends javax.swing.JFrame {
 
     @Action
     public void addService() throws DocumentException {
-        // Запросим название услуги и если оно уникально и не пусто, то примем
+        // Will ask for name of the service and if it is unique and not empty, then accept
         String serviceName = "";
         boolean flag = true;
         while (flag) {
@@ -1389,7 +1393,7 @@ public class FAdmin extends javax.swing.JFrame {
                 flag = false;
             }
         }
-        // Созданим новую услугу и добавим ее в модель
+        // Create a new service and add it to the model
         final QService newService = new QService();
         newService.setName(serviceName);
         newService.setDescription(serviceName);

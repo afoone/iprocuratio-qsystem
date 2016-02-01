@@ -86,7 +86,6 @@ public class QServer extends Thread {
             }
         }
 
-  //      System.out.println("Welcome to the QSystem server. Your MySQL must be prepared.");
         System.out.println("Bienvenidos al servidor iProcuratio QSystem. El MYSQL debe estar activo.");
 
         FAbout.loadVersionSt();
@@ -134,9 +133,9 @@ public class QServer extends Thread {
             Uses.loadPlugins("./plugins/");
         }
 
-        // посмотрим не нужно ли стартануть jetty
-        // для этого нужно запускать с ключом http
-        // если етсь ключ http, то запускаем сервер и принимаем на нем команды серверу суо
+        // is not necessary to look at whether to start jetty
+        // it needs to start with the key http
+        // if you can fill key http, then run the server and accept it commands to the server MSA
         if (QConfig.cfg().getHttp() > 0) {
             QLog.l().logger().info("Run Jetty.");
             try {
@@ -160,14 +159,14 @@ public class QServer extends Thread {
 
                 @Override
                 public void run() {
-                    // это обнуление
+                    // reset
                     if (!QConfig.cfg().isRetain() && Uses.format_HH_mm.format(new Date(new Date().getTime() + 10 * 60 * 1000)).equals(Uses.format_HH_mm.format(ServerProps.getInstance().getProps().getStartTime()))) {
                         QLog.l().logger().info("Desactivando todos los servicios.");
                         // clean all the services of the customers on previous day
                         QServer.clearAllQueue();
                     }
 
-                    // это рассылка дневного отчета
+                    // is sending daily report
                     if (("true".equalsIgnoreCase(Mailer.fetchConfig().getProperty("mailing")) || "1".equals(Mailer.fetchConfig().getProperty("mailing")))
                             && Uses.format_HH_mm.format(new Date(new Date().getTime() - 30 * 60 * 1000)).equals(Uses.format_HH_mm.format(ServerProps.getInstance().getProps().getFinishTime()))) {
                         QLog.l().logger().info("Boletín de noticias Informe diario.");
@@ -195,8 +194,8 @@ public class QServer extends Thread {
             clearServices.start();
         }
 
-        // подключения плагинов, которые стартуют в самом начале.
-        // поддержка расширяемости плагинами
+     // Connect plug-ins, which will start at the beginning.
+        // Support extensibility plug-ins
         for (final IStartServer event : ServiceLoader.load(IStartServer.class)) {
             QLog.l().logger().info("Llamada al SPI: " + event.getDescription());
             try {
@@ -208,7 +207,7 @@ public class QServer extends Thread {
             }
         }
 
-        // привинтить сокет на локалхост, порт 3128
+        // Screw the socket on localhost port 3128
         final ServerSocket server;
         try {
             QLog.l().logger().info("The server system captures the port \"" + ServerProps.getInstance().getProps().getServerPort() + "\".");
@@ -227,7 +226,6 @@ public class QServer extends Thread {
         // слушаем порт
         while (!globalExit && !exit) {
             // a la espera de una nueva conexión, y luego empieza a procesar el cliente
-            // в новый вычислительный поток и увеличиваем счётчик на единичку
 
             try {
                 final QServer qServer = new QServer(server.accept());
@@ -259,9 +257,9 @@ public class QServer extends Thread {
 
             }
 
-            // Попробуем считать нажатую клавишу
-            // если нажади ENTER, то завершаем работу сервера
-            // и затираем файл временного состояния Uses.TEMP_STATE_FILE
+            // Try to assume key pressed 
+            // If you press ENTER, it will cause the server 
+            // and the file will be overwritten by the temporary state Uses.TEMP_STATE_FILE
             //BufferedReader r = new BufferedReader(new StreamReader(System.in));
             int bytesAvailable = System.in.available();
             if (bytesAvailable > 0) {
@@ -273,7 +271,7 @@ public class QServer extends Thread {
                         && data[2] == 105
                         && data[3] == 116
                         && ((data[4] == 10) || (data[4] == 13))) {
-                    // набрали команду "exit" и нажали ENTER
+                    // typed "exit" command and press ENTER
                     QLog.l().logger().info("Apadado del servidor.");
                     exit = true;
                 }
@@ -312,7 +310,7 @@ public class QServer extends Thread {
         try {
             QLog.l().logger().debug(" Start thread for receiving task. host=" + socket.getInetAddress().getHostAddress() + " ip=" + Arrays.toString(socket.getInetAddress().getAddress()));
 
-            // из сокета клиента берём поток входящих данных
+            // from a socket client take the flow of incoming data
             InputStream is;
             try {
                 is = socket.getInputStream();
@@ -389,9 +387,9 @@ public class QServer extends Thread {
             sb.setLength(0);
             throw new ServerException("An error occurred while performing the task.\n" + ex + err);
         } finally {
-            // завершаем соединение
+            // terminate the connection
             try {
-                //оборачиваем close, т.к. он сам может сгенерировать ошибку IOExeption. Просто выкинем Стек-трейс
+                //wrap close, because he can generate an error Exception. Just discard stack trace
                 socket.close();
             } catch (IOException e) {
                 QLog.l().logger().trace(e);
@@ -426,7 +424,7 @@ public class QServer extends Thread {
             (new File(Uses.TEMP_FOLDER)).mkdir();
             fos = new FileOutputStream(new File(Uses.TEMP_FOLDER + File.separator + Uses.TEMP_STATE_FILE));
         } catch (FileNotFoundException ex) {
-            throw new ServerException("Не возможно создать временный файл состояния. " + ex.getMessage());
+            throw new ServerException("Unable to create a temporary file status. " + ex.getMessage());
         }
         Gson gson = null;
         try {
@@ -481,7 +479,7 @@ public class QServer extends Thread {
         final long start = System.currentTimeMillis();
         // if there is a temporary file persistence, you have to download it.
         // ignore all errors of reading and parsing .
-        QLog.l().logger().info("Пробуем восстановить состояние системы.");
+        QLog.l().logger().info("Trying to restore the system state.");
         File recovFile = new File(Uses.TEMP_FOLDER + File.separator + Uses.TEMP_STATE_FILE);
         if (recovFile.exists()) {
             QLog.l().logger().warn(Locales.locMes("came_back"));

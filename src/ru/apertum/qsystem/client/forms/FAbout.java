@@ -118,7 +118,7 @@ public class FAbout extends javax.swing.JDialog {
     }
 
     /**
-     * Загрузим параметры сборки билда из файла с версией.
+     * Carga el número de versión de los ficheros
      */
     public static void loadVersionSt() {
         final Properties settings = new Properties();
@@ -128,7 +128,7 @@ public class FAbout extends javax.swing.JDialog {
         try {
             settings.load(inStream);
         } catch (IOException ex) {
-            throw new ClientException("Проблемы с чтением версии. " + ex);
+            throw new ClientException("Problems reading Version. " + ex);
         }
         DATE_ = settings.getProperty(DATE);
         VERSION_ = settings.getProperty(VERSION);
