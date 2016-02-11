@@ -55,7 +55,7 @@ public abstract class ATListModel<T extends IidGetter> extends AbstractListModel
                 return item;
             }
         }
-        throw new ServerException("Не найден элемент по ID: \"" + id + "\"");
+        throw new ServerException("Element not found on ID: \"" + id + "\"");
     }
 
     public boolean hasById(long id) {

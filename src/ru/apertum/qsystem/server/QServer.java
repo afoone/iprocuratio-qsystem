@@ -513,7 +513,7 @@ public class QServer extends Thread {
                 GsonPool.getInstance().returnGson(gson);
             }
 
-            // Проверим не просрочился ли кеш. Время просточки 3 часа.
+            // Verify whether the cache is expired. Default time 3 hours.
             if (!QConfig.cfg().isRetain() && (recList.date == null || new Date().getTime() - recList.date > 3 * 60 * 60 * 1000)) {
                 // Просрочился кеш, не грузим
                 QLog.l().logger().warn("The limit period for stored state has expired. If the system does nothing for 3 hours it is considered that the stored data is irrevocably obsolete.");
@@ -568,7 +568,7 @@ public class QServer extends Thread {
     }
 
     static public void clearAllQueue() {
-        // почистим все услуги от трупов кастомеров
+        // clean all the services of the dead customer
         QServiceTree.getInstance().getNodes().forEach((service) -> {
             service.clearNextNumber();
             service.freeCustomers();

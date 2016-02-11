@@ -75,9 +75,9 @@ public abstract class ATreeModel<T extends ITreeIdGetter> extends DefaultTreeMod
     }
 
     /**
-     * Получить услугу по ID
+     * Get the service by ID
      * @param id
-     * @return если не найдено то вернет null.
+     * @return if not found, then return null.
      */
     public T getById(long id) {
         for (T node : getNodes()) {
@@ -85,7 +85,7 @@ public abstract class ATreeModel<T extends ITreeIdGetter> extends DefaultTreeMod
                 return node;
             }
         }
-        throw new ServerException("Не найдена услуга по ID \"" + id + "\"");
+        throw new ServerException("Not Found service for ID \"" + id + "\"");
     }
 
     /**

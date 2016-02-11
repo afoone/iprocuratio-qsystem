@@ -74,21 +74,22 @@ import ru.apertum.qsystem.server.model.response.QRespItem;
 import ru.apertum.qsystem.server.model.results.QResult;
 
 /**
- * Содержит статические методы отправки и получения заданий на сервер. любой метод возвращает XML-узел ответа сервера.
+ * It contains static methods to send and receive assignments on the server. Any method returns an XML-node server response.
  *
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda
  */
 public class NetCommander {
 
     private static final JsonRPC20 jsonRpc = new JsonRPC20();
 
     /**
-     * основная работа по отсылки и получению результата.
+     * the main job of of sending and the results obtained.
      *
-     * @param netProperty параметры соединения с сервером
+     * @param netProperty server connection settings
      * @param commandName
      * @param params
-     * @return XML-ответ
+     * @return XML-respuesta
      * @throws ru.apertum.qsystem.common.exceptions.QException
      */
     synchronized public static String send(INetProperty netProperty, String commandName, CmdParams params) throws QException {
@@ -157,10 +158,10 @@ public class NetCommander {
     }
 
     /**
-     * Получение возможных услуг.
+     * Preparation of possible services.
      *
-     * @param netProperty параметры соединения с сервером
-     * @return XML-ответ
+     * @param netProperty server connection settings
+     * @return XML-respuesta
      */
     public static RpcGetAllServices.ServicesForWelcome getServiсes(INetProperty netProperty) {
         QLog.l().logger().info("Получение возможных услуг.");
@@ -187,14 +188,14 @@ public class NetCommander {
     }
 
     /**
-     * Постановка в очередь.
+     * Queing
      *
-     * @param netProperty netProperty параметры соединения с сервером.
-     * @param serviceId услуга, в которую пытаемся встать.
-     * @param password пароль того кто пытается выполнить задание.
-     * @param priority приоритет.
+     * @param netProperty netProperty server connection settings
+     * @param serviceId services, which are trying to get up.
+     * @param password the password of someone trying to do the job.
+     * @param priority prioridad.
      * @param inputData
-     * @return Созданный кастомер.
+     * @return Created customer
      */
     public static QCustomer standInService(INetProperty netProperty, long serviceId, String password, int priority, String inputData) {
         QLog.l().logger().info("Встать в очередь.");
@@ -207,7 +208,7 @@ public class NetCommander {
         String res = null;
         try {
             res = send(netProperty, Uses.TASK_STAND_IN, params);
-        } catch (QException ex) {// вывод исключений
+        } catch (QException ex) {// withdrawal of exemptions
             throw new ClientException(Locales.locMes("command_error"), ex);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
@@ -223,9 +224,9 @@ public class NetCommander {
     }
 
     /**
-     * Постановка в очередь.
+     * Queuing
      *
-     * @param netProperty netProperty параметры соединения с сервером.
+     * @param netProperty netProperty server connection settings.
      * @param servicesId услуги, в которые пытаемся встать. Требует уточнения что это за трехмерный массив. Это пять списков. Первый это вольнопоследовательные
      * услуги. Остальные четыре это зависимопоследовательные услуги, т.е. пока один не закончится на другой не переходить. Что такое элемент списка. Это тоже
      * список. Первый элемент это та самая комплексная услуга(ID). А остальные это зависимости, т.е. если есть еще не оказанные услуги но назначенные, которые в
@@ -262,7 +263,7 @@ public class NetCommander {
     }
 
     /**
-     * Сделать услугу временно неактивной или разблокировать временную неактивность
+     * _ Send the service is temporarily inactive or unlock a temporary inactivity
      *
      * @param netProperty netProperty параметры соединения с сервером.
      * @param serviceId услуга, которую пытаемся править
@@ -282,7 +283,7 @@ public class NetCommander {
     }
 
     /**
-     * Узнать сколько народу стоит к услуге и т.д.
+     * Find out how many people is standing for the service, etc.
      *
      * @param netProperty параметры соединения с сервером.
      * @param serviceId id услуги о которой получаем информацию
@@ -860,17 +861,17 @@ public class NetCommander {
     }
 
     /**
-     * Получение дневной таблици с данными для предварительной записи включающими информацию по занятым временам и свободным.
+     * Getting the daily tables with data for pre-registered users includes information on the busy and free.
      *
-     * @param netProperty netProperty параметры соединения с сервером.
-     * @param serviceId услуга, в которую пытаемся встать.
-     * @param date день недели за который нужны данные.
-     * @param advancedCustomer ID авторизованного кастомера
-     * @return класс с параметрами и списком времен
+     * @param netProperty netProperty server connection settings.
+     * @param serviceId service, which are trying to get.
+     * @param date day of the week in which the are needed data.
+     * @param advancedCustomer ID authorized customer
+     * @return a class with parameters, and a list of times
      */
     public static RpcGetGridOfDay.GridDayAndParams getPreGridOfDay(INetProperty netProperty, long serviceId, Date date, long advancedCustomer) {
-        QLog.l().logger().info("Получить таблицу дня");
-        // загрузим ответ
+        QLog.l().logger().info("Get the day table");
+        // load response
         final CmdParams params = new CmdParams();
         params.serviceId = serviceId;
         params.date = date.getTime();
@@ -878,7 +879,7 @@ public class NetCommander {
         final String res;
         try {
             res = send(netProperty, Uses.TASK_GET_GRID_OF_DAY, params);
-        } catch (QException e) {// вывод исключений
+        } catch (QException e) {// withdrawal of exceptions
             throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
@@ -894,7 +895,7 @@ public class NetCommander {
     }
 
     /**
-     * Получение недельной таблици с данными для предварительной записи.
+     * Get weekly data tables for the appointment.
      *
      * @param netProperty netProperty параметры соединения с сервером.
      * @param serviceId услуга, в которую пытаемся встать.
@@ -903,8 +904,8 @@ public class NetCommander {
      * @return класс с параметрами и списком времен
      */
     public static RpcGetGridOfWeek.GridAndParams getGridOfWeek(INetProperty netProperty, long serviceId, Date date, long advancedCustomer) {
-        QLog.l().logger().info("Получить таблицу");
-        // загрузим ответ
+        QLog.l().logger().info("Get Table");
+        // load response
         final CmdParams params = new CmdParams();
         params.serviceId = serviceId;
         params.date = date.getTime();
@@ -912,7 +913,7 @@ public class NetCommander {
         final String res;
         try {
             res = send(netProperty, Uses.TASK_GET_GRID_OF_WEEK, params);
-        } catch (QException e) {// вывод исключений
+        } catch (QException e) {
             throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
@@ -966,21 +967,21 @@ public class NetCommander {
     }
 
     /**
-     * Предварительная запись в очередь.
+     * Pre-registration in the queue.
      *
-     * @param netProperty netProperty параметры соединения с сервером.
-     * @param advanceID идентификатор предварительно записанного.
-     * @return XML-ответ.
+     * @param netProperty netProperty Server Connection Settings.
+     * @param advanceID ID of the preregistered.
+     * @return XML-answer.
      */
     public static RpcStandInService standAndCheckAdvance(INetProperty netProperty, Long advanceID) {
-        QLog.l().logger().info("Постановка предварительно записанных в очередь.");
-        // загрузим ответ
+        QLog.l().logger().info("Staging preregistered at turn.");
+        // load response
         final CmdParams params = new CmdParams();
         params.customerId = advanceID;
         final String res;
         try {
             res = send(netProperty, Uses.TASK_ADVANCE_CHECK_AND_STAND, params);
-        } catch (QException e) {// вывод исключений
+        } catch (QException e) {
             throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
@@ -996,21 +997,21 @@ public class NetCommander {
     }
 
     /**
-     * Удаление предварительной записи в очередь.
+     * Removal of an appointment in the queue.
      *
      * @param netProperty netProperty параметры соединения с сервером.
      * @param advanceID идентификатор предварительно записанного.
      * @return XML-ответ.
      */
     public static JsonRPC20OK removeAdvancedCustomer(INetProperty netProperty, Long advanceID) {
-        QLog.l().logger().info("Удаление предварительно записанных в очередь.");
+        QLog.l().logger().info("Removal of preregister in the queue.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.customerId = advanceID;
         final String res;
         try {
             res = send(netProperty, Uses.TASK_REMOVE_ADVANCE_CUSTOMER, params);
-        } catch (QException e) {// вывод исключений
+        } catch (QException e) {
             throw new ClientException(Locales.locMes("command_error2"), e);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
@@ -1026,9 +1027,9 @@ public class NetCommander {
     }
 
     /**
-     * Рестарт сервера.
+     * Restart the server
      *
-     * @param netProperty параметры соединения с сервером
+     * @param netProperty Server Connection Settings
      */
     public static void restartServer(INetProperty netProperty) {
         QLog.l().logger().info("Команда на рестарт сервера.");

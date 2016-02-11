@@ -21,8 +21,10 @@ import ru.apertum.qsystem.server.model.ATreeModel;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 
 /**
- * Интерфейс для плагинов печати талонов. Нужен для добавления плагинов Реализовываем этот интерфейс, оформляем jar как сервисный, кладем в папку plugins.
- *
+ * The interface for printing vouchers plugin. We need to add plug-ins to
+ * implement this interface, make out the jar as a service, put in the plugins
+ * folder.*
+ * 
  * @author Evgeniy Egorov
  */
 public interface IPrintTicket extends IExtra {
@@ -30,17 +32,21 @@ public interface IPrintTicket extends IExtra {
     /**
      * Печать талона.
      *
-     * @param customer Для него печатаем
-     * @param caption Название конторы при печати из админки
+     * @param customer
+     *            Для него печатаем
+     * @param caption
+     *            Название конторы при печати из админки
      * @return true - Если все нормально напечатали.
      */
     public boolean printTicket(QCustomer customer, String caption);
 
     /**
-     * Печать талона для предварительной записи
+     * Print coupon for an appointment
      *
-     * @param advCustomer Для него печатаем
-     * @param caption Название конторы при печати из админки
+     * @param advCustomer
+     *            Для него печатаем
+     * @param caption
+     *            The name of the office to print from admin panel
      * @return true - Если все нормально напечатали.
      */
     public boolean printTicketAdvance(final QAdvanceCustomer advCustomer, String caption);
@@ -48,8 +54,10 @@ public interface IPrintTicket extends IExtra {
     /**
      * Печать талона для предварительной записи
      *
-     * @param customer Для него печатаем
-     * @param tm это деоево услуг чтоб в нем искать услуги по ID
+     * @param customer
+     *            Для него печатаем
+     * @param tm
+     *            это деоево услуг чтоб в нем искать услуги по ID
      * @return true - Если все нормально напечатали.
      */
     public boolean printTicketComplex(QCustomer customer, ATreeModel tm);

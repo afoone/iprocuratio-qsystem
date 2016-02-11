@@ -39,7 +39,7 @@ import ru.evgenic.rxtx.serialPort.ISerialPort;
 public class QIndicatorBoardRS extends AIndicatorBoard {
 
     public QIndicatorBoardRS() {
-        // нет мигания - нет его старта. устройства все равно не переварят
+        // No flashing - do not have it start. the device still can not digest
         //startBlinkTimer();
     }
 
@@ -49,7 +49,7 @@ public class QIndicatorBoardRS extends AIndicatorBoard {
         timer.stop();
     }
     /**
-     * Поле для списка адресов многострочного табло.
+     * The field for the list of addresses multiline display.
      */
     private List<Integer> adresses;
 

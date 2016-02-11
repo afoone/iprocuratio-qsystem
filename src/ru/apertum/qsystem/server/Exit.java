@@ -25,6 +25,7 @@ import java.util.Scanner;
 
 /**
  *
+ * @author Alfonso Tienda
  * @author Evgeniy Egorov
  */
 public class Exit {

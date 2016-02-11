@@ -32,7 +32,7 @@ import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.server.model.IidGetter;
 
 /**
- * Перерывы в работе для предвариловки
+ * Interrupciones de trabajo para los calendarios
  * @author Evgeniy Egorov
  */
 @Entity

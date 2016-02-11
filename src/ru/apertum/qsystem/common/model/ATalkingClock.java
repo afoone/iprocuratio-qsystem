@@ -21,7 +21,7 @@ import java.awt.event.ActionListener;
 import javax.swing.Timer;
 
 /**
- * Таймер, однако. Кудаж без него. В наследниках реализовать метод run(). Умеет отмерять единичные интервалы времени.
+ * Timer, however. Where do without him. The successors to implement run () method. Able to measure single intervals.
  *
  * @author Evgeniy Egorov
  */
@@ -41,7 +41,7 @@ public abstract class ATalkingClock {
     }
     private int cntr = 0;
     /**
-     * Интервал в мсек.
+     * The interval, in milliseconds.
      */
     private int interval = 500;
 

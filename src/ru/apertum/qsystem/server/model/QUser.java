@@ -42,16 +42,18 @@ import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.server.Spring;
 
 /**
- * Это пользователь. По большому счету роль и пользователь совпадают в системе. Класс пользователя системы.
+ * It is the user. By and large the same user and role in the system. Class
+ * user.
  *
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  */
 @Entity
 @Table(name = "users")
 public class QUser implements IidGetter, Serializable {
 
     /**
-     * Конструктор для формирования из БД.
+     * The constructor to generate from database. ¿?
      */
     public QUser() {
     }
@@ -60,6 +62,7 @@ public class QUser implements IidGetter, Serializable {
     public String toString() {
         return getName();
     }
+
     @Expose
     @SerializedName("id")
     private Long id;
@@ -75,8 +78,9 @@ public class QUser implements IidGetter, Serializable {
     public void setId(Long id) {
         this.id = id;
     }
+
     /**
-     * признак удаления с проставленим даты
+     * Mark as remove by putting a Date
      */
     @Column(name = "deleted")
     @Temporal(javax.persistence.TemporalType.DATE)
@@ -89,8 +93,10 @@ public class QUser implements IidGetter, Serializable {
     public void setDeleted(Date deleted) {
         this.deleted = deleted;
     }
+
     /**
-     * Удаленный или нет. Нельзя их из базы гасить чтоб констрейнты не поехали. 0 - удаленный 1 - действующий Только для БД.
+     * Remote or not. It is impossible to extinguish them from the base to
+     * konstreynty not go. 0 - Remote 1 - valid only for the database.
      */
     @Expose
     @SerializedName("enable")
@@ -104,8 +110,9 @@ public class QUser implements IidGetter, Serializable {
     public void setEnable(Integer enable) {
         this.enable = enable;
     }
+
     /**
-     * Параметр доступа к администрированию системы.
+     * Parameter: access to system administration.
      */
     @Expose
     @SerializedName("is_admin")
@@ -119,8 +126,9 @@ public class QUser implements IidGetter, Serializable {
     public Boolean getAdminAccess() {
         return adminAccess;
     }
+
     /**
-     * Параметр доступа к отчетам системы.
+     * Parameter: Access to System Reports
      */
     @Expose
     @SerializedName("is_report_access")
@@ -134,26 +142,28 @@ public class QUser implements IidGetter, Serializable {
     public Boolean getReportAccess() {
         return reportAccess;
     }
+
     /**
-     * Пароль пользователя. В программе хранится открыто. В базе и xml зашифрован.
+     * User Password. The program is kept open. The database is encrypted and xml.
      */
     @Expose
     @SerializedName("pass")
     private String password = "";
 
     /**
-     * Расшифрует
+     * Decipher
      *
-     * @param password - зашифрованное слово
+     * @param password
+     *            - encrypted word
      */
     public void setPassword(String password) {
         this.password = password;
     }
 
     /**
-     * Зашифрует
+     * Encrypt
      *
-     * @return пароль в зашифрованном виде.
+     * @return encrypted password.
      */
     @Column(name = "password")
     public String getPassword() {
@@ -167,6 +177,7 @@ public class QUser implements IidGetter, Serializable {
     public void recoverAccess(String access) {
         this.password = access;
     }
+
     /**
      * Идентификатор рабочего места пользователя.
      */
@@ -182,6 +193,7 @@ public class QUser implements IidGetter, Serializable {
     public String getPoint() {
         return point;
     }
+
     /**
      * Название пользователя.
      */
@@ -198,6 +210,7 @@ public class QUser implements IidGetter, Serializable {
     public String getName() {
         return name;
     }
+
     @Expose
     @SerializedName("adress_rs")
     private Integer adressRS;
@@ -210,6 +223,7 @@ public class QUser implements IidGetter, Serializable {
     public Integer getAdressRS() {
         return adressRS;
     }
+
     @Expose
     @SerializedName("point_ext")
     private String pointExt = "";
@@ -222,13 +236,17 @@ public class QUser implements IidGetter, Serializable {
     public void setPointExt(String pointExt) {
         this.pointExt = pointExt;
     }
-    //******************************************************************************************************************
-    //******************************************************************************************************************
-    //************************************** Услуги юзера **************************************************************
+
+    // ******************************************************************************************************************
+    // ******************************************************************************************************************
+    // ************************************** Услуги юзера
+    // **************************************************************
     /**
-     * Множество услуг, которые обрабатывает юзер. По наименованию услуги получаем Класс - описалово участия юзера в этой услуге/ Имя услуги - IProperty
+     * Множество услуг, которые обрабатывает юзер. По наименованию услуги
+     * получаем Класс - описалово участия юзера в этой услуге/ Имя услуги -
+     * IProperty
      */
-    //private QPlanServiceList serviceList = new QPlanServiceList();
+    // private QPlanServiceList serviceList = new QPlanServiceList();
     @Expose
     @SerializedName("plan")
     private List<QPlanService> planServices;
@@ -238,14 +256,19 @@ public class QUser implements IidGetter, Serializable {
         planServiceList = new QPlanServiceList(planServices);
     }
 
-    //@OneToMany(fetch = FetchType.EAGER)//setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).
+    // @OneToMany(fetch =
+    // FetchType.EAGER)//setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JoinColumn(name = "user_id", insertable = false, nullable = false, updatable = false)
-    //MOSCOW
-    @Fetch(FetchMode.SELECT) // Это отсечение дублирования при джойне таблици, т.к. в QPlanService есть @OneToOne к QService, и в нем есть @OneToMany к QServiceLang - дублится по количеству переводов
+    // MOSCOW
+    @Fetch(FetchMode.SELECT) // Это отсечение дублирования при джойне таблици,
+                             // т.к. в QPlanService есть @OneToOne к QService, и
+                             // в нем есть @OneToMany к QServiceLang - дублится
+                             // по количеству переводов
     public List<QPlanService> getPlanServices() {
         return planServices;
     }
+
     private QPlanServiceList planServiceList = new QPlanServiceList(new LinkedList<>());
 
     /**
@@ -269,7 +292,8 @@ public class QUser implements IidGetter, Serializable {
     /**
      * Найти сервис из списка обслуживаемых юзером.
      *
-     * @param serviceId id искомого сервиса
+     * @param serviceId
+     *            id искомого сервиса
      * @return
      */
     public QPlanService getPlanService(long serviceId) {
@@ -284,7 +308,8 @@ public class QUser implements IidGetter, Serializable {
     /**
      * Найти сервис из списка обслуживаемых юзером.
      *
-     * @param service искомый сервис.
+     * @param service
+     *            искомый сервис.
      * @return
      */
     public QPlanService getPlanService(QService service) {
@@ -294,7 +319,8 @@ public class QUser implements IidGetter, Serializable {
     /**
      * Добавить сервис в список обслуживаемых юзером. Помнить про ДБ.
      *
-     * @param service добавляемый сервис.
+     * @param service
+     *            добавляемый сервис.
      */
     public void addPlanService(QService service) {
         // в список услуг
@@ -303,10 +329,13 @@ public class QUser implements IidGetter, Serializable {
     }
 
     /**
-     * Добавить сервис в список обслуживаемых юзером использую параметры. Используется при добавлении на горячую.
+     * Добавить сервис в список обслуживаемых юзером использую параметры.
+     * Используется при добавлении на горячую.
      *
-     * @param service добавляемый сервис.
-     * @param coefficient приоритет обработки
+     * @param service
+     *            добавляемый сервис.
+     * @param coefficient
+     *            приоритет обработки
      */
     public void addPlanService(QService service, int coefficient) {
         // в список услуг
@@ -317,7 +346,8 @@ public class QUser implements IidGetter, Serializable {
     /**
      * Удалить сервис из списка обслуживаемых юзером.
      *
-     * @param serviceId удаляемый сервис.
+     * @param serviceId
+     *            удаляемый сервис.
      * @return
      */
     public QPlanService deletePlanService(long serviceId) {
@@ -331,6 +361,7 @@ public class QUser implements IidGetter, Serializable {
         }
         throw new ServerException("Не найдена услуга по ID \"" + serviceId + "\" у услуги c ID = " + id);
     }
+
     private final LinkedList<QPlanService> forDel = new LinkedList<>();
 
     public QPlanService deletePlanService(QService service) {
@@ -347,8 +378,10 @@ public class QUser implements IidGetter, Serializable {
         forDel.clear();
         Spring.getInstance().getHt().saveOrUpdateAll(planServices);
     }
+
     /**
-     * Количество услуг, которые обрабатывает юзер. // едет на коиента при логине
+     * Количество услуг, которые обрабатывает юзер. // едет на коиента при
+     * логине
      */
     @Expose
     @SerializedName("services_cnt")
@@ -359,7 +392,8 @@ public class QUser implements IidGetter, Serializable {
     }
 
     /**
-     * Количество услуг, которые обрабатывает юзер. // едет на коиента при логине
+     * Количество услуг, которые обрабатывает юзер. // едет на коиента при
+     * логине
      *
      * @return
      */
@@ -367,10 +401,14 @@ public class QUser implements IidGetter, Serializable {
     public int getServicesCnt() {
         return servicesCnt;
     }
+
     /**
-     * Customer, который попал на обработку к этому юзеру. При вызове следующего, первый в очереди кастомер, выдерается из этой очереди совсем и попадает сюда.
-     * Сдесь он живет и переживает все интерпритации, которые с ним делает юзер. При редиректе в другую очередь юзером, данный кастомер отправляется в другую
-     * очередь, возможно, с другим приоритетом, а эта ссылка становится null.
+     * Customer, который попал на обработку к этому юзеру. При вызове
+     * следующего, первый в очереди кастомер, выдерается из этой очереди совсем
+     * и попадает сюда. Сдесь он живет и переживает все интерпритации, которые с
+     * ним делает юзер. При редиректе в другую очередь юзером, данный кастомер
+     * отправляется в другую очередь, возможно, с другим приоритетом, а эта
+     * ссылка становится null.
      */
     private QCustomer customer = null;
 
@@ -381,17 +419,20 @@ public class QUser implements IidGetter, Serializable {
         }
         // был кастомер у юзера и убираем его
         if (customer == null && getCustomer() != null) {
-            // если убирается кастомер, то надо убрать признак юзера, который работает с кастомером
+            // если убирается кастомер, то надо убрать признак юзера, который
+            // работает с кастомером
             finalizeCustomer();
             if (getCustomer().getUser() != null) {
                 getCustomer().setUser(null);
             }
-            // раз юзера убрали, то и время начала работы этого юзера тож убирать
+            // раз юзера убрали, то и время начала работы этого юзера тож
+            // убирать
             if (getCustomer().getStartTime() != null) {
                 getCustomer().setStartTime(null);
             }
         } else {
-            // иначе кастомеру, определившимуся к юзеру, надо поставить признак работы с опред. юзером.
+            // иначе кастомеру, определившимуся к юзеру, надо поставить признак
+            // работы с опред. юзером.
             customer.setUser(this);
             initCustomer(customer);
         }
@@ -404,7 +445,8 @@ public class QUser implements IidGetter, Serializable {
     }
 
     /**
-     * Это чтоб осталась инфа после завершения работ с кастомером. Нужно для нормативов и статистики сиюминутной
+     * Это чтоб осталась инфа после завершения работ с кастомером. Нужно для
+     * нормативов и статистики сиюминутной
      */
     public void finalizeCustomer() {
         shadow = new Shadow(customer);
@@ -412,7 +454,8 @@ public class QUser implements IidGetter, Serializable {
     }
 
     /**
-     * Это чтоб осталась инфа сразу после вызова кастомера. Нужно для нормативов и статистики сиюминутной
+     * Это чтоб осталась инфа сразу после вызова кастомера. Нужно для нормативов
+     * и статистики сиюминутной
      *
      * @param cust
      */
@@ -420,6 +463,7 @@ public class QUser implements IidGetter, Serializable {
         shadow = new Shadow(cust);
         shadow.setFinTime(null);
     }
+
     /**
      * Типо не набрасывать сюда посетителей при маршрутизации в списке услуг.
      */
@@ -435,6 +479,7 @@ public class QUser implements IidGetter, Serializable {
     public void setPause(Boolean pause) {
         this.pause = pause;
     }
+
     @Expose
     @SerializedName("shadow")
     private Shadow shadow = null;
@@ -469,6 +514,7 @@ public class QUser implements IidGetter, Serializable {
                 customerState = oldCostomer.getState();
             }
         }
+
         private QService oldService;
         private QCustomer oldCustomer;
         @Expose
@@ -564,6 +610,7 @@ public class QUser implements IidGetter, Serializable {
         public void setOldService(QService oldService) {
             this.oldService = oldService;
         }
+
         @Expose
         @SerializedName("old_cust_state")
         private CustomerState customerState;

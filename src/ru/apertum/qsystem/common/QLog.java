@@ -25,7 +25,7 @@ import ru.apertum.qsystem.About;
 import ru.apertum.qsystem.server.ServerProps;
 
 /**
- * Собственно, логер лог4Ж Это синглтон. Тут в место getInstance() для короткого написания используется l()
+ * Actually, logger log4j uses this singleton. Here, instead of getInstance , l() is used for shorter writing
  *
  * @author Evgeniy Egorov
  */
@@ -37,7 +37,7 @@ public class QLog {
         return logger;
     }
     /**
-     * Пользуемся этой константой для работы с логом для отчетов
+     * We use this constant to work with the log for records
      */
     private Logger logRep = Logger.getLogger("reports.file");
     private Logger logQUser = QConfig.cfg().isServer() ? Logger.getLogger("quser.file") : Logger.getLogger("reports.file.info.trace");
@@ -51,11 +51,10 @@ public class QLog {
     }
 
     private QLog() {
-        //бежим по параметрам, смотрим, выполняем что надо
-        // ключ, отвечающий за логирование
+        //run in the parameters, look, it is necessary to carry out the key responsible for logging
         if (QConfig.cfg().isDebug()) {
             switch (loggerType) {
-                case 0://сервер
+                case 0://server
                     logger = Logger.getLogger("server.file.info.trace");
                     break;
                 case 1://клиент
@@ -141,7 +140,7 @@ public class QLog {
             }
         }
 
-        // ключ, отвечающий за паузу на старте. 
+        // a key responsible for at launch the pause.
         if (QConfig.cfg().getDelay() > 0) {
             try {
                 Thread.sleep(QConfig.cfg().getDelay() * 1000);
@@ -164,12 +163,12 @@ public class QLog {
     public static QLog l() {
         return LogerHolder.INSTANCE;
     }
-    public static int loggerType = 0; // 0-сервер,1-клиент,2-приемная,3-админка,4-киоск
+    public static int loggerType = 0; 
 
     /**
      *
      * @param args
-     * @param type 0-сервер,1-клиент,2-приемная,3-админка,4-киоск,5-сервер хардварных кнопок
+     * @param type 0-server,1-client,2-приемная,3-админка,4-kiosk,5-сервер хардварных кнопок
      * @return
      */
     public static QLog initial(String[] args, int type) {

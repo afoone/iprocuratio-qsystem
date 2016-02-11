@@ -69,7 +69,7 @@ public class UBForm extends JFrame {
      */
     public UBForm() {
         initComponents();
-        // поддержка расширяемости плагинами
+        // extensible plug-ins support
         IButtonDeviceFuctory devFuctory = null;
         for (final IButtonDeviceFuctory event : ServiceLoader.load(IButtonDeviceFuctory.class)) {
             QLog.l().logger().info("Invoke SPI ext. Description: " + event.getDescription());
@@ -78,8 +78,7 @@ public class UBForm extends JFrame {
         }
         table.setModel(devFuctory == null ? new UserTableModel(AddrProp.getInstance()) : devFuctory.getDeviceTable());
 
-        // Фича. По нажатию Escape закрываем форму
-        // свернем по esc
+        // Feature. By pressing Escape closes the form 
         getRootPane().registerKeyboardAction((ActionEvent e) -> {
             setVisible(false);
         },

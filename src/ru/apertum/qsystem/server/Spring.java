@@ -64,7 +64,7 @@ public class Spring {
     }
 
     /**
-     * Для транзакций через передачу на выполнениее класса с методом где реализована работа с БД
+     * For transactions through the transmission to perform a class with a method which implements the database
      *
      * @return
      */
@@ -73,7 +73,7 @@ public class Spring {
     }
 
     /**
-     * Для транзакций обычным образом с открытием именованной транзакции
+     * For transactions in the usual way with the opening transaction named
      *
      * @return
      */
@@ -85,17 +85,15 @@ public class Spring {
         try {
             factory = new ClassPathXmlApplicationContext("/ru/apertum/qsystem/spring/qsContext.xml");
         } catch (BeanCreationException ex) {
-            throw new ServerException("Ошибка создания класса-бина контекста приложения: \"" + ex.getCause().getMessage() + "\"\n"
-                    + "Бин с ошибкой \"" + ex.getBeanName() + "\""
-                    + "Сообщение об ошибке: \"" + ex.getCause().getMessage() + "\"\n" + ex);
+            throw new ServerException("Failed to create class-bin application context: \"" + ex.getCause().getMessage() + "\"\n"
+                    + "bin error \"" + ex.getBeanName() + "\""
+                    + "Error message: \"" + ex.getCause().getMessage() + "\"\n" + ex);
         } catch (BeansException ex) {
-            throw new ServerException("Ошибка класса-бина контекста приложения: \"" + ex.getCause().getMessage() + "\"\n"
-                    + "Сообщение об ошибке: \"" + ex.getCause().getMessage() + "\"\n" + ex);
+            throw new ServerException("Error class bean application context: \"" + ex.getCause().getMessage() + "\"\n"
+                    + "Error message: \"" + ex.getCause().getMessage() + "\"\n" + ex);
         } catch (Exception ex) {
-            throw new ServerException("Ошибка создания контекста приложения: " + ex);
+            throw new ServerException("Failed to create application context: " + ex);
         }
-        //sessionFactory = factory.getBean("mySessionFactory", SessionFactoryImpl.class);
-        //ht = new HibernateTemplate(sessionFactory);
 
         final ComboPooledDataSource bds = (ComboPooledDataSource) factory.getBean("c3p0DataSource");
         driverClassName = bds.getDriverClass();

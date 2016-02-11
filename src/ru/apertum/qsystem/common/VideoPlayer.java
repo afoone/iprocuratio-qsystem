@@ -41,9 +41,7 @@ import javax.swing.JPanel;
 import ru.apertum.qsystem.common.exceptions.ClientException;
 
 /**
- * Может проигрывать фидеофайлы *.mpg, *.jpg. Для этого используется установленная предварительно на компьютере среда JMF. По умолчанию показ ролика бесконечно
- * в цикле.
- *
+ * Can play video files * .mpg, * .jpg. It uses pre-installed JMF on the computer. Default video display infinite loop.
  * @author Evgeniy Egorov
  */
 public class VideoPlayer extends JPanel {

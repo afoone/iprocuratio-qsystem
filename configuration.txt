@@ -7,7 +7,7 @@ QSKY_IGNOR_ADDR 193.107;213.5
 QSKY_QSYS_VER 1.4.1
 QSKY_TIME_SHIFT 0
 QSKY_USERS qadmin=qadminqadmin;demo=demo#4_5;kievfriend=kievfriend@3;prozoriy.office=v6gb8aj#10
-demo_QSYSPREREG_CAPTION СУО QSystem: демонстрация предварительной записи через интернет.
+demo_QSYSPREREG_CAPTION СУО QSystem: demonstration appointment via the Internet.
 demo_QSYSPREREG_LOGO /resources/img/label.png
 demo_QSYSPREREG_TITLE СУО QSystem!
 demo_QSYSTEM_SERVER_ADDR 82.146.53.79

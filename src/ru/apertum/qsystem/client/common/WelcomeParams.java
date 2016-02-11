@@ -39,9 +39,10 @@ import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ClientException;
 
 /**
- * Класс загрузки и предоставления настроек пункта регистрации
+ * Class of download and registration point settings
  *
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  */
 public class WelcomeParams {
 
@@ -54,7 +55,7 @@ public class WelcomeParams {
         private static final WelcomeParams INSTANCE = new WelcomeParams();
     }
     /**
-     * Константы хранения параметров в файле.
+     * Constants store settings in the file.
      */
     private static final String POINT = "point";
     private static final String PAPER_WIDHT = "paper_widht";
@@ -67,9 +68,9 @@ public class WelcomeParams {
     private static final String PRNAME = "printer.Name";
     private static final String EXECUTIVE = "printer.MediaSizeName.EXECUTIVE";
     private static final String PRINTABLE_AREA = "printer.MediaPrintableArea";
-    // параметр размера бумаги. A0 A1 ... A10 B0 B2 ... B10 C0 C1 ... C6. Пустое или неверное значение - отключен
+    // Paper size option. A0 A1 ... A10 B0 B2 ... B10 C0 C1 ... C6. A blank or incorrect value - disabled
     private static final String MEDIA_SIZE_NAME = "printer.MediaSizeName";
-    // параметр размера бумаги <ширина,длинна>. Пустое или неверное значение - отключен
+    // setting the paper size <width, length>. A blank or incorrect value - disabled
     private static final String FIND_MEDIA = "printer.findMedia";
     private static final String ORIENTATION_PRINT = "printer.OrientationRequested";
     private static final String LOGO = "logo";
@@ -90,18 +91,18 @@ public class WelcomeParams {
     private static final String BOTTOM_TXT = "bottom_text";
     private static final String ASK_LIMIT = "ask_limit";
     private static final String PAGE_LINES_COUNT = "page_lines_count";
-    private static final String INFO_BUTTON = "info_button";// кнопка информационной системы на пункте регистрации
-    private static final String RESPONSE_BUTTON = "response_button";// - кнопка обратной связи на пункте регистрации
-    private static final String ADVANCE_BUTTON = "advance_button";// - кнопка предварительной записи на пункте регистрации
-    private static final String STAND_ADVANCE_BUTTON = "stand_advance_button";// - присутствие кнопки предварительной записи на пункте регистрации (0/1)
-    private static final String NUMERIC_KEYBOARD = "numeric_keyboard";// - цифровая клавиатура при вводе юзерской инфы
-    private static final String ALPHABETIC_KEYBOARD = "alphabetic_keyboard";// - буквенная клавиатура при вводе юзерской инфы
-    private static final String SPEC_KEYBOARD = "spec_keyboard";// - буквенная клавиатура при вводе юзерской инфы
-    private static final String INPUT_FONT_SIZE = "input_font_size";// - размер шрифта вводимого текста клиентом
-    private static final String LINES_BUTTON_COUNT = "lines_button_count";// - количество рядов кнопок на киоске, если будет привышение, то начнотся листание страниц
-    private static final String ONE_COLUMN_BUTTON_COUNT = "one_column_buttons_count";// - количество кнопок на киоске в один стобл
-    private static final String TWO_COLUMNS_BUTTON_COUNT = "two_columns_buttons_count";// - количество кнопок на киоске в два столба
-    private static final String BUTTON_TYPE = "button_type";// - это внешний вид кнопки. Если его нет или ошибочный, то стандартный вид. Иначе номер вида или картинка в png желательно
+    private static final String INFO_BUTTON = "info_button";// Information System button on the registration point
+    private static final String RESPONSE_BUTTON = "response_button";// - feedback button on the registration point
+    private static final String ADVANCE_BUTTON = "advance_button";// - appointment at the registration point button
+    private static final String STAND_ADVANCE_BUTTON = "stand_advance_button";// - the presence of pre-registered button on the registration point (0/1)
+    private static final String NUMERIC_KEYBOARD = "numeric_keyboard";// - numeric keypad when entering yuzersky of information
+    private static final String ALPHABETIC_KEYBOARD = "alphabetic_keyboard";// - alphabetic keypad when entering yuzersky of information
+    private static final String SPEC_KEYBOARD = "spec_keyboard";// - alphabetic keypad when entering yuzersky of information
+    private static final String INPUT_FONT_SIZE = "input_font_size";// - the font size of the text input client
+    private static final String LINES_BUTTON_COUNT = "lines_button_count";// - the number of rows of buttons on the kiosk, if exceeded, then will flip the pages 
+    private static final String ONE_COLUMN_BUTTON_COUNT = "one_column_buttons_count";// - the number of buttons on the kiosk in one post
+    private static final String TWO_COLUMNS_BUTTON_COUNT = "two_columns_buttons_count";// - the number of buttons on the kiosk in the two columns
+    private static final String BUTTON_TYPE = "button_type";// - it is the appearance of a button. If it is not or wrong, the standard form. Otherwise, type in the number or png image, it is desirable
     private static final String SERV_BUTTON_TYPE = "serv_button_type";// - вид управляющей кнопки на пункте регистрации. Если его нет или ошибочный, то стандартный вид. Иначе номер вида или картинка в png желательно
     private static final String SERV_VERT_BUTTON_TYPE = "serv_vert_button_type";// - вид вертикальной управляющей кнопки на пункте регистрации. Если его нет или ошибочный, то стандартный вид. Иначе номер вида или картинка в png желательно
     private static final String BUTTON_IMG = "button_img";// - это присутствие пиктограммы услуги или группы на кнопке

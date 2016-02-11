@@ -21,6 +21,7 @@ import java.util.ArrayList;
 /**
  *
  * @author egorov
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  */
 public class ServerEvents implements IServerListener {
 

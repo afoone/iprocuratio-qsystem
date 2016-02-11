@@ -32,17 +32,24 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 /**
- * Класс предварительно записанного кастомера.
- * Должен уметь работать с БД, генерировать XML. И прочая логика.
+ * Class preregistered customer. Must be able to work with the database to
+ * generate XML. And other logic.
+ * 
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  */
 @Entity
 @Table(name = "advance")
 public class QAdvanceCustomer implements Serializable {
 
+    /**
+     * Serial Version UID
+     */
+    private static final long serialVersionUID = -1207167453068587402L;
+
     public QAdvanceCustomer() {
     }
-    
+
     public QAdvanceCustomer(Long id) {
         this.id = id;
     }
@@ -50,9 +57,10 @@ public class QAdvanceCustomer implements Serializable {
     public QAdvanceCustomer(String inputData) {
         this.inputData = inputData;
     }
+
     @Id
     @Column(name = "id")
-    //@GeneratedValue(strategy = GenerationType.AUTO)
+    // @GeneratedValue(strategy = GenerationType.AUTO)
     @Expose
     @SerializedName("id")
     private Long id = new Date().getTime() % 1000000;
@@ -64,6 +72,7 @@ public class QAdvanceCustomer implements Serializable {
     public void setId(Long id) {
         this.id = id;
     }
+
     @Column(name = "advance_time")
     @Temporal(TemporalType.TIMESTAMP)
     @Expose
@@ -77,6 +86,7 @@ public class QAdvanceCustomer implements Serializable {
     public void setAdvanceTime(Date advanceTime) {
         this.advanceTime = advanceTime;
     }
+
     @Column(name = "priority")
     @Expose
     @SerializedName("priority")
@@ -89,7 +99,8 @@ public class QAdvanceCustomer implements Serializable {
     public void setPriority(Integer priority) {
         this.priority = priority;
     }
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+
+    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinColumn(name = "service_id")
     @Expose
     @SerializedName("service")
@@ -102,10 +113,13 @@ public class QAdvanceCustomer implements Serializable {
     public void setService(QService service) {
         this.service = service;
     }
+
     /**
-     * Связь с таблицей клиентов(фамилии, имена, адреса...) если клиент авторизовался перед тем как записаться на будующее время
+     * Communication with the customer table (first and last names, addresses...) 
+     * if the client is logged in before you sign up 
+     * for future developments 
      */
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinColumn(name = "clients_authorization_id")
     @Expose
     @SerializedName("authorization")
@@ -118,6 +132,7 @@ public class QAdvanceCustomer implements Serializable {
     public void setAuthorizationCustomer(QAuthorizationCustomer authorizationCustomer) {
         this.authorizationCustomer = authorizationCustomer;
     }
+
     @Column(name = "input_data")
     @Expose
     @SerializedName("input_data")
@@ -130,6 +145,7 @@ public class QAdvanceCustomer implements Serializable {
     public void setInputData(String inputData) {
         this.inputData = inputData;
     }
+
     @Column(name = "comments")
     @Expose
     @SerializedName("comments")

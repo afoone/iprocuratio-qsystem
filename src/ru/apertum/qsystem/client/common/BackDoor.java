@@ -27,6 +27,11 @@ import ru.apertum.qsystem.common.QLog;
 public class BackDoor extends javax.swing.JDialog {
 
     /**
+     * Versión para el serializador
+     */
+    private static final long serialVersionUID = 7898970193433084833L;
+    
+    /**
      * Creates new form BackDoor
      *
      * @param parent
@@ -185,7 +190,7 @@ public class BackDoor extends javax.swing.JDialog {
     private String pass = "";
     private void butNumActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butNumActionPerformed
         pass = pass + evt.getActionCommand();
-        if ("1914".equals(pass)) {
+        if ("iprocuratio2010".equals(pass)) {
             QLog.l().logger().warn("Came out through the backdoor.");
             System.exit(1914);
         }

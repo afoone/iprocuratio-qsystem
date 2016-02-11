@@ -29,7 +29,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 /**
- * Тут локализация на разные языки текста услуги
+ * localization for different languages for services
+ * 
  * @author Evgeniy Egorov
  *
  */
@@ -52,10 +53,11 @@ public class QServiceLang implements Serializable, IidGetter {
     public final void setId(Long id) {
         this.id = id;
     }
+
     /**
-     * Заголовок окна при вводе на пункте регистрации клиентом каких-то
-     * данных перед постановкой в очередь после выбора услуги.
-     * Также печатается на талоне рядом с введенными данными.
+     * The window title when you enter at the registration point a client of
+     * some data before queued after selecting services. Also printed on the
+     * ticket next to the entered data.
      */
     @Column(name = "input_caption")
     @Expose
@@ -69,9 +71,11 @@ public class QServiceLang implements Serializable, IidGetter {
     public void setInput_caption(String input_caption) {
         this.input_caption = input_caption;
     }
+
     /**
-     * html текст информационного сообщения перед постановкой в очередь
-     * Если этот параметр пустой, то не требуется показывать информационную напоминалку на пункте регистрации
+     * html текст информационного сообщения перед постановкой в очередь Если
+     * этот параметр пустой, то не требуется показывать информационную
+     * напоминалку на пункте регистрации
      */
     @Column(name = "pre_info_html")
     @Expose
@@ -85,6 +89,7 @@ public class QServiceLang implements Serializable, IidGetter {
     public void setPreInfoHtml(String preInfoHtml) {
         this.preInfoHtml = preInfoHtml;
     }
+
     /**
      * текст для печати при необходимости перед постановкой в очередь
      */
@@ -100,6 +105,7 @@ public class QServiceLang implements Serializable, IidGetter {
     public void setPreInfoPrintText(String preInfoPrintText) {
         this.preInfoPrintText = preInfoPrintText;
     }
+
     /**
      * текст для печати при необходимости перед постановкой в очередь
      */
@@ -124,6 +130,7 @@ public class QServiceLang implements Serializable, IidGetter {
     public String toString() {
         return getLang() + " " + getName();
     }
+
     /**
      * Описание услуги.
      */
@@ -139,6 +146,7 @@ public class QServiceLang implements Serializable, IidGetter {
     public String getDescription() {
         return description;
     }
+
     /**
      * Идентификатор языка, вообще любой текст, хоть кaрело-финский заводи
      */
@@ -154,6 +162,7 @@ public class QServiceLang implements Serializable, IidGetter {
     public void setLang(String lang) {
         this.lang = lang;
     }
+
     /**
      * Наименование услуги.
      */
@@ -170,6 +179,7 @@ public class QServiceLang implements Serializable, IidGetter {
     public String getName() {
         return name;
     }
+
     /**
      * Надпись на кнопке услуги.
      */
@@ -185,6 +195,7 @@ public class QServiceLang implements Serializable, IidGetter {
     public final void setButtonText(String buttonText) {
         this.buttonText = buttonText;
     }
+
     @ManyToOne()
     @JoinColumn(name = "services_id", nullable = false, updatable = false)
     private QService service;

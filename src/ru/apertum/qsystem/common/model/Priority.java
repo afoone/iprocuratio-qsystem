@@ -18,13 +18,12 @@ package ru.apertum.qsystem.common.model;
 
 import java.util.Arrays;
 import ru.apertum.qsystem.common.Uses;
+
 /**
- * @author Evgeniy Egorov
- * Реализация преоритета очередников.
- * приоритет - целое число.
- * чем больше число, тем выше приоритет.
- * ограничения на возможный приоритет находятся в Uses.
- * по умолчанию приоритет Uses.PRIORITY_NORMAL;
+ * @author Evgeniy Egorov The implementation of the priority waiting list.
+ *         priority - integer. the higher the number, the higher the priority.
+ *         restrictions on possible priority are Uses. The default priority
+ *         Uses.PRIORITY_NORMAL;
  *
  */
 public final class Priority implements IPriority {
@@ -36,16 +35,14 @@ public final class Priority implements IPriority {
     }
 
     public Priority() {
-        // по умолчанию приоритет обычный
+        // The default priority is 'normal'
         priority = Uses.PRIORITY_NORMAL;
     }
 
     @Override
     public void set(int priority) {
         if (Arrays.binarySearch(Uses.PRIORITYS, priority) == -1) {
-            throw new IllegalArgumentException("Не возможно установить значение приоритета." +
-                    " Значение " + priority +
-                    " не принадлежит допустимым значениям: " + Arrays.toString(Uses.PRIORITYS));
+            throw new IllegalArgumentException("Unable to set the priority value." + " Value " + priority + " It does not belong to the allowed values: " + Arrays.toString(Uses.PRIORITYS));
         }
         this.priority = priority;
     }
@@ -56,12 +53,12 @@ public final class Priority implements IPriority {
     }
 
     /**
-     * сравнение двух приоритетов.
-     * приоритет - целое число, чем больше число тем выше приоритет
+     * comparison of two priorities. priority - an integer greater than the number of those
+     * выше приоритет
+     * 
      * @param priority
-     * @return 0 - приоритеты равны
-     *         1 - выше, чем приоритет в параметре 
-     *         -1 - ниже, чем приоритет в параметре
+     * @return 0 - Priorities are equal 1 - is higher than the priority parameter -1 - lower than the priority setting
+     *         
      */
     @Override
     public int compareTo(IPriority priority) {

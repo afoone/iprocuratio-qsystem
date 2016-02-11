@@ -29,7 +29,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 /**
- * Класс предварительно записанного кастомера. Должен уметь работать с БД, генерировать XML. И прочая логика.
+ * Class for additional information for customer. Es una clase para mantener
+ * datos del customer, si se consideran necesarios
  *
  * @author Evgeniy Egorov
  */
@@ -37,19 +38,95 @@ import javax.persistence.TemporalType;
 @Table(name = "clients_authorization")
 public class QAuthorizationCustomer implements Serializable {
 
+    /**
+     * Versión para la serialización
+     */
+    private static final long serialVersionUID = -4373378736874515730L;
+
+    /**
+     * Constructor vacío
+     */
     public QAuthorizationCustomer() {
     }
-    // это добавлено для предвариловки с вводом клиентских данных
 
+    /**
+     * Constructor con el nombre de pila
+     * 
+     * @param name
+     */
     public QAuthorizationCustomer(String name) {
         this.name = name;
     }
+
+    /**
+     * Identificador
+     */
     @Id
     @Column(name = "id")
-    //@GeneratedValue(strategy = GenerationType.AUTO)
     @Expose
     @SerializedName("id")
     private Long id;
+
+    /**
+     * autorización ¿? no se para que es
+     */
+    @Column(name = "auth_id")
+    @Expose
+    @SerializedName("auth_id")
+    private String authId;
+
+    /**
+     * Nombre de pila
+     */
+    @Column(name = "name")
+    @Expose
+    @SerializedName("name")
+    private String name;
+
+    /**
+     * El 'middle name', podría usarse para el segundo apellido
+     */
+    @Column(name = "otchestvo")
+    @Expose
+    @SerializedName("otchestvo")
+    private String otchestvo;
+
+    /**
+     * Apellido
+     */
+    @Column(name = "surname")
+    @Expose
+    @SerializedName("surname")
+    private String surname;
+
+    /**
+     * Cumpleaños, no se para qué
+     */
+    @Column(name = "birthday")
+    @Expose
+    @SerializedName("birthday")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date birthday;
+
+    /**
+     * Comentarios
+     */
+    @Column(name = "comments")
+    @Expose
+    @SerializedName("comments")
+    private String comments;
+
+    // *****************
+    // GETTERS Y SETTERS
+    // *****************
+
+    public String getComments() {
+        return comments;
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments;
+    }
 
     public Long getId() {
         return id;
@@ -59,11 +136,6 @@ public class QAuthorizationCustomer implements Serializable {
         this.id = id;
     }
 
-    @Column(name = "auth_id")
-    @Expose
-    @SerializedName("auth_id")
-    private String authId;
-
     public String getAuthId() {
         return authId;
     }
@@ -72,11 +144,6 @@ public class QAuthorizationCustomer implements Serializable {
         this.authId = authId;
     }
 
-    @Column(name = "name")
-    @Expose
-    @SerializedName("name")
-    private String name;
-
     public String getName() {
         return name;
     }
@@ -84,35 +151,6 @@ public class QAuthorizationCustomer implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
-    @Column(name = "surname")
-    @Expose
-    @SerializedName("surname")
-    private String surname;
-
-    public String getSurname() {
-        return surname;
-    }
-
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
-    @Column(name = "otchestvo")
-    @Expose
-    @SerializedName("otchestvo")
-    private String otchestvo;
-
-    public String getOtchestvo() {
-        return otchestvo;
-    }
-
-    public void setOtchestvo(String otchestvo) {
-        this.otchestvo = otchestvo;
-    }
-    @Column(name = "birthday")
-    @Expose
-    @SerializedName("birthday")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date birthday;
 
     public Date getBirthday() {
         return birthday;
@@ -122,17 +160,20 @@ public class QAuthorizationCustomer implements Serializable {
         this.birthday = birthday;
     }
 
-    @Column(name = "comments")
-    @Expose
-    @SerializedName("comments")
-    private String comments;
-
-    public String getComments() {
-        return comments;
+    public String getSurname() {
+        return surname;
     }
 
-    public void setComments(String comments) {
-        this.comments = comments;
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
+    public String getOtchestvo() {
+        return otchestvo;
+    }
+
+    public void setOtchestvo(String otchestvo) {
+        this.otchestvo = otchestvo;
     }
 
 }

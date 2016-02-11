@@ -28,9 +28,10 @@ import javax.persistence.Temporal;
 import javax.persistence.Transient;
 
 /**
- * Сетевые настройки системы. Класс работает как с XML, так и с hibernate.
+ * Network system settings. The class works as with XML, and with hibernate.
  *
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  */
 @Entity
 @Table(name = "net")
@@ -38,6 +39,7 @@ public class QNet implements Serializable {
 
     public QNet() {
     }
+
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -50,8 +52,9 @@ public class QNet implements Serializable {
     public Long getId() {
         return id;
     }
+
     /**
-     * Порт сервера для приема команд.
+     * Server port for receiving commands.
      */
     @Column(name = "server_port")
     private Integer serverPort;
@@ -63,8 +66,9 @@ public class QNet implements Serializable {
     public Integer getServerPort() {
         return serverPort;
     }
+
     /**
-     * Порт сервера через который передается web содержимое отчетов.
+     * server port that sends the contents of the web reports.
      */
     @Column(name = "web_server_port")
     private Integer webServerPort;
@@ -76,8 +80,9 @@ public class QNet implements Serializable {
     public Integer getWebServerPort() {
         return webServerPort;
     }
+
     /**
-     * UDP Порт клиента, на который идет рассылка широковещательных пакетов.
+     * UDP port of the client, which is sending broadcast packets.
      */
     @Column(name = "client_port")
     private Integer clientPort;
@@ -89,8 +94,9 @@ public class QNet implements Serializable {
     public Integer getClientPort() {
         return clientPort;
     }
+
     /**
-     * Время начала приема заявок на постановку в очередь
+     * The start time of applications for queuing
      */
     @Column(name = "start_time")
     @Temporal(javax.persistence.TemporalType.TIME)
@@ -103,8 +109,9 @@ public class QNet implements Serializable {
     public Date getStartTime() {
         return startTime;
     }
+
     /**
-     * Время завершения приема заявок на постановку в очередь
+     * Completion time of receiving applications for queuing
      */
     @Column(name = "finish_time")
     @Temporal(javax.persistence.TemporalType.TIME)
@@ -117,8 +124,10 @@ public class QNet implements Serializable {
     public Date getFinishTime() {
         return finishTime;
     }
+
     /**
-     * Версия БД или конфигурационного файла. Для определения совместимости и возможности вариантов ардейта.
+     * DB version or configuration file. To determine the compatibility and
+     * ardeyta options.
      */
     @Column(name = "version")
     private String version = "Не присвоена";
@@ -134,10 +143,12 @@ public class QNet implements Serializable {
     // Numeration
     /////////////////////////////////////////////////////////
     /**
-     * Для настроек нурациии. Сдесь будут имеццо настройки для ведения нумерирования клиентов и формирования для них индикации на табло.
+     * For nuratsiii settings. Here you will imetstso setting for conducting
+     * numerirovaniya customers and shaping them for display on the scoreboard.
      */
+
     /**
-     * Ограничение по максимально возможному номеру.
+     * Limit the maximum possible number.
      */
     @Column(name = "last_number")
     private Integer lastNumber;
@@ -149,8 +160,9 @@ public class QNet implements Serializable {
     public void setLastNumber(Integer lastNumber) {
         this.lastNumber = lastNumber;
     }
+
     /**
-     * Количество доп. приоритетов
+     * Number ext. priorities
      */
     @Column(name = "ext_priority")
     private Integer extPriorNumber;
@@ -176,8 +188,9 @@ public class QNet implements Serializable {
     public void setFirstNumber(Integer firstNumber) {
         this.firstNumber = firstNumber;
     }
+
     /**
-     * 0 - общая нумерация, 1 - для каждой услуги своя нумерация
+     * 0 - total numbering, 1 - for each service has its own numbering
      */
     @Column(name = "numering")
     private Boolean numering;
@@ -189,8 +202,9 @@ public class QNet implements Serializable {
     public void setNumering(Boolean numering) {
         this.numering = numering;
     }
+
     /**
-     * 0 - кабинет, 1 - окно, 2 - стойка
+     * 0 - office, 1 - box 2 - Front
      */
     @Column(name = "point")
     private Integer point;
@@ -202,8 +216,9 @@ public class QNet implements Serializable {
     public void setPoint(Integer point) {
         this.point = point;
     }
+
     /**
-     * 0 - нет оповещения, 1 - только сигнал, 2 - сигнал + голос
+     * 0 - No alarm, 1 - only signal 2 - voice signal +
      */
     @Column(name = "sound")
     private Integer sound;
@@ -215,8 +230,9 @@ public class QNet implements Serializable {
     public void setSound(Integer sound) {
         this.sound = sound;
     }
+
     /**
-     * 0 - по умолчанию, ну и т.д. по набору звуков
+     * 0 - the default, well, etc. on a set of sounds
      */
     @Column(name = "voice")
     private Integer voice = 0;
@@ -228,8 +244,10 @@ public class QNet implements Serializable {
     public void setVoice(Integer voice) {
         this.voice = voice;
     }
+
     /**
-     * Время нахождения в блеклисте в минутах. 0 - попавшие в блекслист не блокируются
+     * The residence time in the blacklist in minutes. 0 - trapped in the
+     * blacklist are not blocked
      */
     @Column(name = "black_time")
     private Integer blackTime = 0;
@@ -241,8 +259,10 @@ public class QNet implements Serializable {
     public void setBlackTime(Integer blackTime) {
         this.blackTime = blackTime;
     }
+
     /**
-     * Это ID филиала в котором установлена система. Нужно для идентификации в облачном сервисе
+     * This ID of the branch in which the system is installed. It is necessary
+     * to identify the service in the cloud
      */
     @Column(name = "branch_id")
     private Long branchOfficeId;
@@ -254,9 +274,11 @@ public class QNet implements Serializable {
     public void setBranchOfficeId(Long branchOfficeId) {
         this.branchOfficeId = branchOfficeId;
     }
+
     /**
-     * URL облачного сервиса, к которому будет коннектится плагин Зачем это в БД? Да чо-бы проще было настраивать, а то придется как-то плагин отдельно
-     * админить. не все догадаются.
+     * URL cloud service, which will plug connects to the database Why? Yes, Cho
+     * would have been easier to customize, and you will have to somehow
+     * separate plugin admin. not all guess.
      */
     @Column(name = "sky_server_url")
     private String skyServerUrl;
@@ -268,9 +290,12 @@ public class QNet implements Serializable {
     public void setSkyServerUrl(String skyServerUrl) {
         this.skyServerUrl = skyServerUrl;
     }
+
     /**
-     * адрес зонного сервера отображения хода очереди, к которому будет коннектится плагин Зачем это в БД? Да чо-бы проще было настраивать, а то придется как-то
-     * плагин отдельно админить. не все догадаются.
+     * address zone display turn to move the server to which you will plug
+     * connects to the database Why? Yes, Cho would have been easier to
+     * customize, and you will have to somehow separate plugin admin. not all
+     * guess.
      */
     @Column(name = "zone_board_serv_addr")
     private String zoneBoardServAddr;
@@ -278,6 +303,7 @@ public class QNet implements Serializable {
     public String getZoneBoardServAddr() {
         return zoneBoardServAddr;
     }
+
     @Transient
     private String[] zbsal = null;
 
@@ -293,8 +319,9 @@ public class QNet implements Serializable {
     public void setZoneBoardServAddr(String zoneBoardServAddr) {
         this.zoneBoardServAddr = zoneBoardServAddr;
     }
+
     /**
-     * Это порт зонального сервера отображения очереди на котором он будет принимать данные Нужно для идентификации в облачном сервисе
+     * 
      */
     @Column(name = "zone_board_serv_port")
     private Integer zoneBoardServPort;
@@ -308,7 +335,8 @@ public class QNet implements Serializable {
     }
 
     /**
-     * Это количество повторных вызовов посетителя перед тем как при очередном повторном вызове клиент будет удален
+     * This is the port zone display queue server on which it will receive data
+     * necessary to identify the service in the cloud
      */
     @Column(name = "limit_recall")
     private Integer limitRecall;
@@ -322,7 +350,7 @@ public class QNet implements Serializable {
     }
 
     /**
-     * Свободное расположение кнопок на пункте регистрации
+     * Free arrangement of buttons on the registration point
      */
     @Column(name = "button_free_design")
     private Boolean buttonFreeDesign;

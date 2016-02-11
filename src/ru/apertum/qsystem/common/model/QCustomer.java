@@ -49,9 +49,13 @@ import ru.apertum.qsystem.server.model.IidGetter;
 import ru.apertum.qsystem.server.model.response.QRespEvent;
 
 /**
- * @author Evgeniy Egorov Реализация клиета Наипростейший "очередник". Используется для организации простой очереди. Если используется СУБД, то сохранение
- * происходит при смене ссостояния. ВАЖНО! Всегда изменяйте статус кастомера при его изменении, особенно при его удалении.
- *
+ * * Client implementation simply "waiting list". Used to organize a simple
+ * queue. If you are using the database, the saving takes place when changing
+ * state. IMPORTANT! Always change customer status when it changes, especially
+ * when it is removed.
+ * 
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
+ * @author Evgeniy Egorov
  */
 @Entity
 @Table(name = "clients")
@@ -62,18 +66,23 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
 
     /**
-     * создаем клиента имея только его номер в очереди. Префикс не определен, т.к. еще не знаем об услуге куда его поставить. Присвоем кастомену услугу -
-     * присвоются и ее атрибуты.
+     * We create a customer with only his number in the queue. Prefix is
+     * defined, because still do not know about the service where to put it.
+     * Assign customer service - priority and its attributes.
      *
-     * @param number номер клиента в очереди
+     * @param number
+     *            customer number in the queue
      */
     public QCustomer(int number) {
         this.number = number;
         id = new Date().getTime();
-        setStandTime(new Date()); // действия по инициализации при постановке
-        // все остальные всойства кастомера об услуге куда попал проставятся в самой услуге при помещении кастомера в нее
-        QLog.l().logger().debug("Создали кастомера с номером " + number);
+        setStandTime(new Date());
+        // Initialization steps when setting all the other properties customer
+        // about the service which was put down in the service itself by placing
+        // it customer
+        QLog.l().logger().debug("Created customer number " + number);
     }
+
     @Expose
     @SerializedName("id")
     private Long id = new Date().getTime();
@@ -81,7 +90,8 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     @Id
     @Column(name = "id")
     @Override
-    //@GeneratedValue(strategy = GenerationType.AUTO) простаяляем уникальный номер времени создания.
+    // @GeneratedValue(strategy = GenerationType.AUTO) marked as unique
+    // room creation time.
     public Long getId() {
         return id;
     }
@@ -89,8 +99,10 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setId(Long id) {
         this.id = id;
     }
+
     /**
-     * АТРИБУТЫ "ОЧЕРЕДНИКА" персональный номер, именно по нему система ведет учет и управление очередниками номер - целое число
+     * ATTRIBUTES "waiting" personal number, it is for him the system keeps a
+     * record of and manage the waiting room - integer It's the waiting number
      */
     @Expose
     @SerializedName("number")
@@ -119,12 +131,16 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
 
     /**
-     * АТРИБУТЫ "ОЧЕРЕДНИКА" состояние кастомера, именно по нему система знает что сейчас происходит с кастомером Это состояние менять только если кастомер уже
-     * готов к этому и все другие параметры у него заполнены. Если данные пишутся в БД, то только по состоянию завершенности обработки над ним. Так что если
-     * какая-то итерация закончена и про кастомера должно занестись в БД, то как и надо выставлять что кастомер ЗАКОНЧИЛ обрабатываться, а уж потом менять ,
-     * если надо, его атрибуты и менять состояние, например на РЕДИРЕКТЕННОГО.
+     * ATTRIBUTES "waiting" state customer, it is for him the system knows what
+     * is happening with customer This state change only if customer is already
+     * ready for this and all other options had been filled. If data is written
+     * to the database, it is only as of completion of the processing on it. So
+     * if some iteration is finished and about customer should enter into the
+     * database, as well as necessary to expose that customer finish processing,
+     * and then change, if necessary, its attributes and change the state, such
+     * as REDIREKTENNOGO.
      *
-     * состояние клиента
+     * client state
      *
      * @see ru.apertum.qsystem.common.Uses
      */
@@ -137,83 +153,90 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
 
     /**
-     * Специально для редиректа и возврата после редиректа
+     * Especially for redirection and return after a redirect
      *
      * @param state
-     * @param newServiceId - при редиректе и возврате после редиректа тут будет ID той услуги куда редиректим или возвращвем, причем услуга у кастомера все еще
-     * прежняя, т.е. так в которой завершили с ним работать
+     * @param newServiceId
+     *            - When redirecting and return after a redirect here to ID of
+     *            the service which redirects or refund, and service at customer
+     *            still the same, ie, way in which the completed work with him
      */
     public void setState(CustomerState state, Long newServiceId) {
         this.state = state;
         stateIn = state.ordinal();
 
-        // можно будет следить за тенью кастомера у юзера и за его изменениями
+        // it will be possible to follow the shadow kastomer at the user and its
+        // changes
         if (getUser() != null) {
             getUser().getShadow().setCustomerState(state);
         }
 
         switch (state) {
-            case STATE_DEAD:
-                QLog.l().logger().debug("Статус: Кастомер с номером \"" + getPrefix() + getNumber() + "\" идет домой по неявке");
-                getUser().getPlanService(getService()).inkKilled();
-                // хер с ним, сохраним чтоб потом почекать неподошедших. сохраним кастомера в базе
-                // только финиш_тайм надо проставить, хер сним, и старт_тайм тоже, ядренбатон
-                setStartTime(new Date());
-                setFinishTime(new Date());
-                saveToSelfDB();
-                break;
-            case STATE_WAIT:
-                QLog.l().logger().debug("Статус: Кастомер пришел и ждет с номером \"" + getPrefix() + getNumber() + "\"");
-                break;
-            case STATE_WAIT_AFTER_POSTPONED:
-                QLog.l().logger().debug("Статус: Кастомер был возвращен из отложенных по истечению времени и ждет с номером \"" + getPrefix() + getNumber() + "\"");
-                break;
-            case STATE_WAIT_COMPLEX_SERVICE:
-                QLog.l().logger().debug("Статус: Кастомер был опять поставлен в очередь т.к. услуга комплекстая и ждет с номером \"" + getPrefix() + getNumber() + "\"");
-                break;
-            case STATE_INVITED:
-                QLog.l().logger().debug("Статус: Пригласили кастомера с номером \"" + getPrefix() + getNumber() + "\"");
-                break;
-            case STATE_INVITED_SECONDARY:
-                QLog.l().logger().debug("Статус: Пригласили повторно в цепочке обработки кастомера с номером \"" + getPrefix() + getNumber() + "\"");
-                break;
-            case STATE_REDIRECT:
-                QLog.l().logger().debug("Статус: Кастомера редиректили с номером \"" + getPrefix() + getNumber() + "\"");
-                getUser().getPlanService(getService()).inkWorked(new Date().getTime() - getStartTime().getTime());
-                // сохраним кастомера в базе
-                saveToSelfDB();
-                break;
-            case STATE_WORK:
-                QLog.l().logger().debug("Начали работать с кастомером с номером \"" + getPrefix() + getNumber() + "\"");
-                getUser().getPlanService(getService()).upWait(new Date().getTime() - getStandTime().getTime());
-                break;
-            case STATE_WORK_SECONDARY:
-                QLog.l().logger().debug("Статус: Далее по цепочки начали работать с кастомером с номером \"" + getPrefix() + getNumber() + "\"");
-                break;
-            case STATE_BACK:
-                QLog.l().logger().debug("Статус: Кастомер с номером \"" + getPrefix() + getNumber() + "\" вернут в преднюю услугу");
-                break;
-            case STATE_FINISH:
-                QLog.l().logger().debug("Статус: С кастомером с номером \"" + getPrefix() + getNumber() + "\" закончили работать");
-                getUser().getPlanService(getService()).inkWorked(new Date().getTime() - getStartTime().getTime());
-                // сохраним кастомера в базе
-                saveToSelfDB();
-                break;
-            case STATE_POSTPONED:
-                QLog.l().logger().debug("Кастомер с номером \"" + getPrefix() + getNumber() + "\" идет ждать в список отложенных");
-                getUser().getPlanService(getService()).inkWorked(new Date().getTime() - getStartTime().getTime());
-                // сохраним кастомера в базе
-                saveToSelfDB();
-                break;
+        case STATE_DEAD:
+            QLog.l().logger().debug("Status: customer number \"" + getPrefix() + getNumber() + "\" going home by withdrawal");
+            getUser().getPlanService(getService()).inkKilled();
+            // Direct trans: dick to him, then to keep pochekat nepodoshedshih.
+            // kastomer keep in the database only need to put down finish_taym,
+            // dick Sneem and start_taym too yadrenbaton
+            setStartTime(new Date());
+            setFinishTime(new Date());
+            saveToSelfDB();
+            break;
+        case STATE_WAIT:
+            QLog.l().logger().debug("Status: customer came and waiting number \"" + getPrefix() + getNumber() + "\"");
+            break;
+        case STATE_WAIT_AFTER_POSTPONED:
+            QLog.l().logger().debug("Status: customer was returned from the pending expiration time and waiting number \"" + getPrefix() + getNumber() + "\"");
+            break;
+        case STATE_WAIT_COMPLEX_SERVICE:
+            QLog.l().logger().debug("Status: customer was again put in place since powerful complex service and waiting number \"" + getPrefix() + getNumber() + "\"");
+            break;
+        case STATE_INVITED:
+            QLog.l().logger().debug("Status: invited customer number \"" + getPrefix() + getNumber() + "\"");
+            break;
+        case STATE_INVITED_SECONDARY:
+            QLog.l().logger().debug("Status: Invited again customer processing chain with the number \"" + getPrefix() + getNumber() + "\"");
+            break;
+        case STATE_REDIRECT:
+            QLog.l().logger().debug("Status: customer redirect or number \"" + getPrefix() + getNumber() + "\"");
+            getUser().getPlanService(getService()).inkWorked(new Date().getTime() - getStartTime().getTime());
+            // saving customer to database
+            saveToSelfDB();
+            break;
+        case STATE_WORK:
+            QLog.l().logger().debug("We started to work with a customer number \"" + getPrefix() + getNumber() + "\"");
+            getUser().getPlanService(getService()).upWait(new Date().getTime() - getStandTime().getTime());
+            break;
+        case STATE_WORK_SECONDARY:
+            QLog.l().logger().debug("Status: Further along the chain started to work with a customer number \"" + getPrefix() + getNumber() + "\"");
+            break;
+        case STATE_BACK:
+            QLog.l().logger().debug("Status: customer number \"" + getPrefix() + getNumber() + "\" return to the fron service");
+            break;
+        case STATE_FINISH:
+            QLog.l().logger().debug("Status: customer number \"" + getPrefix() + getNumber() + "\" finished work");
+            getUser().getPlanService(getService()).inkWorked(new Date().getTime() - getStartTime().getTime());
+            // customer save on database
+            saveToSelfDB();
+            break;
+        case STATE_POSTPONED:
+            QLog.l().logger().debug("Status: Customer number \"" + getPrefix() + getNumber() + "\" is waiting for the list of pending");
+            getUser().getPlanService(getService()).inkWorked(new Date().getTime() - getStartTime().getTime());
+            // saving customer to database
+            saveToSelfDB();
+            break;
         }
 
-        // поддержка расширяемости плагинами
+        // Support for plugins
+        // Lo que hace es llamar a una clase IChangeCustomerStateEvent tras
+        // ejecutar un cambio
+        // Algo así como un hook
         for (final IChangeCustomerStateEvent event : ServiceLoader.load(IChangeCustomerStateEvent.class)) {
-            QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+            QLog.l().logger().info("Call SPI expansion. Description: " + event.getDescription());
             try {
                 event.change(this, state, newServiceId);
             } catch (Throwable tr) {
-                QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
+                QLog.l().logger().error("Call SPI expansion will fail. Description: " + tr);
             }
         }
     }
@@ -225,36 +248,49 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         resps.add(event);
     }
 
+    /**
+     * Saving customer to database
+     */
     private void saveToSelfDB() {
-        // сохраним кастомера в базе
+        // Save customer to database
         final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("SomeTxName");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
         try {
-            if (input_data == null) { // вот жеж черд дернул выставить констрейнт на то что введенные данные не нул, а они этот ввод редко нужкн
+            if (input_data == null) { // Well here's the devil pulled put of
+                                      // constraints on the fact that the data
+                                      // entered is not zero, and they rarely
+                                      // need this entry
                 input_data = "";
             }
             Spring.getInstance().getHt().saveOrUpdate(this);
-            // костыль. Если кастомер оставил отзывы прежде чем попал в БД, т.е. во время работы еще с ним.
+            // crutch. If kastomer left reviews before you hit the database, ie
+            // even during operation with it.
             if (resps.size() > 0) {
                 Spring.getInstance().getHt().saveAll(resps);
                 resps.clear();
             }
         } catch (Exception ex) {
             Spring.getInstance().getTxManager().rollback(status);
-            throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+            throw new ServerException("Error Saving Customer to database \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
         }
         Spring.getInstance().getTxManager().commit(status);
-        QLog.l().logger().debug("Сохранили.");
+        QLog.l().logger().debug("Stored customer.");
     }
 
+    /**
+     * Devuelve el estado del customer
+     * 
+     * @return
+     */
     @Transient
     public CustomerState getState() {
         return state;
     }
+
     /**
-     * ПРИОРИТЕТ "ОЧЕРЕДНИКА"
+     * PRIORITY "waiting list"
      */
     @Expose
     @SerializedName("priority")
@@ -270,16 +306,29 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
 
     /**
-     * Сравнение очередников для выбора первого. Участвует приоритет очередника. сравним по приоритету, потом по времени
+     * Compare waiting to select the first. Participates priority waiting list.
+     * compare the priority, then the time
      *
      * @param customer
-     * @return используется отношение "обслужится позднее"(сравнение дает ответ на вопрос "я обслужусь позднее чем тот в параметре?") 1 - "обслужится позднее"
-     * чем кастомер в параметре, -1 - "обслужится раньше" чем кастомер в параметре, 0 - одновременно -1 - быстрее обслужится чем кастомер из параметров, т.к.
-     * встал раньше 1 - обслужится после чем кастомер из параметров, т.к. встал позднее
+     * @returnusing the ratio of "Maintenance later" (the comparison gives an
+     *              answer to the question "I cater for at least one parameter?"
+     *              )
+     * 
+     *              (1) - "Maintenance later" than kastomer parameter,
+     * 
+     *              (- 1) - "Maintenance sooner" than kastomer parameter, (0) -
+     *              at the same time
+     * 
+     * 
+     *              (- 1) - be serviced faster than kastomer parameter because
+     *              got up before (1) - than kastomer be serviced after the
+     *              parameters, since arose later
      */
     @Override
     public int compareTo(QCustomer customer) {
-        int resultCmp = -1 * getPriority().compareTo(customer.getPriority()); // (-1) - т.к.  больший приоритет быстрее обслужится
+        // (-1) - because higher priority will be serviced
+
+        int resultCmp = -1 * getPriority().compareTo(customer.getPriority());
 
         if (resultCmp == 0) {
             if (this.getStandTime().before(customer.getStandTime())) {
@@ -289,13 +338,14 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
             }
         }
         if (resultCmp == 0) {
-            QLog.l().logger().warn("Клиенты не могут быть равны.");
+            QLog.l().logger().warn("Clients may not be equal.");
             resultCmp = -1;
         }
         return resultCmp;
     }
+
     /**
-     * К какой услуге стоит. Нужно для статистики.
+     * Which service is worth. It is necessary for statistics.
      */
     @Expose
     @SerializedName("to_service")
@@ -308,21 +358,25 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
 
     /**
-     * Кастомеру проставим атрибуты услуги включая имя, описание, префикс. Причем префикс ставится раз и навсегда. При добавлении кастомера в услугу
-     * addCustomer() происходит тоже самое + выставляется префикс, если такой атрибут не добавлен в XML-узел кастомера
+     * Customer places a service attributes including name, description, prefix.
+     * And the prefix is put once and for all. When you add in customer's
+     * addCustomer () service comes + exhibited the same prefix, if this
+     * attribute is not added to the XML-node customer
      *
-     * @param service не передавать тут NULL
+     * @param service
+     *            not to transfer here NULL
      */
     public void setService(QService service) {
         this.service = service;
-        // Префикс для кастомера проставится при его создании, один раз и на всегда.
+        // Prefix for customer bear when it is created, once and for all.
         if (getPrefix() == null) {
             setPrefix(service.getPrefix());
         }
-        QLog.l().logger().debug("Клиента \"" + getFullNumber() + "\" поставили к услуге \"" + service.getName() + "\"");
+        QLog.l().logger().debug("Client \"" + getFullNumber() + "\" put to the service \"" + service.getName() + "\"");
     }
+
     /**
-     * Результат работы с пользователем
+     * The result of the user
      */
     private QResult result;
 
@@ -335,13 +389,14 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setResult(QResult result) {
         this.result = result;
         if (result == null) {
-            QLog.l().logger().debug("Обозначать результат работы с кастомером не требуется");
+            QLog.l().logger().debug("Denotes the result of working with kastomer not required");
         } else {
-            QLog.l().logger().debug("Обозначили результат работы с кастомером: \"" + result.getName() + "\"");
+            QLog.l().logger().debug("Denotes the result of working with stadiometer: \"" + result.getName() + "\"");
         }
     }
+
     /**
-     * Кто его обрабатывает. Нужно для статистики.
+     * Who handles. (wich user) It is necessary for statistics.
      */
     @Expose
     @SerializedName("from_user")
@@ -355,12 +410,13 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
 
     public void setUser(QUser user) {
         this.user = user;
-        QLog.l().logger().debug("Клиенту \"" + getPrefix() + getNumber() + (user == null ? " юзера нету, еще он его не вызывал\"" : " опредилили юзера \"" + user.getName() + "\""));
+        QLog.l().logger().debug("Customer \"" + getPrefix() + getNumber() + (user == null ? " the user is not present, yet he did not cause it\"" : " define user \"" + user.getName() + "\""));
     }
+
     /**
-     * Префикс услуги, к которой стоит кастомер.
+     * Prefix service which is customer.
      *
-     * Строка префикса.
+     * String prefix
      */
     @Expose
     @SerializedName("prefix")
@@ -379,6 +435,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setPrefix(String prefix) {
         this.prefix = prefix == null ? "" : prefix;
     }
+
     @Expose
     @SerializedName("stand_time")
     private Date standTime;
@@ -392,6 +449,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setStandTime(Date date) {
         this.standTime = date;
     }
+
     @Expose
     @SerializedName("start_time")
     private Date startTime;
@@ -405,6 +463,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setStartTime(Date date) {
         this.startTime = date;
     }
+
     private Date callTime;
 
     public void setCallTime(Date date) {
@@ -415,6 +474,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public Date getCallTime() {
         return callTime;
     }
+
     @Expose
     @SerializedName("finish_time")
     private Date finishTime;
@@ -428,12 +488,13 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setFinishTime(Date date) {
         this.finishTime = date;
     }
+
     @Expose
     @SerializedName("input_data")
     private String input_data = "";
 
     /**
-     * Введенные кастомером данные на пункте регистрации.
+     * Kastomer entered data at the point of registration.
      *
      * @return
      */
@@ -445,16 +506,19 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setInput_data(String input_data) {
         this.input_data = input_data;
     }
+
     /**
-     * Список услуг в которые необходимо вернуться после редиректа Новые услуги для возврата добвляются в начало списка. При возврате берем первую из списка и
-     * удаляем ее.
+     * The list of services that need to come back after redirect New services
+     * are added to return to the top of the list. In return we take the first
+     * on the list and delete it.
      */
     private final LinkedList<QService> serviceBack = new LinkedList<>();
 
     /**
-     * При редиректе если есть возврат. то добавим услугу для возврата
+     * When you redirect if there is a return. then add the service to return
      *
-     * @param service в эту услугу нужен возврат
+     * @param service
+     *            at which service need to come back
      */
     public void addServiceForBack(QService service) {
         serviceBack.addFirst(service);
@@ -462,15 +526,16 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
 
     /**
-     * Куда вернуть если работу закончили но кастомер редиректенный
+     * Where to return when the work is completed by customer redirection
      *
-     * @return вернуть в эту услугу
+     * @return return to this service
      */
     @Transient
     public QService getServiceForBack() {
         needBack = serviceBack.size() > 1;
         return serviceBack.pollFirst();
     }
+
     @Expose
     @SerializedName("need_back")
     private boolean needBack = false;
@@ -478,8 +543,9 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public boolean needBack() {
         return needBack;
     }
+
     /**
-     * Комментариии юзеров о кастомере при редиректе и отправки в отложенные
+     * Comment on user's customer when redirecting and sent to the deferred
      */
     @Expose
     @SerializedName("temp_comments")
@@ -493,6 +559,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setTempComments(String tempComments) {
         this.tempComments = tempComments;
     }
+
     /**
      *
      */
@@ -508,8 +575,9 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setPostponedStatus(String postponedStatus) {
         this.postponedStatus = postponedStatus;
     }
+
     /**
-     * Период отложенности в минутах. 0 - бессрочно;
+     * Deferred Period in minutes. 0 - indefinitely
      */
     @Expose
     @SerializedName("postpone_period")
@@ -521,7 +589,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
 
     /**
-     * ID того кто видит отложенного, NULL для всех
+     * ID of who sees deferred, NULL for all
      */
     @Expose
     @SerializedName("is_mine")
@@ -537,7 +605,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
 
     /**
-     * Количество повторных вызовов этого клиента
+     * Number of repeated calls of this customer
      */
     @Expose
     @SerializedName("recall_cnt")
@@ -561,6 +629,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         startPontpone = new Date().getTime();
         finishPontpone = startPontpone + postponPeriod * 1000 * 60;
     }
+
     private long startPontpone = 0;
     private long finishPontpone = 0;
 
@@ -570,14 +639,11 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
 
     /**
-     * Вернет строку, описывающую кастомера
+     * Returns a string describing kastomer
      */
     @Override
     public String toString() {
-        return getFullNumber()
-                + (getInput_data().isEmpty() ? "" : " " + getInput_data())
-                + (postponedStatus.isEmpty() ? "" : " " + postponedStatus + (postponPeriod > 0 ? " (" + postponPeriod + "min.)" : "")
-                        + (isMine != null ? " Private!" : ""));
+        return getFullNumber() + (getInput_data().isEmpty() ? "" : " " + getInput_data()) + (postponedStatus.isEmpty() ? "" : " " + postponedStatus + (postponPeriod > 0 ? " (" + postponPeriod + "min.)" : "") + (isMine != null ? " Private!" : ""));
     }
 
     @Transient

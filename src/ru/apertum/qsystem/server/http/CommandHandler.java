@@ -45,7 +45,7 @@ public class CommandHandler extends AbstractHandler {
         final int status;
         switch (target) {
             case "/qsystem/ws":
-                // этот урл нужно учесть, что бы запрос в jetty дальше пробросился по хандлерам.
+                // This URL is necessary to consider that a request to the jetty further forwarding the on Handler.
                 return;
             case "/qsystem/info":
                 QLog.l().logger().trace("HTTP Задание: /qsystem/info");
