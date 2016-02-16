@@ -625,11 +625,7 @@ private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
         //regexp = "[<>a-z:]*";
         Pattern p = Pattern.compile(regexp);
         String st = "your url http://asd.saedrhg.sdh.sdh.ru here";
-        //st = "your url http://www.asd.com here";
-        //st = "your url https://www.asd.com here";
-        //st = "your url mailto:asd@asd.com here";
-        //st = "your url .<br> <a  href=\"mailto:evgeniy.egorov@gmail.com>email: e|vgeniy.egorov@gmail.com</a> here";
-        st = "your url .<br> <a  href=\"https://code.google.com:8080/p/apertum-qsystem/issues/list.php?asd=13&qwe=re2\">email: e|vgeniy.egorov@gmail.com</a> here";
+        st = "your url .<br> <a  href=\"https://code.google.com:8080/p/apertum-qsystem/issues/list.php?asd=13&qwe=re2\">email: qsystem@iprocuratio.com</a> here";
         Matcher m = p.matcher(st);
 
         while (m.find()) {

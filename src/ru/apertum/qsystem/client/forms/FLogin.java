@@ -49,32 +49,33 @@ import ru.apertum.qsystem.server.model.QUserList;
 /**
  *
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  */
 public class FLogin extends javax.swing.JDialog {
 
     /**
-     * Результат
+     * Result
      */
     private static boolean ok = false;
     /**
-     * Количество неудачных попыток, если 0 то бесконечно
+     * The number of failed attempts, if 0 is infinitely
      */
     private static int count = 0;
     private static int was = 0;
     /**
-     * Параметры соединения.
+     * Connection settings
      */
     private INetProperty netProperty;
     private QUserList userList;
     private JFrame parent;
     /**
-     * Уровни логирования
+     * login levels - roles
      */
     public static final int LEVEL_USER = 1;
     public static final int LEVEL_REPORT = 2;
     public static final int LEVEL_ADMIN = 3;
     /**
-     * текущий уровень доступа для диалога
+     * the current level of access for dialogue
      */
     private int level = LEVEL_USER;
 
@@ -113,13 +114,13 @@ public class FLogin extends javax.swing.JDialog {
         return localeMap.getString(key);
     }
     /**
-     * Надпись о доступе
+     * The inscription on access ¿?
      */
     private static final String LABEL_USER = " " + getLocaleMessage("messages.access.work");
     private static final String LABEL_REPORT = " " + getLocaleMessage("messages.access.report");
     private static final String LABEL_ADMIN = " " + getLocaleMessage("messages.access.admin");
     /**
-     * Используемая ссылка на диалоговое окно.
+     * Used link to the dialog box.
      */
     private static FLogin loginForm;
 
@@ -171,9 +172,9 @@ public class FLogin extends javax.swing.JDialog {
     }
 
     /**
-     * Чтоб не дублировать код
+     * In order not to duplicate code
      *
-     * @param str список пользователей
+     * @param str a list of users
      */
     private void afterCreate(Object[] users) {
         jLabel1.setText(getLocaleMessage("jLabel1.text"));
@@ -203,7 +204,7 @@ public class FLogin extends javax.swing.JDialog {
                 }
             }
         }
-        //привязка помощи к форме.
+        //binding assistance to the form.
         final Helper helper = Helper.getHelp(level == LEVEL_ADMIN ? "ru/apertum/qsystem/client/help/admin.hs" : "ru/apertum/qsystem/client/help/client.hs");
         helper.enableHelpKey(qPanel1, "loginning");
         addWindowListener(new WindowAdapter() {
@@ -262,7 +263,7 @@ public class FLogin extends javax.swing.JDialog {
     }
 
     /**
-     * Логирование без предварительно созданного списка пользователей. Этот список определяется путем отправки задания на сервер.
+     * Logging without pre-established list of users. This list is determined by sending the job to the server.
      *
      * @param netProperty свойства коннекта
      * @param owner относительно этого контрола модальность и позиционирование
@@ -272,7 +273,7 @@ public class FLogin extends javax.swing.JDialog {
      * @return залогиневшiйся юзер.
      */
     public static QUser logining(INetProperty netProperty, JFrame owner, boolean modal, int count, int level) {
-        QLog.l().logger().info("Вход в систему.");
+        QLog.l().logger().info("User login.");
         if (loginForm == null) {
             loginForm = new FLogin(netProperty, owner, modal, level);
         } else {
@@ -293,7 +294,7 @@ public class FLogin extends javax.swing.JDialog {
         if (!ok) {
             System.exit(0);
         }
-        QLog.l().logger().info("Вход в систему выполнен. Пользователь \"" + loginForm.comboBoxUser.getSelectedItem() + "\", уровень доступа \"" + level + "\".");
+        QLog.l().logger().info("Login executed. User \"" + loginForm.comboBoxUser.getSelectedItem() + "\", access level \"" + level + "\".");
         final File f = new File("temp/lusr");
         try {
             try (FileOutputStream fos = new FileOutputStream(f)) {
@@ -306,7 +307,7 @@ public class FLogin extends javax.swing.JDialog {
     }
 
     /**
-     * Логирование имея уже готовый список возможных пользователей для логирования.
+     * Logging of having a ready-made list of possible users for logging.
      *
      * @param userList список пользователей
      * @param owner относительно этого контрола модальность и позиционирование
@@ -316,7 +317,7 @@ public class FLogin extends javax.swing.JDialog {
      * @return залогиневшийся юзер.
      */
     public static QUser logining(QUserList userList, JFrame owner, boolean modal, int count, int level) {
-        QLog.l().logger().info("Вход в систему.");
+        QLog.l().logger().info("User login.");
         if (loginForm == null) {
             loginForm = new FLogin(userList, owner, modal, level);
         } else {
@@ -326,18 +327,16 @@ public class FLogin extends javax.swing.JDialog {
         }
         FLogin.count = count;
         if (owner == null) {
-            // Отцентирируем
-            final Toolkit kit = Toolkit.getDefaultToolkit();
+            // atienda: lo elimino porque no parece hacer nada
+   //        final Toolkit kit = Toolkit.getDefaultToolkit();
             loginForm.setLocationRelativeTo(null);
-            //loginForm.setLocation((Math.round(kit.getScreenSize().width - loginForm.getWidth()) / 2),
-            //        (Math.round(kit.getScreenSize().height - loginForm.getHeight()) / 2));
         }
         Uses.closeSplash();
         loginForm.setVisible(true);
         if (!ok) {
             System.exit(0);
         }
-        QLog.l().logger().info("Вход в систему выполнен. Пользователь \"" + loginForm.comboBoxUser.getSelectedItem() + "\", уровень доступа \"" + level + "\".");
+        QLog.l().logger().info("Login Executed. User  \"" + loginForm.comboBoxUser.getSelectedItem() + "\", access level \"" + level + "\".");
         final File f = new File("temp/lusr");
         try {
             try (FileOutputStream fos = new FileOutputStream(f)) {
@@ -350,7 +349,7 @@ public class FLogin extends javax.swing.JDialog {
     }
 
     /**
-     * Получить выбранного юзера по его имени для разных случаев.
+     * Get the selected user by name for different occasions.
      */
     private interface IGetUser {
 

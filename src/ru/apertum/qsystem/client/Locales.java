@@ -46,11 +46,21 @@ import ru.apertum.qsystem.common.Uses;
 public final class Locales {
 
     private static final ResourceBundle translate = ResourceBundle.getBundle("ru/apertum/qsystem/common/resources/i3-label", Locales.getInstance().getLangCurrent());
+    
+    /** 
+     * Instancia estática de la clase
+     */
+    private static Locales INSTANCE = null;
+    
 
     public static String locMes(String key) {
         return translate.getString(key);
     }
 
+    
+    /**
+     * Contructor de la clase Locales
+     */
     private Locales() {
 
         // Descargar plugins desde la carpeta de pluggins
@@ -79,6 +89,8 @@ public final class Locales {
             final InputStream in;
             final InputStreamReader inR;
             try {
+                QLog.l().logger().debug("   Retrieving properties: " +"/" + s + ".properties");
+
                 in = settings.getClass().getResourceAsStream("/" + s + ".properties");
                 inR = new InputStreamReader(in, "UTF-8");
             } catch (UnsupportedEncodingException ex) {
@@ -91,7 +103,7 @@ public final class Locales {
                 QLog.l().logger().error("Language description " + list1.getName() + " did NOT load. " + ex);
                 continue;
             }
-            QLog.l().logger().debug("   Langusge: " + settings.getProperty("name") + " " + settings.getProperty("lng") + "_" + settings.getProperty("country"));
+            QLog.l().logger().debug("   Language: " + settings.getProperty("name") + " " + settings.getProperty("lng") + "_" + settings.getProperty("country"));
 
             final Locale locale = new Locale(settings.getProperty("lng"), settings.getProperty("country"));
             locales.put(s, locale);
@@ -185,14 +197,22 @@ public final class Locales {
      */
     private final LinkedHashMap<String, String> lngs_welcome = new LinkedHashMap<>();
 
+    
+    /**
+     * Devuelve la instancia de la clase Locales
+     * @return
+     */
     public static Locales getInstance() {
-        return LocalesHolder.INSTANCE;
+        if (Locales.INSTANCE == null) {
+            Locales.INSTANCE= new Locales();
+        }
+        return Locales.INSTANCE;
     }
 
-    private static class LocalesHolder {
 
-        private static final Locales INSTANCE = new Locales();
-    }
+    
+    
+    
     private final String WELCOME = "welcome";
     private final String LANG_CURRENT = "locale.current";
     private final String WELCOME_LNG = "welcome.multylangs";

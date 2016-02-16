@@ -769,8 +769,8 @@ public final class Uses {
      * @param folder из этой папки закрузим.
      */
     public static void loadPlugins(String folder) {
-        // Загрузка плагинов из папки plugins
-        QLog.l().logger().info("Загрузка плагинов из папки plugins.");
+        // Download plug-ins folder plugins
+        QLog.l().logger().info("Download plug-ins folder plugins.");
         final File[] list = new File(folder).listFiles((File dir, String name) -> name.toLowerCase().endsWith(".jar"));
         if (list != null && list.length != 0) {
             final URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();

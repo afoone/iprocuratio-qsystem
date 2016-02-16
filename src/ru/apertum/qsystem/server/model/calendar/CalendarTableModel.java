@@ -32,7 +32,7 @@ import ru.apertum.qsystem.common.exceptions.ClientException;
 import ru.apertum.qsystem.server.Spring;
 
 /**
- * Модель для отображения сетки календаля
+ * Model to display the calendar grid
  * @author Evgeniy Egorov
  */
 public class CalendarTableModel extends AbstractTableModel {
@@ -41,7 +41,7 @@ public class CalendarTableModel extends AbstractTableModel {
     private List<FreeDay> days_del;
 
     public CalendarTableModel(long calcId) {
-        QLog.l().logger().debug("Создаем модель для календаря");
+        QLog.l().logger().debug("Create a model for the calendar");
         this.calcId = calcId;
         days = getFreeDays(calcId);
         days_del = new ArrayList<>(days);

@@ -1087,7 +1087,7 @@ public class UBForm extends JFrame {
     public static void main(String args[]) {
         QLog.initial(args, 5);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
-        // Загрузка плагинов из папки plugins
+        // Download plug-ins folder plugins
         if (QConfig.cfg().isPlaginable()) {
             Uses.loadPlugins("./plugins/");
         }

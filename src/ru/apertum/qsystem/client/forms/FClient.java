@@ -1619,7 +1619,7 @@ public final class FClient extends javax.swing.JFrame {
         QLog.initial(args, 1);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
         Uses.startSplashClient();
-        // Загрузка плагинов из папки plugins
+        // Download plug-ins folder plugins
         if (QConfig.cfg().isPlaginable()) {
             Uses.loadPlugins("./plugins/");
         }

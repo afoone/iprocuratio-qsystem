@@ -37,11 +37,18 @@ import ru.apertum.qsystem.common.exceptions.ClientException;
 /**
  * Created on 3 Март 2009 г., 14:54
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda
  */
 public class FAbout extends javax.swing.JDialog {
 
     /**
-     * Используемая ссылка на диалоговое окно.
+     * Versión del serializador
+     */
+    private static final long serialVersionUID = 8319982080973966646L;
+    
+    
+    /**
+     * Used link to the dialog box.
      */
     private static FAbout aboutForm;
 

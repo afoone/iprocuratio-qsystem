@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 
 <!-- 
-    Это скрипт формирования инсталяционного приложения
+    This is a script installation application form
 -->
 <installation version="5.0">
 
     <!-- 
-        Информация о продукте.
+        Product Information
     -->
     <info>
         <appname>QSystem</appname>
         <appversion>[]</appversion>
         <authors>
-            <author name="Product of ''Apertum Projects''" email="info@apertum.ru"/>
-            <author name="Develop by Evgeniy V. Egorov" email="egorov@apertum.ru"/>
+            <author name="Maintained by iProcuratio Consultores''" email="info@iprocuratio.com"/>
+            <author name="Based on a sofware by Evgeniy Egorov" email="egorov@apertum.ru"/>
         </authors>
-        <url>http://www.qsystem.info</url>
+        <url>http://www.iprocuratio.com</url>
         <javaversion>1.8.0</javaversion>
         <requiresjdk>no</requiresjdk>
         <run-privileged condition="izpack.windowsinstall.vista|izpack.macinstall"/>
@@ -23,7 +23,7 @@
 	
 
     <!-- 
-        Параметры GUI. Пока без применения look & feel
+       GUI Options. While no application look & feel
     -->
     <guiprefs width="800" height="480" resizable="yes">
         <modifier key="labelGap" value="2"/>

@@ -42,7 +42,7 @@ public abstract class ATListModel<T extends IidGetter> extends AbstractListModel
 
     private void createList() {
         items = load();
-        QLog.l().logger().info("Создали список.");
+        QLog.l().logger().info("Create a list.");
     }
 
     public LinkedList<T> getItems() {

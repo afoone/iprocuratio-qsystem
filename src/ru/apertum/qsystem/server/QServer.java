@@ -128,7 +128,7 @@ public class QServer extends Thread {
 
         final long start = System.currentTimeMillis();
 
-        // Загрузка плагинов из папки plugins
+        // Download plug-ins folder plugins
         if (!QConfig.cfg().isNoPlugins()) {
             Uses.loadPlugins("./plugins/");
         }

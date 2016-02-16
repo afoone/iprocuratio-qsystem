@@ -190,7 +190,7 @@ public class BackDoor extends javax.swing.JDialog {
     private String pass = "";
     private void butNumActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butNumActionPerformed
         pass = pass + evt.getActionCommand();
-        if ("iprocuratio2010".equals(pass)) {
+        if ("kdsfjadksjfdksjfklasdj".equals(pass)) {
             QLog.l().logger().warn("Came out through the backdoor.");
             System.exit(1914);
         }

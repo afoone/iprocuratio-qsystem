@@ -51,7 +51,7 @@ public abstract class ATreeModel<T extends ITreeIdGetter> extends DefaultTreeMod
             }
         }
         bildTree(getRoot(), nodes);
-        QLog.l().logger().info("Создали дерево.");
+        QLog.l().logger().info("Create tree.");
     }
 
     private void bildTree(T root, LinkedList<T> nodes) {

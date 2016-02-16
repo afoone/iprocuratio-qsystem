@@ -36,11 +36,20 @@ import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 
 /**
- *
+ * Creo que es la clase para seleccionar un idioma en el kiosco
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  */
 public class FLangsOnWelcome extends javax.swing.JFrame {
 
+    /**
+     * Versión para la serialización
+     */
+    private static final long serialVersionUID = -1747402073065386546L;
+    
+    /**
+     * 
+     */
     final private ArrayList<JCheckBox> bxs = new ArrayList<>();
 
     /**

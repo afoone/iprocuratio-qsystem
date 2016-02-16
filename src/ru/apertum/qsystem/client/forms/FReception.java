@@ -1725,7 +1725,7 @@ public class FReception extends javax.swing.JFrame {
         QLog.initial(args, 2);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
         Uses.showSplash();
-        // Загрузка плагинов из папки plugins
+        // Download plug-ins folder plugins
         if (QConfig.cfg().isPlaginable()) {
             Uses.loadPlugins("./plugins/");
         }

@@ -17,6 +17,7 @@
     <target name="-check-ivy">
         <available property="have.ivy" resource="fr/jayasoft/ivy/ant/antlib.xml"/>
     </target>
+	
     <target depends="-check-ivy" name="-ivy-define" unless="have.ivy">
         <echo level="debug" message="ivy.home : ${ivy.home}"/>
         <taskdef resource="fr/jayasoft/ivy/ant/antlib.xml" uri="antlib:fr.jayasoft.ivy.ant">
