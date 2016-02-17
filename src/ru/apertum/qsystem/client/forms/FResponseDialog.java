@@ -55,9 +55,21 @@ import ru.apertum.qsystem.common.model.ATalkingClock;
 import ru.apertum.qsystem.server.model.response.QRespItem;
 
 /**
+ * Dialogues to get a response. The response of a dialog is made of a QRespItem
+ * item
+ * 
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  */
 public class FResponseDialog extends javax.swing.JDialog {
+
+    // Version for serialization
+    private static final long serialVersionUID = -7720238707031005300L;
+
+    // The result (the response of a Dialog)
+    private static QRespItem result = null;
+
+    private static int delay = 10000;
 
     private static FResponseDialog respDialog;
 
@@ -75,8 +87,10 @@ public class FResponseDialog extends javax.swing.JDialog {
             buttonInRoot.setFont(WelcomeParams.getInstance().btnFont);
             jButton2.setFont(WelcomeParams.getInstance().btnFont);
         }
-        
-        //На верхней панели пункта регистрации, там где заголовок и картинка в углу, можно вывести вэб-контент по URL. Оставьте пустым если не требуется
+
+        // На верхней панели пункта регистрации, там где заголовок и картинка в
+        // углу, можно вывести вэб-контент по URL. Оставьте пустым если не
+        // требуется
         if (!WelcomeParams.getInstance().topURL.isEmpty()) {
             panelUp.removeAll();
             final BrowserFX bro = new BrowserFX();
@@ -86,23 +100,22 @@ public class FResponseDialog extends javax.swing.JDialog {
             bro.load(Uses.prepareAbsolutPathForImg(WelcomeParams.getInstance().topURL));
         }
     }
-    private static QRespItem result = null;
-    private static int delay = 10000;
 
     public static void setRoot(QRespItem rootEl) {
         root = rootEl;
         preLevel = rootEl;
     }
+
     /**
-     * Корень справочной системы
+     * The root of the help system
      */
     private static QRespItem root;
     /**
-     * Предыдущий уровень кнопок
+     * Previous buttons level
      */
     private static QRespItem preLevel;
     /**
-     * Текущий уровень кнопок
+     * The current level of key
      */
     private static QRespItem level;
     private static ResourceMap localeMap = null;
@@ -115,18 +128,26 @@ public class FResponseDialog extends javax.swing.JDialog {
     }
 
     /**
-     * Статический метод который показывает модально диалог выбора времени для предварительной записи клиентов.
+     * Static method that shows a modal dialog to select the time for the
+     * appointment of customers.
      *
-     * @param parent фрейм относительно которого будет модальность
-     * @param respList XML-список возможных отзывов
-     * @param modal модальный диалог или нет
-     * @param fullscreen растягивать форму на весь экран и прятать мышку или нет
-     * @param delay задержка перед скрытием диалога. если 0, то нет автозакрытия диалога
-     * @return XML-описание результата предварительной записи, по сути это номерок. если null, то отказались от предварительной записи
+     * @param parent
+     *            frame against the dialog is modal
+     * @param respList
+     *            XML-a list of possible feedbacks
+     * @param modal
+     *            modal dialog or not (boolean)
+     * @param fullscreen
+     *            shape stretch to full screen and hiding your mouse or not
+     * @param delay
+     *            delay before hiding the dialogue. If 0, there is no
+     *            Auto-dialogue
+     * @return XML-description of the appointment, in fact it is numbered. if
+     *         null, the abandoned appointment
      */
     public static QRespItem showResponseDialog(Frame parent, QRespItem respList, boolean modal, boolean fullscreen, int delay) {
         FResponseDialog.delay = delay;
-        QLog.l().logger().info("Выбор отзыва");
+        QLog.l().logger().info("Selecting date of appointment");
         if (respDialog == null) {
             respDialog = new FResponseDialog(parent, modal);
             respDialog.setTitle(getLocaleMessage("dialog.title"));
@@ -160,6 +181,10 @@ public class FResponseDialog extends javax.swing.JDialog {
         return result;
     }
 
+    /**
+     * 
+     * @param level
+     */
     private void showLevel(QRespItem level) {
         panelMain.removeAll();
         panelMain.repaint();
@@ -180,27 +205,27 @@ public class FResponseDialog extends javax.swing.JDialog {
         } else {
             int delta = 10;
             switch (Toolkit.getDefaultToolkit().getScreenSize().width) {
-                case 640:
-                    delta = 10;
-                    break;
-                case 800:
-                    delta = 20;
-                    break;
-                case 1024:
-                    delta = 30;
-                    break;
-                case 1366:
-                    delta = 25;
-                    break;
-                case 1280:
-                    delta = 40;
-                    break;
-                case 1600:
-                    delta = 50;
-                    break;
-                case 1920:
-                    delta = 60;
-                    break;
+            case 640:
+                delta = 10;
+                break;
+            case 800:
+                delta = 20;
+                break;
+            case 1024:
+                delta = 30;
+                break;
+            case 1366:
+                delta = 25;
+                break;
+            case 1280:
+                delta = 40;
+                break;
+            case 1600:
+                delta = 50;
+                break;
+            case 1920:
+                delta = 60;
+                break;
             }
             if (QConfig.cfg().isDebug() || QConfig.cfg().isDemo()) {
                 delta = 25;
@@ -230,6 +255,7 @@ public class FResponseDialog extends javax.swing.JDialog {
             setSize(getWidth() + s(), getHeight());
         }
     }
+
     private static int s = 1;
 
     private static int s() {
@@ -245,18 +271,20 @@ public class FResponseDialog extends javax.swing.JDialog {
 
     private static class RespButton extends JButton {
 
-        final Long id;
+        // Versión para la serialización
+        private static final long serialVersionUID = -7862377627875958931L;
         final QRespItem el;
 
         public RespButton(QRespItem item, String resourceName) {
             this.el = item;
-            id = item.getId();
             setFocusPainted(false);
             setText(item.getHTMLText());
             setBorder(new CompoundBorder(new BevelBorder(BevelBorder.RAISED), new BevelBorder(BevelBorder.RAISED)));
             addActionListener((ActionEvent e) -> {
                 if (el.isLeaf()) {
-                    //Если услуга требует ввода данных пользователем, то нужно получить эти данные из диалога ввода, т.к. потом при постановки в очередь предварительных
+                    // Если услуга требует ввода данных пользователем, то нужно
+                    // получить эти данные из диалога ввода, т.к. потом при
+                    // постановки в очередь предварительных
                     // нет ввода данных, только номера регистрации.
                     String inputData = null;
                     if (el.getInput_required()) {
@@ -271,7 +299,8 @@ public class FResponseDialog extends javax.swing.JDialog {
                 }
             });
 
-            // Нарисуем картинку на кнопке если надо. Загрузить можно из файла или ресурса
+            // Нарисуем картинку на кнопке если надо. Загрузить можно из файла
+            // или ресурса
             if ("".equals(resourceName)) {
                 background = null;
             } else {
@@ -301,8 +330,9 @@ public class FResponseDialog extends javax.swing.JDialog {
                     }
                 }
             }
-            //займемся внешним видом
-            // либо просто стандартная кнопка, либо картинка на кнопке если она есть
+            // займемся внешним видом
+            // либо просто стандартная кнопка, либо картинка на кнопке если она
+            // есть
             if (background == null) {
                 setBorder(new CompoundBorder(new BevelBorder(BevelBorder.RAISED), new BevelBorder(BevelBorder.RAISED)));
             } else {
@@ -324,7 +354,8 @@ public class FResponseDialog extends javax.swing.JDialog {
         @Override
         public void paintComponent(Graphics g) {
             if (background != null) {
-                //Image scaledImage = background.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH); // это медленный вариант
+                // Image scaledImage = background.getScaledInstance(getWidth(),
+                // getHeight(), Image.SCALE_SMOOTH); // это медленный вариант
                 final Image scaledImage = resizeToBig(background, getWidth(), getHeight());
                 final Graphics2D g2 = (Graphics2D) g;
                 g2.drawImage(scaledImage, 0, 0, null, null);
@@ -349,6 +380,7 @@ public class FResponseDialog extends javax.swing.JDialog {
             return resizedImage;
         }
     }
+
     /**
      * Таймер, по которому будем выходить в корень меню.
      */
@@ -361,11 +393,13 @@ public class FResponseDialog extends javax.swing.JDialog {
     };
 
     /**
-     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of this method is always
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         panelAll = new QPanel(WelcomeParams.getInstance().backgroundImg);
@@ -402,14 +436,8 @@ public class FResponseDialog extends javax.swing.JDialog {
 
         javax.swing.GroupLayout panelUpLayout = new javax.swing.GroupLayout(panelUp);
         panelUp.setLayout(panelUpLayout);
-        panelUpLayout.setHorizontalGroup(
-            panelUpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(LabelCaption, javax.swing.GroupLayout.DEFAULT_SIZE, 1071, Short.MAX_VALUE)
-        );
-        panelUpLayout.setVerticalGroup(
-            panelUpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(LabelCaption, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 148, Short.MAX_VALUE)
-        );
+        panelUpLayout.setHorizontalGroup(panelUpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addComponent(LabelCaption, javax.swing.GroupLayout.DEFAULT_SIZE, 1071, Short.MAX_VALUE));
+        panelUpLayout.setVerticalGroup(panelUpLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addComponent(LabelCaption, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 148, Short.MAX_VALUE));
 
         panelBottom.setBorder(new javax.swing.border.MatteBorder(null));
         panelBottom.setEndPoint(new java.awt.Point(0, 100));
@@ -455,27 +483,10 @@ public class FResponseDialog extends javax.swing.JDialog {
 
         javax.swing.GroupLayout panelBottomLayout = new javax.swing.GroupLayout(panelBottom);
         panelBottom.setLayout(panelBottomLayout);
-        panelBottomLayout.setHorizontalGroup(
-            panelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelBottomLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonInRoot, javax.swing.GroupLayout.PREFERRED_SIZE, 252, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(buttonBack, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
+        panelBottomLayout.setHorizontalGroup(panelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelBottomLayout.createSequentialGroup().addContainerGap().addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE).addComponent(buttonInRoot, javax.swing.GroupLayout.PREFERRED_SIZE, 252, javax.swing.GroupLayout.PREFERRED_SIZE).addGap(18, 18, 18).addComponent(buttonBack, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE).addContainerGap()));
         panelBottomLayout.setVerticalGroup(
-            panelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelBottomLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, 78, Short.MAX_VALUE)
-                    .addComponent(buttonBack, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(buttonInRoot, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
+                panelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(panelBottomLayout.createSequentialGroup().addContainerGap().addGroup(panelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, 78, Short.MAX_VALUE).addComponent(buttonBack, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE).addComponent(buttonInRoot, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)).addContainerGap()));
 
         panelMain.setBackground(resourceMap.getColor("panelMain.background")); // NOI18N
         panelMain.setBorder(new javax.swing.border.MatteBorder(null));
@@ -484,46 +495,19 @@ public class FResponseDialog extends javax.swing.JDialog {
 
         javax.swing.GroupLayout panelMainLayout = new javax.swing.GroupLayout(panelMain);
         panelMain.setLayout(panelMainLayout);
-        panelMainLayout.setHorizontalGroup(
-            panelMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 571, Short.MAX_VALUE)
-        );
-        panelMainLayout.setVerticalGroup(
-            panelMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 462, Short.MAX_VALUE)
-        );
+        panelMainLayout.setHorizontalGroup(panelMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 571, Short.MAX_VALUE));
+        panelMainLayout.setVerticalGroup(panelMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 462, Short.MAX_VALUE));
 
         javax.swing.GroupLayout panelAllLayout = new javax.swing.GroupLayout(panelAll);
         panelAll.setLayout(panelAllLayout);
-        panelAllLayout.setHorizontalGroup(
-            panelAllLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panelUp, javax.swing.GroupLayout.DEFAULT_SIZE, 1073, Short.MAX_VALUE)
-            .addComponent(panelBottom, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(panelAllLayout.createSequentialGroup()
-                .addGap(250, 250, 250)
-                .addComponent(panelMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(250, 250, 250))
-        );
-        panelAllLayout.setVerticalGroup(
-            panelAllLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelAllLayout.createSequentialGroup()
-                .addComponent(panelUp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, 0)
-                .addComponent(panelMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(0, 0, 0)
-                .addComponent(panelBottom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
+        panelAllLayout.setHorizontalGroup(panelAllLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addComponent(panelUp, javax.swing.GroupLayout.DEFAULT_SIZE, 1073, Short.MAX_VALUE).addComponent(panelBottom, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE).addGroup(panelAllLayout.createSequentialGroup().addGap(250, 250, 250).addComponent(panelMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE).addGap(250, 250, 250)));
+        panelAllLayout
+                .setVerticalGroup(panelAllLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(panelAllLayout.createSequentialGroup().addComponent(panelUp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE).addGap(0, 0, 0).addComponent(panelMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE).addGap(0, 0, 0).addComponent(panelBottom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panelAll, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panelAll, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
+        layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addComponent(panelAll, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+        layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addComponent(panelAll, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -536,15 +520,16 @@ public class FResponseDialog extends javax.swing.JDialog {
         buttonInRoot.setText(resourceMap.getString("buttonInRoot.text")); // NOI18N
         buttonBack.setText(resourceMap.getString("buttonBack.text")); // NOI18N
     }
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton2ActionPerformed
         result = null;
         if (clockBack.isActive()) {
             clockBack.stop();
         }
         setVisible(false);
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }// GEN-LAST:event_jButton2ActionPerformed
 
-    private void buttonBackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonBackActionPerformed
+    private void buttonBackActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_buttonBackActionPerformed
         if (level.isLeaf() || level.getChildCount() == 1) {
             if (level.getParent() != null) {
                 showLevel(level.getParent());
@@ -556,15 +541,15 @@ public class FResponseDialog extends javax.swing.JDialog {
             respDialog.clockBack.stop();
         }
         respDialog.clockBack.start();
-    }//GEN-LAST:event_buttonBackActionPerformed
+    }// GEN-LAST:event_buttonBackActionPerformed
 
-    private void buttonInRootActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonInRootActionPerformed
+    private void buttonInRootActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_buttonInRootActionPerformed
         showLevel(root);
         if (respDialog.clockBack.isActive()) {
             respDialog.clockBack.stop();
         }
         respDialog.clockBack.start();
-    }//GEN-LAST:event_buttonInRootActionPerformed
+    }// GEN-LAST:event_buttonInRootActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel LabelCaption;

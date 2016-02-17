@@ -26,8 +26,9 @@ import ru.apertum.qsystem.common.exceptions.ReportException;
 import ru.apertum.qsystem.reports.net.RunnableSocket;
 
 /**
- * Отчетный сервер, выступающий в роли вэбсервера, обрабатывающего запросы на выдачу отчетов
- * Класс потоков, обрабатывающих запросы HTTP, для выдачи отчетов
+ * Отчетный сервер, выступающий в роли вэбсервера, обрабатывающего запросы на
+ * выдачу отчетов Класс потоков, обрабатывающих запросы HTTP, для выдачи отчетов
+ * 
  * @author Evgeniy Egorov
  */
 public class WebServer {
@@ -43,14 +44,15 @@ public class WebServer {
 
     private WebServer() {
     }
+
     /**
      * состояние вэбсервера
      */
     volatile private boolean isActive = false;
     /**
-     *  Сокет, принявший сообщение или запрос
+     * Сокет, принявший сообщение или запрос
      */
-    ///private final Socket socket;
+    /// private final Socket socket;
     /**
      * Поток вебсервера.
      */
@@ -61,8 +63,10 @@ public class WebServer {
     private ServerSocket reportSocket = null;
 
     /**
-     * запуск вэбсервера
-     * @param port На каком порту
+     * launch of the web server
+     * 
+     * @param port
+     *            На каком порту
      */
     synchronized public void startWebServer(int port) {
         if (!isActive) {
@@ -71,14 +75,14 @@ public class WebServer {
             return;
         }
 
-        // привинтить сокет на локалхост, порт port
-        QLog.l().logger().info("Отчетный сервер захватывает порт \"" + port + "\".");
+        // privintitʹ socket on lokalhost, port port
+        QLog.l().logger().info("Reporting Server started on port \"" + port + "\".");
         try {
             reportSocket = new ServerSocket(port, 0);
         } catch (Exception e) {
             throw new ReportException("Ошибка при создании серверного сокета для вэбсервера: " + e);
         }
-        // поток вэбсервера, весит параллельно и обслуживает запросы
+        // the flow of the web server, weighs in parallel and serves requests
         webTread = new Thread() {
 
             public WebServer webServer;
@@ -86,14 +90,15 @@ public class WebServer {
             @Override
             public void run() {
                 System.out.println("Report server for QSystem started.");
-                QLog.l().logRep().info("Отчетный вэбсервер системы 'Очередь' запущен.");
+                QLog.l().logRep().info("Web Reporting 'queue' system server is running.");
                 try {
                     reportSocket.setSoTimeout(500);
                 } catch (SocketException ex) {
                 }
                 while (isActive && !webTread.isInterrupted()) {
-                    // ждём нового подключения, после чего запускаем обработку клиента
-                    // в новый вычислительный поток и увеличиваем счётчик на единичку
+                    // We are waiting for a new connection, and then run the
+                    // client processing a new computational flow and increase
+                    // the counter to yedinichku
                     final Socket socket;
                     try {
                         socket = reportSocket.accept();
@@ -103,7 +108,7 @@ public class WebServer {
                         thread.start();
                     } catch (SocketTimeoutException ex) {
                     } catch (IOException ex) {
-                        throw new ReportException("Ошибка при работе сокета для вэбсервера: " + ex);
+                        throw new ReportException("Error in the socket of the Web server: " + ex);
                     }
                 }
                 try {
@@ -112,11 +117,11 @@ public class WebServer {
                     }
                 } catch (IOException ex) {
                 }
-                QLog.l().logRep().info("Отчетный вэбсервер системы 'Очередь' остановлен.");
+                QLog.l().logRep().info("Web Reporting 'queue' system shut down the server.");
 
             }
         };
-        // и запускаем новый вычислительный поток (см. ф-ю run())
+        // and launching a new stream computing (см. ф-ю run())
         webTread.setDaemon(true);
         webTread.setPriority(Thread.NORM_PRIORITY);
         webTread.start();
@@ -124,7 +129,7 @@ public class WebServer {
     }
 
     /**
-     * Останов вэбсервера
+     * Stop the web server
      */
     synchronized public void stopWebServer() {
         if (isActive) {

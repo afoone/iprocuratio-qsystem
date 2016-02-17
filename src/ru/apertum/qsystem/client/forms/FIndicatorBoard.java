@@ -171,7 +171,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
      */
     private FIndicatorBoard(Element rootParams, boolean isDebug, boolean fractal) {
 
-        QLog.l().logger().info("Создаем окно для информации.");
+        QLog.l().logger().info("Creating a window for information.");
 
         this.fractal = fractal;
         topElement = rootParams.element(Uses.TAG_BOARD_TOP);
@@ -180,17 +180,18 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         leftElement = rootParams.element(Uses.TAG_BOARD_LEFT);
         rightElement = rootParams.element(Uses.TAG_BOARD_RIGHT);
         mainElement = rootParams.element(Uses.TAG_BOARD_MAIN);
-        // Проствим кол-во строк и др. параметры
+        // Pros number of lines, etc. Parameters
         final ArrayList<Element> lst = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_MONITOR);
         this.monitor = lst.isEmpty() ? 100 : Integer.parseInt(lst.get(0).attributeValue(Uses.TAG_BOARD_VALUE));
+        QLog.l().logger().debug("Monitor: "+ this.monitor);
         this.linesCount = Integer.parseInt(Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_LINES_COUNT).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
         final int ii = Integer.parseInt(Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_COLS_COUNT).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
         this.colsCount = isMain ? (ii > 0 ? (ii > 5 ? 5 : ii) : 1) : 1;
         this.pause = Integer.parseInt(Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_DELAY_VISIBLE).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
-        // Определим цвет табло
+     
+        // Determine the color display
         this.bgColor = Color.decode("#" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FON_COLOR).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
         this.fgColorCaprion = Color.decode("#" + Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_CAPTION).get(0).attributeValue(Uses.TAG_BOARD_VALUE));
-
         String clrs = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_LEFT).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
         String[] cls = clrs.split("(\\s*,\\s*|\\s*;\\s*|\\s+)");
         this.fgColorLeft = new Color[cls.length];
@@ -211,7 +212,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         this.rightPic = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_RIGHT_PIC).isEmpty() ? "" : Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_RIGHT_PIC).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
         this.extPic = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_EXT_PIC).isEmpty() ? "" : Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_EXT_PIC).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
 
-        // этим сделаем зебру из табло.
+        // This will do a zebra from the scoreboard.
         clrs = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR_LINE).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
         if (clrs == null || clrs.isEmpty()) {
             this.colorFonLine = new Color[0];
@@ -275,7 +276,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         } else {
             callDialog = null;
         }
-        QLog.l().logger().trace("Прочитали настройки для окна информации.");
+        QLog.l().logger().trace("Read configuration information of the window.");
     }
 
     public void toPosition(boolean isDebug, int x, int y) {
@@ -289,7 +290,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         setLocation(x, y);
         setAlwaysOnTop(!isDebug);
         // setResizable(isDebug);
-        // Отрехтуем форму в зависимости от режима.
+        // Отрехтуем Otrehtuem shape depending on the mode.
         if (!isDebug) {
 
             setAlwaysOnTop(true);
@@ -315,7 +316,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
     }
 
     /**
-     * Загрузка размеров областей табло
+     * Loading area dimensions of board
      */
     private void loadDividerLocation() {
         double down = 1;
@@ -388,10 +389,10 @@ public class FIndicatorBoard extends javax.swing.JFrame {
     }
 
     /**
-     * Загрузка содержимого областей табло
+     * Download content display areas
      */
     private void loadConfig() {
-        //загрузим фоновый рисунок
+        //upload wallpaper
         String filePath = Uses.elementsByAttr(mainElement, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FON_IMG).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
         File f = new File(filePath);
         if (f.exists()) {
@@ -414,21 +415,21 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         if (!"1".equals(params.attributeValue(Uses.TAG_BOARD_VISIBLE_PANEL))) {
             return;
         }
-        // цвет панельки
+        // color panels
         label.setBackground(bgColor);
-        //загрузим размер и цвет шрифта
+        // load the font size and color
         final Font font = new Font(getFontName(), label.getFont().getStyle(), Integer.parseInt(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_SIZE).get(0).attributeValue(Uses.TAG_BOARD_VALUE)));
         label.setForeground(Color.decode("#" + (Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FONT_COLOR).get(0).attributeValue(Uses.TAG_BOARD_VALUE))));
         label.setFont(font);
 
-        //загрузим фоновый рисунок
+        // upload wallpaper
         final String filePath = Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FON_IMG).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
         File fp = new File(filePath);
         if (fp.exists()) {
             label.setBackgroundImage(filePath);
         }
 
-        //загрузим фрактал
+        //upload the fractal
         String fileFractalXml = "";
         if (Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FRACTAL).size() > 0) {
             fileFractalXml = Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_FRACTAL).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
@@ -447,7 +448,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
             }
         } else {
 
-            //загрузим видео
+            //upload your video
             final String filePathVid = Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_VIDEO_FILE).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
             File fv = new File(filePathVid);
             if (fv.exists()) {
@@ -455,13 +456,13 @@ public class FIndicatorBoard extends javax.swing.JFrame {
                 panel.setVideoFileName(filePathVid);
                 panel.startVideo();
             } else {
-                // если не видео, то простая дата или таблица ближайших
+                // if not the video, a simple date or the next table
                 if ("1".equals(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_SIMPLE_DATE).get(0).attributeValue(Uses.TAG_BOARD_VALUE))) {
                     label.setRunningText("");
                     label.setText("");
                     label.setShowTime(true);
                 } else {
-                    // загрузим текст
+                    //  load text
                     if ("1".equals(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_GRID_NEXT).get(0).attributeValue(Uses.TAG_BOARD_VALUE))) {
                         // таблица ближайших
                         label.setVerticalAlignment(1);
@@ -866,10 +867,10 @@ public class FIndicatorBoard extends javax.swing.JFrame {
     }
 
     /**
-     * Создаем и расставляем контролы для строк по форме.
+     * We create and arrange controls for lines of the form.
      */
     public void showLines() {
-        QLog.l().logger().info("Показываем набор строк.");
+        QLog.l().logger().info("Shows a set of rows.");
         GridLayout la = new GridLayout(linesCount + (isMain ? 1 : 0), (isMain ? colsCount : 1), 10, 0);
         panelMain.setLayout(la);
         final ArrayList<JPanel> caps = new ArrayList<>();

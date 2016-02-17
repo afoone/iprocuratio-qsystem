@@ -35,18 +35,25 @@ import javax.swing.tree.TreeNode;
 import ru.apertum.qsystem.server.model.ITreeIdGetter;
 
 /**
- *
+ * 
+ * Stores the responses of a Dialog
+ * 
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  * @author Evgeniy Egorov
  */
 @Entity
 @Table(name = "responses")
 public class QRespItem extends DefaultMutableTreeNode implements ITreeIdGetter, Serializable {
 
+    // Versión para el serializador
+    private static final long serialVersionUID = -916229912232335044L;
+
     @Id
     @Column(name = "id")
     @Expose
     @SerializedName("id")
-    //@GeneratedValue(strategy = GenerationType.AUTO) авто нельзя, т.к. id нужны для формирования дерева
+    // @GeneratedValue(strategy = GenerationType.AUTO) авто нельзя, т.к. id
+    // нужны для формирования дерева
     private Long id = System.currentTimeMillis();
 
     @Override
@@ -57,8 +64,9 @@ public class QRespItem extends DefaultMutableTreeNode implements ITreeIdGetter, 
     public void setId(Long id) {
         this.id = id;
     }
+
     /**
-     * Иерархическая ссылка для построения дерева
+     * Hierarchical link for constructing a tree
      */
     @Column(name = "parent_id")
     private Long parentId;
@@ -71,8 +79,9 @@ public class QRespItem extends DefaultMutableTreeNode implements ITreeIdGetter, 
     public void setParentId(Long paremtId) {
         this.parentId = paremtId;
     }
+
     /**
-     * Наименование узла справки
+     * Help Name Node
      */
     @Expose
     @SerializedName("name")
@@ -92,8 +101,9 @@ public class QRespItem extends DefaultMutableTreeNode implements ITreeIdGetter, 
     public String toString() {
         return name;
     }
+
     /**
-     * Текст HTML
+     * Text HTML
      */
     @Expose
     @SerializedName("html")
@@ -109,7 +119,8 @@ public class QRespItem extends DefaultMutableTreeNode implements ITreeIdGetter, 
     }
 
     /**
-     * Требовать или нет на пункте регистрации ввода от клиента каких-то данных перед постановкой в очередь после выбора услуги.
+     * Require or not at the point of registration of input from the client any
+     * data queued in front after the service selection.
      */
     @Column(name = "input_required")
     @Expose
@@ -127,9 +138,11 @@ public class QRespItem extends DefaultMutableTreeNode implements ITreeIdGetter, 
     public void setInput_required(Boolean input_required) {
         this.input_required = input_required;
     }
+
     /**
-     * Заголовок окна при вводе на пункте регистрации клиентом каких-то данных перед постановкой в очередь после выбора услуги. Также печатается на талоне рядом
-     * с введенными данными.
+     * The window title when entering at the point of registration by the client
+     * of any data queued in front after the service selection. Also printed on
+     * the ticket next to the entered data.
      */
     @Column(name = "input_caption")
     @Expose
@@ -148,7 +161,7 @@ public class QRespItem extends DefaultMutableTreeNode implements ITreeIdGetter, 
     public String data;
 
     /**
-     * признак удаления с проставленим даты
+     * Mark as removed by timestamping
      */
     @Column(name = "deleted")
     @Temporal(javax.persistence.TemporalType.DATE)
@@ -162,11 +175,13 @@ public class QRespItem extends DefaultMutableTreeNode implements ITreeIdGetter, 
         this.deleted = deleted;
     }
 
-    //*******************************************************************************************************************
-    //*******************************************************************************************************************
-    //********************** Реализация методов узла в дереве ***********************************************************
+    // *******************************************************************************************************************
+    // *******************************************************************************************************************
+    // ********************** Implementation techniques node in the tree
+    // ***********************************************************
+    
     /**
-     * По сути группа объединения услуг или коернь всего дерева. То во что включена данныя услуга.
+     * In fact, a group of associations or services koern entire tree. That is what enabled DATA service.
      */
     @Transient
     private QRespItem parentService;

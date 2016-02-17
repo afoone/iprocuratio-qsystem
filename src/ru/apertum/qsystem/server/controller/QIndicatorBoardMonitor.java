@@ -105,7 +105,7 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
     }
 
     public QIndicatorBoardMonitor() {
-        QLog.l().logger().info("Создание табло для телевизоров или мониторов.");
+        QLog.l().logger().info("Creating a display for TVs and monitors.");
     }
 
     @Override

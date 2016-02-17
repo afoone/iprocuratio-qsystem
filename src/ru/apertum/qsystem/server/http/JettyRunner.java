@@ -45,16 +45,18 @@ import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 
 /**
- * Класс старта и останова сервера Jetty. При старте создается новый поток и в нем стартует Jetty
+ * Class start and stop the Jetty server. When starting a new thread is created, and it will start Jetty
  *
  * @author Evgeniy Egorov
+ * @author Alfonso Tienda <atienda@iprocuratio.com>
  */
 public class JettyRunner implements Runnable {
 
     /**
-     * Страт Jetty
+     * Start Jetty
      *
-     * @param port порт на котором стартует сервер
+     * @param port
+     *            the port on which the server starts
      */
     public static void start(int port) {
         servetPort = port;
@@ -64,7 +66,7 @@ public class JettyRunner implements Runnable {
                     jetty.stop();
                 }
             } catch (Exception ex) {
-                QLog.l().logger().error("Ошибка остановки сервера Jetty.", ex);
+                QLog.l().logger().error("Error stop Jetty server.", ex);
             }
             jetthread.interrupt();
         }
@@ -74,7 +76,7 @@ public class JettyRunner implements Runnable {
     }
 
     /**
-     * Остановить сервер Jetty
+     * Stops Jetty server
      */
     public static void stop() {
         if (jetthread != null && jetthread.isInterrupted() == false) {
@@ -83,22 +85,23 @@ public class JettyRunner implements Runnable {
                     jetty.stop();
                 }
             } catch (Exception ex) {
-                throw new ServerException("Ошибка остановки сервера Jetty.", ex);
+                throw new ServerException("Error stopping Jetty Server.", ex);
             }
             jetthread.interrupt();
         }
-        QLog.l().logger().info("Сервер Jetty успешно остановлен.");
+        QLog.l().logger().info("Jetty server stopped successfully.");
     }
+
     private static volatile Server jetty = null;
     private static int servetPort = 8081;
     private static Thread jetthread = null;
 
     @Override
     public void run() {
-        QLog.l().logger().info("Старт сервера Jetty на порту " + servetPort);
+        QLog.l().logger().info("Start Jetty server on port " + servetPort);
         jetty = new Server();
-        
-        //org.eclipse.jetty.io.nio.AsyncConnection d;
+
+        // org.eclipse.jetty.io.nio.AsyncConnection d;
         HttpConfiguration http_config = new HttpConfiguration();
         http_config.setSecureScheme("https");
         http_config.setSecurePort(8443);
@@ -114,44 +117,48 @@ public class JettyRunner implements Runnable {
 
         final ResourceHandler resource_handler = new ResourceHandler();
         resource_handler.setDirectoriesListed(true);
-        resource_handler.setWelcomeFiles(new String[]{"index.html"});
+        resource_handler.setWelcomeFiles(new String[] { "index.html" });
         resource_handler.setResourceBase("www");
 
         /*
-         // WebSocket: Регистрируем ChatWebSocketHandler в сервере Jetty. такой метож сдох в jttty9
-         QWebSocketHandler qWebSocketHandler = new QWebSocketHandler();
-         // Это вариант хэндлера для WebSocketHandlerContainer
-         qWebSocketHandler.setHandler(new DefaultHandler());
+         * // WebSocket: Регистрируем ChatWebSocketHandler в сервере Jetty.
+         * такой метож сдох в jttty9 QWebSocketHandler qWebSocketHandler = new
+         * QWebSocketHandler(); // Это вариант хэндлера для
+         * WebSocketHandlerContainer qWebSocketHandler.setHandler(new
+         * DefaultHandler());
          * 
          */
         final ServletContextHandler servletContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
         servletContext.setContextPath("/");
-        //При необходимости иметь сервлет, добавляяем их в обработчики вот так
-        //servletContext.addServlet(new ServletHolder(new HelloServlet()), "/hell");
+        // If necessary, have the servlet, adding them to the handlers like this
+        // servletContext.addServlet(new ServletHolder(new HelloServlet()),
+        // "/hell");
 
         /*
-         // поддержка расширяемости плагинами. На будующее, пото если понадобится приделаю сервлеты как плагины
-         for (final IChangeCustomerStateEvent event : ServiceLoader.load(IChangeCustomerStateEvent.class)) {
-         QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
-         try {
-         event.change(this, state, newServiceId);
-         } catch (Throwable tr) {
-         QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
-         }
-         }
+         * // поддержка расширяемости плагинами. На будующее, пото если
+         * понадобится приделаю сервлеты как плагины for (final
+         * IChangeCustomerStateEvent event :
+         * ServiceLoader.load(IChangeCustomerStateEvent.class)) {
+         * QLog.l().logger().info("Вызов SPI расширения. Описание: " +
+         * event.getDescription()); try { event.change(this, state,
+         * newServiceId); } catch (Throwable tr) { QLog.l().logger().error(
+         * "Вызов SPI расширения завершился ошибкой. Описание: " + tr); } }
          */
         final HandlerList handlers = new HandlerList();
 
-        // Важный момент - поряд следования хандлеров
-        // по этому порядку будет передоваться запрос, если он еще не обработан
-        // т.е. с начала ищется файл, если не найден, то урл передается на исполнение команды,
-        // в комаедах учтено что урл для вебсокета нужно пробросить дальше, его поймает хандлер вебсокетов
-        //handlers.setHandlers(new Handler[]{resource_handler, new CommandHandler(), qWebSocketHandler});
-        handlers.setHandlers(new Handler[]{resource_handler, new CommandHandler(), servletContext});
+        // An important point - the order of the Handler so the order will be
+        // sent a request, if it is not processed ie since the beginning of the
+        // file is searched for, if not found, then the URL is transmitted to
+        // the execution team, komaedah taken into account that the URL of
+        // vebsoketa need to traverse further, it will catch Handler vebsoketov
+        
+        // handlers.setHandlers(new Handler[]{resource_handler, new
+        // CommandHandler(), qWebSocketHandler});
+        handlers.setHandlers(new Handler[] { resource_handler, new CommandHandler(), servletContext });
 
-        // Загрузка war из папки 
+        // Download war folder
         String folder = "./www/war/";
-        QLog.l().logger().info("Загрузка war из папки " + folder);
+        QLog.l().logger().info("Downloading war folder " + folder);
         final File[] list = new File(folder).listFiles((File dir, String name) -> name.toLowerCase().endsWith(".war"));
         if (list != null && list.length != 0) {
             for (File file : list) {
@@ -165,60 +172,19 @@ public class JettyRunner implements Runnable {
         }
 
         jetty.setHandler(handlers);
-        
 
-        /*
-         String jetty_home = "";
-         SslContextFactory sslContextFactory = new SslContextFactory();
-         sslContextFactory.setKeyStorePath(jetty_home + "/etc/keystore");
-         sslContextFactory.setKeyStorePassword("OBF:1vny1zlo1x8e1vnw1vn61x8g1zlu1vn4");
-         sslContextFactory.setKeyManagerPassword("OBF:1u2u1wml1z7s1z7a1wnl1u2g");
-         sslContextFactory.setTrustStorePath(jetty_home + "/etc/keystore");
-         sslContextFactory.setTrustStorePassword("OBF:1vny1zlo1x8e1vnw1vn61x8g1zlu1vn4");
-         sslContextFactory.setExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA", "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");
-         HttpConfiguration https_config = new HttpConfiguration(http_config);
-         https_config.addCustomizer(new SecureRequestCustomizer());
-         ServerConnector sslConnector = new ServerConnector(jetty, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(https_config));
-         sslConnector.setPort(8443);
-         jetty.addConnector(sslConnector);
-         * 
-         */
         try {
             jetty.start();
         } catch (Exception ex) {
-            throw new ServerException("Ошибка запуска сервера Jetty. ", ex);
+            throw new ServerException("Jetty server failed to start. ", ex);
         }
-        QLog.l().logger().info("Join сервера Jetty на порту " + servetPort);
+        QLog.l().logger().info("Join Jetty server on port" + servetPort);
         try {
             jetty.join();
         } catch (InterruptedException ex) {
-            QLog.l().logger().warn("Jetty прекратил работу");
+            QLog.l().logger().warn("Jetty has stopped working");
         }
-        QLog.l().logger().info("Сервер Jetty остановлен.");
+        QLog.l().logger().info("Jetty server is stopped.");
     }
 
-    /*
-     public static class HelloServlet extends HttpServlet {
-
-     private static final long serialVersionUID = -6154475799000019575L;
-
-     private static final String greeting = "Hello World";
-
-     @Override
-     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-     System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-     response.setContentType("text/html");
-     response.setStatus(HttpServletResponse.SC_OK);
-     response.getWriter().println(greeting);
-     }
-
-     @Override
-     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-     System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-     resp.setContentType("text/html");
-     resp.setStatus(HttpServletResponse.SC_OK);
-     resp.getWriter().println(greeting);
-     }
-     }
-     */
 }

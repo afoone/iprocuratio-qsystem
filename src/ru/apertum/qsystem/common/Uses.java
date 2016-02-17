@@ -167,6 +167,7 @@ public final class Uses {
     public static final String TAG_PROP_INPUT_REQUIRED = "ТребованиеКлиентскихДанных";
     public static final String TAG_PROP_INPUT_CAPTION = "ЗаголовокФормыВводаКлДанных";
     public static final String TAG_PROP_RESULT_REQUIRED = "ТребованиеРезультатаРаботы";
+    // tags and attributes of configuration files names of the main board
     // теги и имена атрибутов конфигурационных файлов главных табло
     public static final String TAG_BOARD_PROPS = "Параметры";
     public static final String TAG_BOARD_PROP = "Параметер";
@@ -175,11 +176,11 @@ public final class Uses {
     public static final String TAG_BOARD_TYPE = "Тип";
     // имена параметров для табло 
     public static final String TAG_BOARD_FRACTAL = "Fractal";
-    public static final String TAG_BOARD_MONITOR = "Number of additional monitors to display";
-    public static final String TAG_BOARD_LINES_COUNT = "The number of lines on the scoreboard";
-    public static final String TAG_BOARD_COLS_COUNT = "The number of columns on the scoreboard";
-    public static final String TAG_BOARD_DELAY_VISIBLE = "Minimum time display on the scoreboard";
-    public static final String TAG_BOARD_FON_IMG = "Background image";
+    public static final String TAG_BOARD_MONITOR = "Номер дополнительного монитора для табло";
+    public static final String TAG_BOARD_LINES_COUNT = "Количество строк на табло";
+    public static final String TAG_BOARD_COLS_COUNT = "Количество столбцов на табло";
+    public static final String TAG_BOARD_DELAY_VISIBLE = "Минимальное время индикации на табло";
+    public static final String TAG_BOARD_FON_IMG = "Фоновое изображение";
     public static final String TAG_BOARD_FONT_SIZE = "Размер шрифта";
     public static final String TAG_BOARD_FONT_COLOR = "Цвет шрифта";
     public static final String TAG_BOARD_PANEL_SIZE = "Размер";
@@ -462,14 +463,14 @@ public final class Uses {
     }
 
     /**
-     * Рекурентный формирователь для public static ArrayList elementsByAttr(...).
+     * Recurrent driver for public static ArrayList elementsByAttr(...).
      *
-     * @param list массив элементов
-     * @param el корневой элемент ветви
-     * @param attrName имя искомых атрибутов
-     * @param attrValue значение атрибута
+     * @param list an array of
+     * @param el the root element of the branches
+     * @param attrName the name of the desired attributes
+     * @param attrValue attribute value
      */
-    private static void getList(ArrayList list, Element el, String attrName, String attrValue) {
+    private static void getList(ArrayList<Element> list, Element el, String attrName, String attrValue) {
         if (attrValue.equals(el.attributeValue(attrName))) {
             list.add(el);
         }
@@ -479,7 +480,7 @@ public final class Uses {
     }
 
     /**
-     * Возвращает массив эолементов с определенным значением атрибута из ветви
+     * Returns an array of elements with a particular attribute value in the thread
      *
      * @param root корневой элемент ветви
      * @param attrName имя искомых атрибутов

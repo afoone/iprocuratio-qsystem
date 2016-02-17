@@ -108,10 +108,10 @@ public class FAdvanceCalendar extends javax.swing.JDialog {
         FAdvanceCalendar.advancedCustomer = advCustomer;
         FAdvanceCalendar.inputData = inputData;
         FAdvanceCalendar.comments = comments;
-        QLog.l().logger().info("Выбор времени для предварительной записи");
+        QLog.l().logger().info("The date of the appointment");
         if (advanceCalendar == null) {
             advanceCalendar = new FAdvanceCalendar(parent, modal);
-            advanceCalendar.setTitle("Выбор времени предварительной записи.");
+            advanceCalendar.setTitle("Selecting an appointment time.");
         }
         advanceCalendar.changeTextToLocale();
         result = null;
