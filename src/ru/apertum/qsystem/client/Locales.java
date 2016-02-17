@@ -63,12 +63,12 @@ public final class Locales {
      */
     private Locales() {
 
-        // Descargar plugins desde la carpeta de pluggins
+        // Descargar plugins desde la carpeta de plugins
         QLog.l().logger().info("Languages are loading...");
         final File[] list = new File("languages").listFiles((File dir, String name) -> name.matches(".._..\\.(jar|JAR)"));
         if (list != null && list.length != 0) {
             final URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-            final Class sysclass = URLClassLoader.class;
+            final Class<URLClassLoader> sysclass = URLClassLoader.class;
             final Class[] parameters = new Class[]{URL.class};
             for (File file : list) {
                 try {

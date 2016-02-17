@@ -98,17 +98,16 @@ public class FAbout extends javax.swing.JDialog {
     }
 
     /**
-     * Опредилить Singleton.
-     * @param parent  относительно этого контрола модальность и позиционирование
-     * @param modal режим модальности
+     * Singleton.
+     * @param parent  relative to this control modality and positioning
+     * @param modal mode modalities
      */
     private static void getForm(JFrame parent, boolean modal, String verDB) {
-        QLog.l().logger().info("Демонстрация информации о программе.");
+        QLog.l().logger().info("Information about the application.");
         if (aboutForm == null) {
             aboutForm = new FAbout(parent, modal);
         }
         if (aboutForm != null) {
-            // Отцентирируем
             final Toolkit kit = Toolkit.getDefaultToolkit();
             aboutForm.setLocation((Math.round(kit.getScreenSize().width - aboutForm.getWidth()) / 2),
                     (Math.round(kit.getScreenSize().height - aboutForm.getHeight()) / 2));

@@ -171,11 +171,24 @@ public class FAdmin extends javax.swing.JFrame {
      */
     private static final long serialVersionUID = 1168133377560513117L;
 
+    /***
+     * Strings para el locale
+     */
     private static ResourceMap localeMap = null;
 
+    /**
+     * Recupera los mensajes locales
+     * @param key
+     * @return
+     */
     public static String getLocaleMessage(String key) {
+     //   QLog.l().logger().debug("Obteniendo los locales de "+ key);
+        QLog.l().logger().debug("Locales disponibles "+Locale.getAvailableLocales());
         if (localeMap == null) {
+            Object context = Application.getInstance(QSystem.class).getContext();
             localeMap = Application.getInstance(QSystem.class).getContext().getResourceMap(FAdmin.class);
+           // Application.getInstance(QSystem.class).getContext().getResourceMap();
+            //QLog.l().logger().debug("Contexto"+ Application.getInstance(QSystem.class).getContext());
         }
         return localeMap.getString(key);
     }

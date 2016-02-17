@@ -1,6 +1,6 @@
 /*
- *  Copyright (C) 2010 {Apertum}Projects. web: www.apertum.ru email: info@apertum.ru
- *
+ *  2010 {Apertum}Projects. web: www.apertum.ru email: info@apertum.ru
+ *  2015 iProcuratio Consultores
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or

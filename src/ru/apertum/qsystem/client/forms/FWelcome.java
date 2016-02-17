@@ -136,6 +136,11 @@ import ru.evgenic.rxtx.serialPort.RxtxSerialPort;
  */
 public class FWelcome extends javax.swing.JFrame {
 
+    /**
+     * Serializador
+     */
+    private static final long serialVersionUID = -8947372044595907339L;
+
     private static ResourceMap localeMap = null;
 
     public static String getLocaleMessage(String key) {
@@ -169,8 +174,8 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     /**
-     * XML- дерево информации. перврначально null, грузится при первом
-     * обращении. Использовать через геттер.
+     * XML- information tree. initially null, loaded at the first call. Use
+     * through getter.
      */
     private static QInfoItem infoTree = null;
 
@@ -214,7 +219,7 @@ public class FWelcome extends javax.swing.JFrame {
     // ******************************************************************************************************************
     // ******************************************************************************************************************
     // ***************************************** Remote control server
-    // ********************************************
+    // **************************************************
     /**
      *
      */
@@ -234,16 +239,17 @@ public class FWelcome extends javax.swing.JFrame {
                 server = new ServerSocket(netProperty.getClientPort());
                 server.setSoTimeout(500);
             } catch (IOException e) {
-                throw new ClientException("Ошибка при создании серверного сокета: " + e);
+                throw new ClientException("Error creating a server socket: " + e);
             }
 
             System.out.println("Server for managment of registration point started.\n");
-            QLog.l().logger().info("Сервер управления пунктом регистрации запущен.");
+            QLog.l().logger().info("point registration management server launched.");
 
             // Listening port
             while (!exitServer) {
                 // We are waiting for a new connection, and then run the client
-                // processing a new computational flow and increase the counter to yedinichku
+                // processing a new computational flow and increase the counter
+                // to yedinichku
                 try {
                     doCommand(server.accept());
                 } catch (SocketTimeoutException e) {
@@ -255,6 +261,7 @@ public class FWelcome extends javax.swing.JFrame {
 
         /**
          * Executes a command through a socket
+         * 
          * @param socket
          */
         private void doCommand(Socket socket) {
@@ -885,8 +892,18 @@ public class FWelcome extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * 
+     * @author afoone
+     *
+     */
     private class LngBtnAction extends AbstractAction {
 
+        /**
+         * VErsión para el serializador 
+         */
+        private static final long serialVersionUID = -4356735106180920345L;
+        
         final private Locale locale;
 
         public LngBtnAction(Locale locale) {
@@ -907,8 +924,8 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     /**
-     * Загрузка и инициализация неких параметров из корня дерева описания для
-     * старта или реинициализации.
+     * Downloading and initialization of certain parameters of the root of the
+     * tree description to start or re-initialization.
      */
     private void loadRootParam() {
         FWelcome.caption = root.getTextToLocale(QService.Field.NAME);
@@ -918,11 +935,10 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     /**
-     * Это когда происходит авторизация клиента при постановке в очередь,
-     * например перед выбором услуге в регистуре, то сюда попадает ID этого
-     * авторизованного пользователя. Дальше этот ID передать в команду
-     * постановки предварительного и там если по нему найдется этот клиент, то
-     * он должен попасть в табличку предварительно зарегиных.
+     * This occurs when the client authorization when queuing, for example, the
+     * choice in favor registure, that here gets the ID of the authorized user.
+     * Then pass this ID to the team prior statement and there if there is this
+     * client on it, then he should get into the tablet pre zareginyh.
      */
     public long advancedCustomer = -1;
 
@@ -939,7 +955,7 @@ public class FWelcome extends javax.swing.JFrame {
                             setAdvanceRegim(true);
                             labelCaption.setText("<html><p align=center><span style='font-size:55.0pt;color:green'>" + customer.getSurname() + " " + customer.getName() + " " + customer.getOtchestvo() + "<br></span><span style='font-size:40.0pt;color:red'>" + getLocaleMessage("messages.select_adv_servece"));
                         } else {
-                            throw new ClientException("Нельзя выбирать услугу если не идентифицирован клиент.");
+                            throw new ClientException("You can not select a service if you do not identify the customer.");
                         }
                     }
                 }
@@ -957,21 +973,21 @@ public class FWelcome extends javax.swing.JFrame {
                 serialPort.free();
             }
         } catch (Exception ex) {
-            throw new ClientException("Ошибка освобождения порта. " + ex);
+            throw new ClientException("Error releasing port. " + ex);
         }
         super.finalize();
     }
 
     /**
-     * Создаем и расставляем кнопки по форме.
+     * Create and insert a button on the form.
      *
      * @param current
-     *            уровень отображения кнопок.
+     *            buttons display the level.
      * @param panel
      */
     public void showButtons(QService current, JPanel panel) {
 
-        QLog.l().logger().info("Показываем набор кнопок уровня: " + current.getName() + " ID=" + current.getId());
+        QLog.l().logger().info("Shows a set of level buttons: " + current.getName() + " ID=" + current.getId());
         if (current != FWelcome.current) { // если смена уровней то страница
                                            // уровня становится нулевая
             pageNumber = 0;
@@ -1017,8 +1033,8 @@ public class FWelcome extends javax.swing.JFrame {
         int cols = 3;
         int rows = 5;
 
-        // посмотрим сколько реальных кнопок нужно отобразить
-        // тут есть невидимые услуги и услуги не с того киоска
+        // see how many actual buttons you want to show there is an invisible
+        // services and not on the kiosk
         int childCount = 0;
         childCount = current.getChildren().stream().filter((service) -> (!(isAdvanceRegim() && service.getAdvanceLimit() == 0) && service.getStatus() != -1 && (WelcomeParams.getInstance().point == 0 || (service.getPoint() == 0 || service.getPoint() == WelcomeParams.getInstance().point)))).map((_item) -> 1).reduce(childCount, Integer::sum);
 
@@ -1035,8 +1051,9 @@ public class FWelcome extends javax.swing.JFrame {
             rows = Math.round(0.3f + (float) childCount / 3);
         }
 
-        // поправка на то что если кнопок на уровне много и они уже в три
-        // колонки, то задействуем ограничение по линиям, а то расползутся
+        // correction for the fact that when a lot of keys on the level and they
+        // are three: the column, then deploy the constraint lines and the
+        // raspolzutsya
         if (rows > WelcomeParams.getInstance().linesButtonCount && cols >= 3) {
             rows = WelcomeParams.getInstance().linesButtonCount;
             panelForPaging.setVisible(true);
@@ -1126,7 +1143,7 @@ public class FWelcome extends javax.swing.JFrame {
             System.err.println(ex);
             throw new RuntimeException(ex);
         }
-        // разошлем весточку о том что бумага заканчивается
+        // We will send news about the paper ends
         int st = (i - WelcomeParams.getInstance().paper_size_alarm) % WelcomeParams.getInstance().paper_alarm_step;
         if (0 <= st && st < d) {
             final String m = Mailer.fetchConfig().getProperty("paper_alarm_mailing", "0");
@@ -1250,18 +1267,23 @@ public class FWelcome extends javax.swing.JFrame {
         printTicket(customer);
     }
 
+    /**
+     * Imprime el ticket
+     * 
+     * @param customer
+     */
     public static synchronized void printTicket(final QCustomer customer) {
         increaseTicketCount(1);
-        // поддержка расширяемости плагинами
+        // extensible plug-ins support
         boolean flag = false;
         for (final IPrintTicket event : ServiceLoader.load(IPrintTicket.class)) {
-            QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+            QLog.l().logger().info("Call SPI expansion. Description: " + event.getDescription());
             try {
                 flag = event.printTicket(customer, FWelcome.caption);
             } catch (Throwable tr) {
-                QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: ", tr);
+                QLog.l().logger().error("Call SPI expansion will fail. Description: ", tr);
             }
-            // раз напечатили и хорошь
+            // once printed, and good
             if (flag) {
                 return;
             }
@@ -1319,7 +1341,7 @@ public class FWelcome extends javax.swing.JFrame {
                     g2.drawImage(Uses.loadImage(this, WelcomeParams.getInstance().logoImg, "/ru/apertum/qsystem/client/forms/resources/logo_ticket_a.png"), WelcomeParams.getInstance().logoLeft, WelcomeParams.getInstance().logoTop, null);
                 }
                 g2.scale(WelcomeParams.getInstance().scaleHorizontal, WelcomeParams.getInstance().scaleVertical);
-                // позиционируем начало координат
+                // positioning the origin
                 g2.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
 
                 int line = 1;
@@ -1353,19 +1375,20 @@ public class FWelcome extends javax.swing.JFrame {
                 g2.setFont(f_standard);
 
                 write(Locales.getInstance().isRuss ? Uses.getRusDate(customer.getStandTime(), "dd MMMM HH:mm") : (Locales.getInstance().isUkr ? Uses.getUkrDate(customer.getStandTime(), "dd MMMM HH:mm") : Uses.format_for_label.format(customer.getStandTime())), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
-                // если клиент что-то ввел, то напечатаем это на его талоне
+                // if the client is something introduced, then print it on his
+                // ticket
                 if (customer.getService().getInput_required()) {
                     initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
                     g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, g2.getFont().getSize()));
                     write(customer.getService().getTextToLocale(QService.Field.INPUT_CAPTION).replaceAll("<.*?>", ""), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
                     g2.setFont(f_standard);
                     write(customer.getInput_data(), ++line, WelcomeParams.getInstance().leftMargin, 1, 1);
-                    // если требуется, то введеное напечатаем как qr-код для
-                    // быстрого считывания сканером
+                    // if necessary, the introduction of print as a qr-code
+                    // scanner for quick reading
                     if (WelcomeParams.getInstance().input_data_qrcode) {
                         try {
                             final int matrixWidth = 130;
-                            final HashMap<EncodeHintType, String> hints = new HashMap();
+                            final HashMap<EncodeHintType, String> hints = new HashMap<EncodeHintType, String>();
                             hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
                             final BitMatrix matrix = new QRCodeWriter().encode(customer.getInput_data(), BarcodeFormat.QR_CODE, matrixWidth, matrixWidth, hints);
                             // final BitMatrix matrix = new
@@ -1386,8 +1409,8 @@ public class FWelcome extends javax.swing.JFrame {
                         }
                     }
                 }
-                // если в услуге есть что напечатать на талоне, то напечатаем
-                // это на его талоне
+                // if the service has something to be printed on the ticket,
+                // then print it on his ticket
                 if (customer.getService().getTextToLocale(QService.Field.TICKET_TEXT) != null && !customer.getService().getTextToLocale(QService.Field.TICKET_TEXT).isEmpty()) {
                     initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
                     String tt = customer.getService().getTextToLocale(QService.Field.TICKET_TEXT);
@@ -1408,7 +1431,7 @@ public class FWelcome extends javax.swing.JFrame {
                     if (WelcomeParams.getInstance().barcode == 2) {
                         try {
                             final int matrixWidth = 100;
-                            final HashMap<EncodeHintType, String> hints = new HashMap();
+                            final HashMap<EncodeHintType, String> hints = new HashMap<EncodeHintType, String>();
                             hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
                             final BitMatrix matrix = new QRCodeWriter().encode(customer.getInput_data(), BarcodeFormat.QR_CODE, matrixWidth, matrixWidth, hints);
                             // Write Bit Matrix as image
@@ -1440,7 +1463,7 @@ public class FWelcome extends javax.swing.JFrame {
                     }
                 }
 
-                // Напечатаем текст внизу билета
+                // Type the text at the bottom of the ticket
                 name = WelcomeParams.getInstance().bottomText;
                 int al = getAlign(name, -1);
                 name = getTrim(name);
@@ -1456,7 +1479,7 @@ public class FWelcome extends javax.swing.JFrame {
             try {
                 job.setPrintService(WelcomeParams.getInstance().printService);
             } catch (PrinterException ex) {
-                QLog.l().logger().error("Ошибка установки принтера: ", ex);
+                QLog.l().logger().error("Error Printer Setup: ", ex);
             }
         }
         job.setPrintable(canvas);
@@ -1464,7 +1487,7 @@ public class FWelcome extends javax.swing.JFrame {
             job.print(WelcomeParams.getInstance().printAttributeSet);
             // job.print();
         } catch (PrinterException ex) {
-            QLog.l().logger().error("Ошибка печати: ", ex);
+            QLog.l().logger().error("Error printing: ", ex);
         }
     }
 
@@ -1473,18 +1496,23 @@ public class FWelcome extends javax.swing.JFrame {
         printTicketAdvance(advCustomer);
     }
 
+    /**
+     * Imprime los tickets para los usuarios con cita
+     * 
+     * @param advCustomer
+     */
     public static synchronized void printTicketAdvance(final QAdvanceCustomer advCustomer) {
         increaseTicketCount(1);
         // поддержка расширяемости плагинами
         boolean flag = false;
         for (final IPrintTicket event : ServiceLoader.load(IPrintTicket.class)) {
-            QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+            QLog.l().logger().info("Call SPI expansion. Description: " + event.getDescription());
             try {
                 flag = event.printTicketAdvance(advCustomer, FWelcome.caption);
             } catch (Throwable tr) {
-                QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
+                QLog.l().logger().error("Call SPI expansion will fail. Description: " + tr);
             }
-            // раз напечатили и хорошь
+            // once printed, and good
             if (flag) {
                 return;
             }
@@ -1598,7 +1626,7 @@ public class FWelcome extends javax.swing.JFrame {
                     if (WelcomeParams.getInstance().input_data_qrcode) {
                         try {
                             final int matrixWidth = 130;
-                            final HashMap<EncodeHintType, String> hints = new HashMap();
+                            final HashMap<EncodeHintType, String> hints = new HashMap<EncodeHintType, String>();
                             hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
                             final BitMatrix matrix = new QRCodeWriter().encode(advCustomer.getAuthorizationCustomer().getName(), BarcodeFormat.QR_CODE, matrixWidth, matrixWidth, hints);
                             // final BitMatrix matrix = new
@@ -1635,7 +1663,7 @@ public class FWelcome extends javax.swing.JFrame {
                     if (WelcomeParams.getInstance().barcode == 2) {
                         try {
                             final int matrixWidth = 100;
-                            final HashMap<EncodeHintType, String> hints = new HashMap();
+                            final HashMap<EncodeHintType, String> hints = new HashMap<EncodeHintType, String>();
                             hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
                             final BitMatrix matrix = new QRCodeWriter().encode(advCustomer.getId().toString(), BarcodeFormat.QR_CODE, matrixWidth, matrixWidth, hints);
                             // Write Bit Matrix as image
@@ -1674,7 +1702,7 @@ public class FWelcome extends javax.swing.JFrame {
                 if (wText != null && !wText.isEmpty()) {
                     write(getTrim(wText), ++line, getHAlignment(getTrim(wText), getAlign(wText, -1), 0.7), 0.7, 0.4);
                 }
-                // Напечатаем текст внизу билета
+                // Print text at the bottom of the ticket
 
                 name = WelcomeParams.getInstance().bottomText;
                 int al = getAlign(name, -1);
@@ -1690,7 +1718,7 @@ public class FWelcome extends javax.swing.JFrame {
             try {
                 job.setPrintService(WelcomeParams.getInstance().printService);
             } catch (PrinterException ex) {
-                QLog.l().logger().error("Ошибка установки принтера: ", ex);
+                QLog.l().logger().error("Failed Printer Setup: ", ex);
             }
         }
         job.setPrintable(canvas);
@@ -1698,10 +1726,14 @@ public class FWelcome extends javax.swing.JFrame {
             job.print(WelcomeParams.getInstance().printAttributeSet);
             // job.print();
         } catch (PrinterException ex) {
-            QLog.l().logger().error("Ошибка печати: ", ex);
+            QLog.l().logger().error("Printing error: ", ex);
         }
     }
 
+    /**
+     * 
+     * @param preInfo
+     */
     public static synchronized void printPreInfoText(final String preInfo) {
         increaseTicketCount(2);
         Printable canvas = new Printable() {
@@ -1773,14 +1805,14 @@ public class FWelcome extends javax.swing.JFrame {
                     g2.drawImage(Uses.loadImage(this, WelcomeParams.getInstance().logoImg, "/ru/apertum/qsystem/client/forms/resources/logo_ticket_a.png"), WelcomeParams.getInstance().logoLeft, WelcomeParams.getInstance().logoTop, null);
                 }
                 g2.scale(WelcomeParams.getInstance().scaleHorizontal, WelcomeParams.getInstance().scaleVertical);
-                // позиционируем начало координат
+                // positioning the origin
                 g2.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
 
                 int line = 1;
 
                 write(caption, ++line, WelcomeParams.getInstance().leftMargin, 1.5, 1.5, pageIndex);
                 ++line;
-                // напечатаем текст подсказки
+                // print help text
                 final LinkedList<String> strings = new LinkedList<>();
                 final Scanner sc = new Scanner(preInfo.replace("<brk>", "\n"));
                 while (sc.hasNextLine()) {
@@ -1797,7 +1829,7 @@ public class FWelcome extends javax.swing.JFrame {
                 if (wText != null && !wText.isEmpty()) {
                     write(getTrim(wText), ++line, getHAlignment(getTrim(wText), getAlign(wText, -1), 0.7), 0.7, 0.4, pageIndex);
                 }
-                // Напечатаем текст внизу билета
+                // Print text at the bottom of the ticket
 
                 // line = writeText(WelcomeParams.getInstance().bottomText,
                 // line, WelcomeParams.getInstance().leftMargin, 1, 1,
@@ -1823,17 +1855,21 @@ public class FWelcome extends javax.swing.JFrame {
             try {
                 job.setPrintService(WelcomeParams.getInstance().printService);
             } catch (PrinterException ex) {
-                QLog.l().logger().error("Ошибка установки принтера: ", ex);
+                QLog.l().logger().error("Failed Printer Setup: ", ex);
             }
         }
         job.setPrintable(canvas);
         try {
             job.print(WelcomeParams.getInstance().printAttributeSet);
         } catch (PrinterException ex) {
-            QLog.l().logger().error("Ошибка печати: ", ex);
+            QLog.l().logger().error("printing Error: ", ex);
         }
     }
 
+    /**
+     * 
+     * @param visible
+     */
     public void setVisibleButtons(boolean visible) {
         buttonBack.setVisible(visible && current != root);
         buttonToBegin.setVisible(visible && current != root);
@@ -1847,8 +1883,8 @@ public class FWelcome extends javax.swing.JFrame {
         int cols = 3;
         int rows = 5;
 
-        // посмотрим сколько реальных кнопок нужно отобразить
-        // тут есть невидимые услуги и услуги не с того киоска
+        // see how many actual buttons you want to show there is an invisible
+        // services and not on the kiosk
         int childCount = 0;
         childCount = current.getChildren().stream().filter((service) -> (service.getStatus() != -1 && (WelcomeParams.getInstance().point == 0 || (service.getPoint() == 0 || service.getPoint() == WelcomeParams.getInstance().point)))).map((_item) -> 1).reduce(childCount, Integer::sum);
 
@@ -1865,8 +1901,9 @@ public class FWelcome extends javax.swing.JFrame {
             rows = Math.round(0.3f + (float) childCount / 3);
         }
 
-        // поправка на то что если кнопок на уровне много и они уже в три
-        // колонки, то задействуем ограничение по линиям, а то расползутся
+        // correction for the fact that when a lot of keys on the level and they
+        // are in three columns, then deploy the constraint lines and the
+        // raspolzutsya
         if (visible && rows > WelcomeParams.getInstance().linesButtonCount && cols >= 3) {
             panelForPaging.setVisible(true);
         } else {
@@ -1881,9 +1918,9 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     // ==================================================================================================================
-    // С рабочего места администратора должна быть возможность заблокировать
-    // пункт постановки в очередь,
-    // разблокировать, выключить, провести инициализация заново.
+    // From the administrator's workstation must be able to lock the item
+    // queuing, unlock, turn off, hold the initialization again.
+
     private String stateWindow = UNLOCK;
 
     public String getStateWindow() {
@@ -1905,29 +1942,29 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     /**
-     * Заблокировать пункт постановки в очередь.
+     * Block point queuing.
      *
      * @param message
-     *            Сообщение, которое выведется на экран пункта.
+     *            The message that is displayed on the screen item.
      */
     public void lock(String message) {
         labelLock.setText(message);
         setStateWindow(LOCK);
         setVisibleButtons(false);
-        QLog.l().logger().info("Пункт регистрации заблокирован. Состояние \"" + stateWindow + "\"");
+        QLog.l().logger().info("registration office is locked. condition \"" + stateWindow + "\"");
     }
 
     /**
-     * Разблокировать пункт постановки в очередь.
+     * Unlock queuing point
      */
     public void unlock() {
         setStateWindow(UNLOCK);
         setVisibleButtons(true);
-        QLog.l().logger().info("Пункт регистрации готов к работе. Состояние \"" + stateWindow + "\"");
+        QLog.l().logger().info("Registration desk ready. Condition: \"" + stateWindow + "\"");
     }
 
     /**
-     * Выключить пункт постановки в очередь.
+     * Disable point queuing.
      */
     public void off() {
         setStateWindow(OFF);
@@ -1941,7 +1978,8 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     /**
-     * Инициализация заново пункта постановки в очередь.
+     * 
+     * Initialization again point queuing.
      *
      * @param params
      */
@@ -1963,13 +2001,13 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     /**
-     * Таймер, по которому будем включать и выключать пункт регистрации.
+     * Timer, by which we will turn on and off to the Registration Desk.
      */
     public ATalkingClock lockWelcome = new ATalkingClock(Uses.DELAY_CHECK_TO_LOCK, 0) {
 
         @Override
         public void run() {
-            // если время начала и завершения совпадают, то игнор блокировки.
+            // if the start and end time are the same, then ignore the lock.
             if (Uses.format_HH_mm.format(finishTime).equals(Uses.format_HH_mm.format(startTime))) {
                 return;
             }
@@ -2266,10 +2304,10 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     /**
-     * Переключение режима постановки в очередь и предварительной записи
+     * Switching the setting mode to the queue and appointment
      *
      * @param advanceRegim
-     *            true - предварительная запись, false - встать в очередь
+     *           true - pre-registration, false - get in line
      */
     public void setAdvanceRegim(boolean advanceRegim) {
         FWelcome.advanceRegim = advanceRegim;
@@ -2277,7 +2315,7 @@ public class FWelcome extends javax.swing.JFrame {
         if (advanceRegim) {
             labelCaption.setText("<html><p align=center><span style='font-size:55.0;color:#DC143C'>" + getLocaleMessage("messages.select_adv_servece1") + "</span><br><span style='font-size:45.0;color:#DC143C'><i>" + getLocaleMessage("messages.select_adv_servece2") + "</i>");
             buttonAdvance.setText("<html><p align=center>" + getLocaleMessage("lable.reg_calcel"));
-            // возврат в начальное состояние из диалога предварительной записи.
+            // return to the initial state of the dialogue appointment.
             if (clockBack.isActive()) {
                 clockBack.stop();
             }
@@ -2289,20 +2327,19 @@ public class FWelcome extends javax.swing.JFrame {
             labelCaption.setText(root.getButtonText());
             buttonAdvance.setText("<html><p align=center>" + getLocaleMessage("lable.adv_reg"));
         }
-        // кнопка регистрации пришедших которые записались давно видна только в
-        // стандартном режиме и вместе с кнопкой предварительной записи
+        // Registration button came that signed long ago seen only in standard mode and with key appointment
         if (buttonAdvance.isVisible()) {
             buttonStandAdvance.setVisible(!advanceRegim);
         }
     }
 
     /**
-     * Заставка на некоторый таймаут
+     * Screensaver timeout on some
      *
      * @param text
-     *            текст на заставке
+     *            text on the splash screen
      * @param imagePath
-     *            картинка на заставке
+     *            the picture on the screen saver
      * @return
      */
     public ATalkingClock showDelayFormPrint(String text, String imagePath) {
@@ -2342,6 +2379,10 @@ public class FWelcome extends javax.swing.JFrame {
     private JLabel labelInfo = new JLabel();
     private JLabel labelInfo2 = new JLabel();
 
+    /**
+     * 
+     * @param evt
+     */
     private void buttonAdvanceActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_buttonAdvanceActionPerformed
         setAdvanceRegim(!isAdvanceRegim());
         if (isMed && !isAdvanceRegim()) {
