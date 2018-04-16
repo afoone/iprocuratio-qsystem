@@ -1,13 +1,16 @@
-﻿Instrucción de instalación del sistema de automatización del trabajo con clientes.
+﻿# Instrucciones de instalación del sistema de automatización de colas con clientes.
 
-Paso 1. Preparando la instalación.
-Antes de instalar el sistema, necesita asegurarse que ya tiene instalado el MySQL(si desea utilizar MySQL) de versión no menos que 5.5 y OracleJRE no menos de 1.8. Construido en base de datos de H2 es alternativa. Puede averiguar la instalación de JRE así:
+## Paso 1. Preparando la instalación.
+Antes de instalar el sistema, necesita asegurarse que ya tiene instalado el MySQL(si desea utilizar MySQL) de versión no menos que 5.5 y OracleJRE no menos de 1.8.
+Se puede instalar como alternativa en base de datos H2.
+Puede averiguar la instalación de JRE así:
 El menú Inicio –>Cumplir->cmd-> java –version.
 
 También está recomendado instalar utilidades gráficas para trabajar con MySQL.
 
-Paso 2. Inicio de la instalación del sistema.
-Microsoft Windows:
+## Paso 2. Inicio de la instalación del sistema.
+
+### Microsoft Windows:
 Hace 2 clics sobre el archivo install.jar.
 Linux(el método universal para cualquier SO):
 Inicio de la instalación de la línea de órdenes:

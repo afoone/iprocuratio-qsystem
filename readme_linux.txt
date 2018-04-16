@@ -14,7 +14,7 @@
 
 java -version
 
-если там начнет гулять какой-никакой Openjdk или предыдущие установки, то от них нужно избавится. В случае с OpenJDK это делается командой:
+Si tiene cualquier configuración de openjdk o anterior, entonces debe deshacerse de ella. En el caso de OpenJDK, esto se hace mediante el comando:
 
 sudo apt-get remove openjdk*
 
